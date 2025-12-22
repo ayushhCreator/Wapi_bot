@@ -8,7 +8,8 @@
 ## 🎯 Core Flows (What Users Do)
 
 ### 1. Happy Path Booking (90% of users)
-```
+
+```bash
 User: "Hi, need car wash"
 Bot: "Hello! I'm here to help. What's your name?"
 User: "Rahul Kumar"
@@ -24,7 +25,8 @@ Bot: "✅ Booked! SR-ABC123"
 ```
 
 ### 2. Negotiation Flow (5% of users)
-```
+
+```bash
 User: "What's the price?"
 Bot: "₹499 for Premium Wash"
 User: "Too costly, discount?"
@@ -34,7 +36,8 @@ User: "Okay, book it"
 ```
 
 ### 3. Error Recovery (3% of users)
-```
+
+```bash
 User: "confrim bokking" (typo)
 Bot: "Did you mean 'confirm booking'?"
 User: "Yes"
@@ -42,7 +45,8 @@ User: "Yes"
 ```
 
 ### 4. Edit During Confirmation (2% of users)
-```
+
+```bash
 Bot: "Confirm booking for Rahul?"
 User: "Wait, change name to Priya"
 Bot: "Updated! Confirm booking for Priya?"
@@ -55,7 +59,8 @@ User: "Yes"
 ## 🏗️ Architecture (How It Works)
 
 ### Module Structure (50 lines max per file)
-```
+
+```bash
 wapibot/
 ├── core/
 │   ├── state/          # State machine logic
@@ -75,6 +80,7 @@ wapibot/
 
 | Module | Purpose | Lines |
 |--------|---------|-------|
+
 | `state_machine.py` | Define states & transitions | 50 |
 | `scratchpad.py` | Store user data | 50 |
 | `scratchpad_merger.py` | Merge updates (no overwrite) | 50 |
@@ -89,9 +95,11 @@ wapibot/
 ## 🚨 Critical Pitfalls (What NOT to Do)
 
 ### ❌ Pitfall 1: State Lock
+
 **Problem:** System asks for name 5 times  
 **Cause:** Not checking if data already exists  
 **Fix:**
+
 ```python
 def can_transition(from_state, scratchpad):
     if from_state == "name_collection":
@@ -99,9 +107,11 @@ def can_transition(from_state, scratchpad):
 ```
 
 ### ❌ Pitfall 2: Data Overwrite
+
 **Problem:** Editing phone deletes name  
 **Cause:** Replacing entire scratchpad  
 **Fix:**
+
 ```python
 def merge_update(scratchpad, new_data):
     for key, value in new_data.items():
@@ -110,9 +120,11 @@ def merge_update(scratchpad, new_data):
 ```
 
 ### ❌ Pitfall 3: Race Condition
+
 **Problem:** User clicks button + types → 2 bookings  
 **Cause:** No locking between /chat and /api/confirmation  
 **Fix:**
+
 ```python
 import redis
 lock = redis.Redis()
@@ -122,9 +134,11 @@ if lock.set(f"lock:{conv_id}", "1", nx=True, ex=5):
 ```
 
 ### ❌ Pitfall 4: Silent LLM Failure
+
 **Problem:** Extraction fails, system continues  
 **Cause:** No validation after DSPy call  
 **Fix:**
+
 ```python
 result = dspy_extract(message)
 if not result or result.confidence < 0.5:
@@ -132,9 +146,11 @@ if not result or result.confidence < 0.5:
 ```
 
 ### ❌ Pitfall 5: API Timeout
+
 **Problem:** Frappe API times out → conversation dies  
 **Cause:** No retry logic  
 **Fix:**
+
 ```python
 @retry(max_attempts=3, backoff=2)
 def call_api(endpoint, payload):
@@ -146,6 +162,7 @@ def call_api(endpoint, payload):
 ## 📊 Data Models (What to Store)
 
 ### Scratchpad (16 fields total)
+
 ```python
 {
     # Customer (4 fields)
@@ -175,6 +192,7 @@ def call_api(endpoint, payload):
 ```
 
 ### Completeness Calculation
+
 ```python
 REQUIRED_FIELDS = 12  # Minimum to book
 TOTAL_FIELDS = 16     # All fields
@@ -188,6 +206,7 @@ completeness = (filled_fields / REQUIRED_FIELDS) * 100
 ## 🔌 API Integrations
 
 ### Frappe ERP APIs
+
 ```python
 # 1. Get Services
 GET /api/customer_portal.get_filtered_services
@@ -211,6 +230,7 @@ POST /api/booking.create_booking
 ```
 
 ### WAPI WhatsApp APIs
+
 ```python
 # 1. Send Text
 POST /contact/send-message
@@ -234,6 +254,7 @@ Body: {"media_type": "document", "media_url": "https://..."}
 ## 🧪 Testing (24-Hour Timeline)
 
 ### Hour 0-8: Unit Tests
+
 ```bash
 pytest tests/unit/ -v
 # Test each 50-line module
@@ -241,6 +262,7 @@ pytest tests/unit/ -v
 ```
 
 ### Hour 8-14: Integration Tests
+
 ```bash
 pytest tests/integration/ -v
 # Test API calls (Frappe, WAPI)
@@ -248,6 +270,7 @@ pytest tests/integration/ -v
 ```
 
 ### Hour 14-20: E2E Tests
+
 ```bash
 python tests/conversation_simulator_v2.py
 # Run 7 realistic scenarios
@@ -255,6 +278,7 @@ python tests/conversation_simulator_v2.py
 ```
 
 ### Hour 20-22: Load Tests
+
 ```bash
 locust -f tests/load_test.py --users 100
 # Simulate 100 concurrent conversations
@@ -262,6 +286,7 @@ locust -f tests/load_test.py --users 100
 ```
 
 ### Hour 22-24: Manual QA
+
 - Test on real WhatsApp
 - Verify button clicks
 - Check template messages
@@ -271,7 +296,8 @@ locust -f tests/load_test.py --users 100
 ## 📝 Naming Conventions
 
 ### Files & Folders
-```
+
+```bash
 snake_case/
 ├── scratchpad_merger.py
 ├── state_machine.py
@@ -279,24 +305,28 @@ snake_case/
 ```
 
 ### Classes
+
 ```python
 class ScratchpadMerger:  # PascalCase
 class CustomerModel(BaseModel):  # Pydantic models
 ```
 
 ### Functions
+
 ```python
 def calculate_completeness():  # snake_case
 def _internal_helper():  # Private with underscore
 ```
 
 ### Variables
+
 ```python
 scratchpad_data = {}  # snake_case
 MAX_RETRIES = 3  # Constants in UPPER_SNAKE_CASE
 ```
 
 ### Imports
+
 ```python
 # ✅ GOOD: Absolute imports
 from wapibot.core.state.transition_validator import validate_transition
@@ -310,6 +340,7 @@ from ..state.transition_validator import validate_transition
 ## 🎯 Success Metrics
 
 ### Must-Have (Launch Blockers)
+
 - ✅ Booking completion rate >85%
 - ✅ Error recovery rate >90%
 - ✅ Zero state lock incidents
@@ -317,6 +348,7 @@ from ..state.transition_validator import validate_transition
 - ✅ Response time <2s (p95)
 
 ### Nice-to-Have (Post-Launch)
+
 - 📈 Conversation abandonment <15%
 - 📈 Edit requests <10%
 - 📈 Cancellation rate <5%
@@ -327,6 +359,7 @@ from ..state.transition_validator import validate_transition
 ## 🚀 Quick Start Commands
 
 ### Setup
+
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -344,6 +377,7 @@ cp .env.example .env
 ```
 
 ### Run
+
 ```bash
 # Start chatbot server
 python main.py

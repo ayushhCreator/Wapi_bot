@@ -11,9 +11,11 @@
 This project includes comprehensive documentation to guide development from concept to deployment:
 
 ### 1. **Users_Story_Enhanced.md** (Main Document)
+
 **Purpose:** Complete user story with all flows, scenarios, and technical requirements
 
 **Key Sections:**
+
 - Introduction & Core Principles
 - 9 detailed user flows (booking, negotiation, error recovery, etc.)
 - API integration specifications (Frappe ERP + WAPI)
@@ -23,7 +25,8 @@ This project includes comprehensive documentation to guide development from conc
 - Testing strategy
 - Success metrics
 
-**When to Use:** 
+**When to Use:**
+
 - Understanding complete system requirements
 - Designing new features
 - Reviewing architecture decisions
@@ -31,9 +34,11 @@ This project includes comprehensive documentation to guide development from conc
 ---
 
 ### 2. **Quick_Reference.md** (5-Minute Read)
+
 **Purpose:** Fast reference for developers during implementation
 
 **Key Sections:**
+
 - Core flows (what users do)
 - Architecture overview (how it works)
 - Critical pitfalls (what NOT to do)
@@ -44,6 +49,7 @@ This project includes comprehensive documentation to guide development from conc
 - Quick start commands
 
 **When to Use:**
+
 - Daily development reference
 - Onboarding new developers
 - Quick lookups during coding
@@ -51,9 +57,11 @@ This project includes comprehensive documentation to guide development from conc
 ---
 
 ### 3. **Implementation_Checklist.md** (24-Hour Plan)
+
 **Purpose:** Hour-by-hour implementation guide with tasks
 
 **Key Sections:**
+
 - Phase 1: Core Infrastructure (Hours 0-6)
   - Project setup, models, state machine, data management, LLM integration
 - Phase 2: API Integrations (Hours 6-10)
@@ -66,6 +74,7 @@ This project includes comprehensive documentation to guide development from conc
   - Production setup, Docker, final QA
 
 **When to Use:**
+
 - Project planning & task assignment
 - Tracking development progress
 - Ensuring nothing is missed
@@ -75,12 +84,14 @@ This project includes comprehensive documentation to guide development from conc
 ## 🎯 Key Concepts
 
 ### Modular Architecture
+
 - **Maximum 50 lines per module**
 - **Absolute imports** (prevent circular dependencies)
 - **Single Responsibility** (each module does one thing)
 
 Example:
-```
+
+```bash
 wapibot/
 ├── core/state/state_machine.py          # 50 lines: State enum
 ├── core/data/scratchpad_merger.py       # 50 lines: Merge logic
@@ -93,6 +104,7 @@ wapibot/
 
 | Pitfall | Problem | Solution |
 |---------|---------|----------|
+
 | State Lock | System asks for name 5 times | Check if data exists before asking |
 | Data Overwrite | Editing phone deletes name | Merge updates, don't replace |
 | Race Condition | Button + text → 2 bookings | Redis locks on conversation ID |
@@ -103,7 +115,7 @@ wapibot/
 
 ### Data Flow
 
-```
+```bash
 User Message
     ↓
 [Typo Detection] → Suggest correction if needed
@@ -128,6 +140,7 @@ User Message
 ### API Integrations
 
 #### Frappe ERP (Backend)
+
 ```python
 # 1. Get services
 get_filtered_services(category, frequency, vehicle_type)
@@ -146,6 +159,7 @@ create_booking(scratchpad) → Returns SR-XXXXXXXX
 ```
 
 #### WAPI (WhatsApp)
+
 ```python
 # 1. Send text
 send_text_message(phone, message)
@@ -165,6 +179,7 @@ send_document(phone, media_url, file_name)
 ## 🚀 Quick Start
 
 ### Setup (10 minutes)
+
 ```bash
 # 1. Clone & install
 git clone <repo>
@@ -187,6 +202,7 @@ python main.py
 ```
 
 ### Test (5 minutes)
+
 ```bash
 # Unit tests
 pytest tests/unit/ -v
@@ -203,6 +219,7 @@ python tests/conversation_simulator_v2.py
 ## 📊 Success Metrics
 
 ### Must-Have (Launch Blockers)
+
 - ✅ Booking completion rate >85%
 - ✅ Error recovery rate >90%
 - ✅ Zero state lock incidents
@@ -211,6 +228,7 @@ python tests/conversation_simulator_v2.py
 - ✅ All 7 E2E scenarios pass
 
 ### Nice-to-Have (Post-Launch)
+
 - 📈 Conversation abandonment <15%
 - 📈 Edit requests <10%
 - 📈 Cancellation rate <5%
@@ -221,6 +239,7 @@ python tests/conversation_simulator_v2.py
 ## 🔧 Development Workflow
 
 ### Day 1: Core (Hours 0-6)
+
 1. Setup environment
 2. Create models & state machine
 3. Implement data management
@@ -228,23 +247,27 @@ python tests/conversation_simulator_v2.py
 5. Build NLP components
 
 ### Day 1: APIs (Hours 6-10)
+
 1. Integrate Frappe APIs
 2. Integrate WAPI endpoints
 3. Implement conversation locks
 4. Build orchestrators
 
 ### Day 1: Handlers (Hours 10-14)
+
 1. Chat orchestrator
 2. Confirmation handler
 3. Response generator
 
 ### Day 1: Testing (Hours 14-22)
+
 1. Unit tests (80% coverage)
 2. Integration tests
 3. E2E tests (7 scenarios)
 4. Load tests (100 concurrent)
 
 ### Day 1: Deploy (Hours 22-24)
+
 1. Production setup
 2. Docker deployment
 3. Final QA
@@ -254,7 +277,7 @@ python tests/conversation_simulator_v2.py
 
 ## 📁 File Structure
 
-```
+```bash
 wapibot/
 ├── docs/
 │   ├── Users_Story_Enhanced.md          # ← Main document
@@ -287,17 +310,20 @@ wapibot/
 ## 🎓 Learning Path
 
 ### For New Developers
+
 1. **Start:** Read Quick_Reference.md (5 min)
 2. **Understand:** Read Users_Story_Enhanced.md (30 min)
 3. **Implement:** Follow Implementation_Checklist.md (24 hours)
 4. **Reference:** Use Quick_Reference.md during coding
 
 ### For Reviewers
+
 1. **Architecture:** Users_Story_Enhanced.md → Section 4
 2. **Pitfalls:** Users_Story_Enhanced.md → Section 3
 3. **Testing:** Implementation_Checklist.md → Phase 4
 
 ### For QA
+
 1. **Test Scenarios:** Users_Story_Enhanced.md → Section 2
 2. **Success Metrics:** Users_Story_Enhanced.md → Section 8
 3. **Test Plan:** Implementation_Checklist.md → Phase 4
@@ -309,22 +335,27 @@ wapibot/
 ### Common Issues
 
 #### Issue 1: State Lock
+
 **Symptom:** System asks for name repeatedly  
 **Fix:** Check `transition_validator.py` - ensure data existence check
 
 #### Issue 2: Data Overwrite
+
 **Symptom:** Editing one field deletes others  
 **Fix:** Check `scratchpad_merger.py` - ensure merge, not replace
 
 #### Issue 3: Race Condition
+
 **Symptom:** Duplicate bookings  
 **Fix:** Check `conversation_lock.py` - ensure Redis lock acquired
 
 #### Issue 4: LLM Timeout
+
 **Symptom:** Extraction takes >10s  
 **Fix:** Check `retry_handler.py` - ensure timeout=5s
 
 #### Issue 5: API Failure
+
 **Symptom:** Frappe API returns 500  
 **Fix:** Check `service_fetcher.py` - ensure retry logic
 
@@ -333,11 +364,13 @@ wapibot/
 ## 📞 Support
 
 ### Documentation Issues
+
 - Missing information? → Update Users_Story_Enhanced.md
 - Unclear instructions? → Update Quick_Reference.md
 - Task confusion? → Update Implementation_Checklist.md
 
 ### Technical Issues
+
 - State machine bugs → Check `core/state/`
 - Data validation errors → Check `core/data/`
 - API failures → Check `integrations/`
@@ -348,16 +381,19 @@ wapibot/
 ## 🔄 Maintenance
 
 ### Weekly
+
 - [ ] Review error logs
 - [ ] Check success metrics
 - [ ] Update documentation if needed
 
 ### Monthly
+
 - [ ] Analyze conversation patterns
 - [ ] Optimize slow queries
 - [ ] Update test scenarios
 
 ### Quarterly
+
 - [ ] Review architecture
 - [ ] Refactor if needed
 - [ ] Update dependencies
@@ -367,16 +403,19 @@ wapibot/
 ## 📈 Roadmap
 
 ### Phase 1: MVP (Current)
+
 - ✅ Basic booking flow
 - ✅ Error recovery
 - ✅ API integrations
 
 ### Phase 2: Enhancements (Week 2)
+
 - [ ] Multi-language support (Hindi, Tamil)
 - [ ] Voice message handling
 - [ ] Image recognition (car photos)
 
 ### Phase 3: Advanced (Month 2)
+
 - [ ] Subscription management
 - [ ] Loyalty program integration
 - [ ] Predictive maintenance alerts
@@ -398,6 +437,7 @@ wapibot/
 
 | Document | Version | Last Updated |
 |----------|---------|--------------|
+
 | Users_Story_Enhanced.md | 2.0 | 2025-01-XX |
 | Quick_Reference.md | 1.0 | 2025-01-XX |
 | Implementation_Checklist.md | 1.0 | 2025-01-XX |
@@ -408,6 +448,7 @@ wapibot/
 ## ✅ Pre-Development Checklist
 
 Before starting development, ensure:
+
 - [ ] All documentation read
 - [ ] Development environment setup
 - [ ] API credentials obtained
@@ -428,11 +469,12 @@ Before starting development, ensure:
 ---
 
 **Questions?** Refer to the specific document for detailed information:
+
 - **What?** → Users_Story_Enhanced.md
 - **How?** → Implementation_Checklist.md
 - **Quick Lookup?** → Quick_Reference.md
 
-**Good luck with the implementation! 🎉**
+### **Good luck with the implementation! 🎉**
 
 ---
 

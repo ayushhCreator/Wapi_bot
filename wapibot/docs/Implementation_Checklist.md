@@ -9,6 +9,7 @@
 ## Phase 1: Core Infrastructure (Hours 0-6)
 
 ### Hour 0-1: Project Setup
+
 - [ ] Create folder structure (see Quick_Reference.md)
 - [ ] Initialize Git repository
 - [ ] Create virtual environment
@@ -25,7 +26,9 @@
 ### Hour 1-2: Configuration & Models
 
 #### Task 1.1: Configuration Module
+
 **File:** `wapibot/config/settings.py` (50 lines)
+
 ```python
 # Define:
 - OLLAMA_BASE_URL
@@ -38,7 +41,9 @@
 ```
 
 #### Task 1.2: Scratchpad Model
+
 **File:** `wapibot/models/scratchpad_model.py` (50 lines)
+
 ```python
 class ScratchpadModel(BaseModel):
     # 16 fields: customer (4), vehicle (3), appointment (4), optional (5)
@@ -46,7 +51,9 @@ class ScratchpadModel(BaseModel):
 ```
 
 #### Task 1.3: Customer Model
+
 **File:** `wapibot/models/customer_model.py` (50 lines)
+
 ```python
 class CustomerModel(BaseModel):
     first_name: str
@@ -56,7 +63,9 @@ class CustomerModel(BaseModel):
 ```
 
 #### Task 1.4: Vehicle Model
+
 **File:** `wapibot/models/vehicle_model.py` (50 lines)
+
 ```python
 class VehicleModel(BaseModel):
     brand: str
@@ -72,7 +81,9 @@ class VehicleModel(BaseModel):
 ### Hour 2-3: State Machine
 
 #### Task 2.1: State Enum
+
 **File:** `wapibot/core/state/state_machine.py` (50 lines)
+
 ```python
 class ConversationState(Enum):
     GREETING = "greeting"
@@ -91,7 +102,9 @@ VALID_TRANSITIONS = {
 ```
 
 #### Task 2.2: Transition Validator
+
 **File:** `wapibot/core/state/transition_validator.py` (50 lines)
+
 ```python
 def can_transition(from_state, to_state, scratchpad):
     # Check if transition is valid
@@ -100,7 +113,9 @@ def can_transition(from_state, to_state, scratchpad):
 ```
 
 #### Task 2.3: State Persister
+
 **File:** `wapibot/core/state/state_persister.py` (50 lines)
+
 ```python
 def save_state(conv_id, state):
     # Save to Redis with TTL (24 hours)
@@ -116,7 +131,9 @@ def load_state(conv_id):
 ### Hour 3-4: Data Management
 
 #### Task 3.1: Scratchpad Manager
+
 **File:** `wapibot/core/data/scratchpad.py` (50 lines)
+
 ```python
 def create_scratchpad():
     return ScratchpadModel()
@@ -129,7 +146,9 @@ def load_scratchpad(conv_id):
 ```
 
 #### Task 3.2: Scratchpad Merger
+
 **File:** `wapibot/core/data/scratchpad_merger.py` (50 lines)
+
 ```python
 def merge_update(scratchpad, new_data):
     # Merge without overwriting existing data
@@ -138,7 +157,9 @@ def merge_update(scratchpad, new_data):
 ```
 
 #### Task 3.3: Completeness Calculator
+
 **File:** `wapibot/core/data/completeness_calculator.py` (50 lines)
+
 ```python
 def calculate_completeness(scratchpad):
     filled = count_filled_fields(scratchpad)
@@ -149,7 +170,9 @@ def should_trigger_confirmation(scratchpad):
 ```
 
 #### Task 3.4: Field Validator
+
 **File:** `wapibot/core/data/validator.py` (50 lines)
+
 ```python
 def validate_phone(phone):
     # 10 digits, starts with 6-9
@@ -168,7 +191,9 @@ def validate_date(date_str):
 ### Hour 4-5: LLM Integration
 
 #### Task 4.1: DSPy Client
+
 **File:** `wapibot/core/llm/dspy_client.py` (50 lines)
+
 ```python
 import dspy
 
@@ -183,7 +208,9 @@ class NameExtractor(dspy.Signature):
 ```
 
 #### Task 4.2: Extraction Validator
+
 **File:** `wapibot/core/llm/extraction_validator.py` (50 lines)
+
 ```python
 def validate_extraction(result, min_confidence=0.5):
     if not result:
@@ -194,7 +221,9 @@ def validate_extraction(result, min_confidence=0.5):
 ```
 
 #### Task 4.3: Retry Handler
+
 **File:** `wapibot/core/llm/retry_handler.py` (50 lines)
+
 ```python
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -210,7 +239,9 @@ def call_llm_with_retry(signature, **kwargs):
 ### Hour 5-6: NLP Components
 
 #### Task 5.1: Typo Detector
+
 **File:** `wapibot/core/nlp/typo_detector.py` (50 lines)
+
 ```python
 class TypoDetector(dspy.Signature):
     user_input = dspy.InputField()
@@ -222,7 +253,9 @@ def detect_typos(message):
 ```
 
 #### Task 5.2: Intent Classifier
+
 **File:** `wapibot/core/nlp/intent_classifier.py` (50 lines)
+
 ```python
 class IntentClassifier(dspy.Signature):
     user_message = dspy.InputField()
@@ -234,7 +267,9 @@ def classify_intent(message):
 ```
 
 #### Task 5.3: Sentiment Analyzer
+
 **File:** `wapibot/core/nlp/sentiment_analyzer.py` (50 lines)
+
 ```python
 class SentimentAnalyzer(dspy.Signature):
     user_message = dspy.InputField()
@@ -255,7 +290,9 @@ def analyze_sentiment(message):
 ### Hour 6-7: Frappe API Integration
 
 #### Task 6.1: Service Fetcher
+
 **File:** `wapibot/integrations/frappe/service_fetcher.py` (50 lines)
+
 ```python
 def get_filtered_services(category, frequency_type, vehicle_type):
     response = requests.post(
@@ -266,7 +303,9 @@ def get_filtered_services(category, frequency_type, vehicle_type):
 ```
 
 #### Task 6.2: Addon Fetcher
+
 **File:** `wapibot/integrations/frappe/addon_fetcher.py` (50 lines)
+
 ```python
 def get_optional_addons(product_id):
     response = requests.get(
@@ -277,7 +316,9 @@ def get_optional_addons(product_id):
 ```
 
 #### Task 6.3: Slot Checker
+
 **File:** `wapibot/integrations/frappe/slot_checker.py` (50 lines)
+
 ```python
 def get_available_slots(date_str):
     response = requests.get(
@@ -291,7 +332,9 @@ def check_slot_availability(slot_id):
 ```
 
 #### Task 6.4: Price Calculator
+
 **File:** `wapibot/integrations/frappe/price_calculator.py` (50 lines)
+
 ```python
 def calculate_booking_price(product_id, addon_ids, electricity, water):
     response = requests.post(
@@ -302,7 +345,9 @@ def calculate_booking_price(product_id, addon_ids, electricity, water):
 ```
 
 #### Task 6.5: Booking Creator
+
 **File:** `wapibot/integrations/frappe/booking_creator.py` (50 lines)
+
 ```python
 def create_booking(scratchpad):
     response = requests.post(
@@ -323,7 +368,9 @@ def create_booking(scratchpad):
 ### Hour 7-8: WAPI Integration
 
 #### Task 7.1: Message Sender
+
 **File:** `wapibot/integrations/wapi/message_sender.py` (50 lines)
+
 ```python
 def send_text_message(phone, message, contact_info=None):
     response = requests.post(
@@ -339,7 +386,9 @@ def send_text_message(phone, message, contact_info=None):
 ```
 
 #### Task 7.2: Interactive Sender
+
 **File:** `wapibot/integrations/wapi/interactive_sender.py` (50 lines)
+
 ```python
 def send_buttons(phone, body_text, buttons):
     response = requests.post(
@@ -355,7 +404,9 @@ def send_buttons(phone, body_text, buttons):
 ```
 
 #### Task 7.3: Template Sender
+
 **File:** `wapibot/integrations/wapi/template_sender.py` (50 lines)
+
 ```python
 def send_template(phone, template_name, fields):
     response = requests.post(
@@ -371,7 +422,9 @@ def send_template(phone, template_name, fields):
 ```
 
 #### Task 7.4: Media Sender
+
 **File:** `wapibot/integrations/wapi/media_sender.py` (50 lines)
+
 ```python
 def send_document(phone, media_url, file_name):
     response = requests.post(
@@ -393,7 +446,9 @@ def send_document(phone, media_url, file_name):
 ### Hour 8-9: Conversation Lock
 
 #### Task 8.1: Redis Lock Manager
+
 **File:** `wapibot/core/locks/conversation_lock.py` (50 lines)
+
 ```python
 import redis
 
@@ -427,7 +482,9 @@ def conversation_lock(conv_id):
 ### Hour 9-10: Orchestrators
 
 #### Task 9.1: Extraction Orchestrator
+
 **File:** `wapibot/orchestrators/extraction_orchestrator.py` (50 lines)
+
 ```python
 def extract_all_data(user_message, scratchpad):
     # Try name extraction
@@ -457,7 +514,9 @@ def extract_all_data(user_message, scratchpad):
 ### Hour 10-12: Chat Orchestrator
 
 #### Task 10.1: Main Chat Handler
+
 **File:** `wapibot/orchestrators/chat_orchestrator.py` (50 lines)
+
 ```python
 def handle_chat(conv_id, user_message):
     # 1. Acquire lock
@@ -508,7 +567,9 @@ def handle_chat(conv_id, user_message):
 ### Hour 12-13: Confirmation Orchestrator
 
 #### Task 12.1: Confirmation Handler
+
 **File:** `wapibot/orchestrators/confirmation_orchestrator.py` (50 lines)
+
 ```python
 def handle_confirmation(conv_id, user_input, action):
     # action: "confirm", "edit", "cancel"
@@ -561,7 +622,9 @@ def handle_confirmation(conv_id, user_input, action):
 ### Hour 13-14: Response Generator
 
 #### Task 13.1: Response Templates
+
 **File:** `wapibot/orchestrators/response_generator.py` (50 lines)
+
 ```python
 TEMPLATES = {
     "greeting": "Hello! I'm here to help you book a car service. What's your name?",
@@ -586,7 +649,9 @@ def generate_response(state, next_state, scratchpad):
 ### Hour 14-18: Unit Tests
 
 #### Task 14.1: State Machine Tests
+
 **File:** `tests/unit/test_state_machine.py`
+
 ```python
 def test_valid_transition():
     assert can_transition("greeting", "name_collection", scratchpad)
@@ -597,7 +662,9 @@ def test_invalid_transition():
 ```
 
 #### Task 14.2: Scratchpad Tests
+
 **File:** `tests/unit/test_scratchpad_merger.py`
+
 ```python
 def test_merge_without_overwrite():
     scratchpad = {"first_name": "Rahul", "phone": None}
@@ -608,7 +675,9 @@ def test_merge_without_overwrite():
 ```
 
 #### Task 14.3: Validation Tests
+
 **File:** `tests/unit/test_validator.py`
+
 ```python
 def test_phone_validation():
     assert validate_phone("9876543210") == True
@@ -622,7 +691,9 @@ def test_phone_validation():
 ### Hour 18-20: Integration Tests
 
 #### Task 18.1: Frappe API Tests
+
 **File:** `tests/integration/test_frappe_api.py`
+
 ```python
 def test_get_services():
     services = get_filtered_services("Car Wash", "One Time", "Sedan")
@@ -631,7 +702,9 @@ def test_get_services():
 ```
 
 #### Task 18.2: WAPI Tests
+
 **File:** `tests/integration/test_wapi.py`
+
 ```python
 def test_send_message():
     response = send_text_message("9876543210", "Test message")
@@ -645,12 +718,15 @@ def test_send_message():
 ### Hour 20-22: E2E Tests
 
 #### Task 20.1: Run Conversation Simulator
+
 **File:** `tests/conversation_simulator_v2.py` (already exists)
+
 ```bash
 python tests/conversation_simulator_v2.py
 ```
 
 **Expected:** All 7 scenarios pass:
+
 1. ✅ Happy path
 2. ✅ Negotiation
 3. ✅ Reschedule
@@ -666,13 +742,16 @@ python tests/conversation_simulator_v2.py
 ### Hour 22-23: Production Setup
 
 #### Task 22.1: Environment Configuration
+
 - [ ] Set production API keys (.env.production)
 - [ ] Configure Redis (persistent storage)
 - [ ] Setup monitoring (Sentry, Grafana)
 - [ ] Configure logging (INFO level)
 
 #### Task 22.2: Docker Setup
+
 **File:** `Dockerfile`
+
 ```dockerfile
 FROM python:3.11-slim
 WORKDIR /app
@@ -683,6 +762,7 @@ CMD ["python", "main.py"]
 ```
 
 **File:** `docker-compose.yml`
+
 ```yaml
 version: '3.8'
 services:
@@ -706,18 +786,22 @@ services:
 ### Hour 23-24: Final QA & Launch
 
 #### Task 23.1: Manual Testing
+
 - [ ] Test on real WhatsApp number
 - [ ] Verify button interactions
 - [ ] Check template messages
 - [ ] Test error scenarios (API timeout, invalid input)
 
 #### Task 23.2: Load Testing
+
 ```bash
 locust -f tests/load_test.py --users 100 --spawn-rate 10
 ```
+
 **Target:** 100 concurrent conversations, <2s response time
 
 #### Task 23.3: Launch
+
 - [ ] Deploy to production server
 - [ ] Monitor logs for errors
 - [ ] Test with 5 real customers
@@ -728,6 +812,7 @@ locust -f tests/load_test.py --users 100 --spawn-rate 10
 ## Success Criteria
 
 ### Functional
+
 - [x] All 7 E2E scenarios pass
 - [x] Unit test coverage >80%
 - [x] Integration tests pass
@@ -735,12 +820,14 @@ locust -f tests/load_test.py --users 100 --spawn-rate 10
 - [x] No data overwrite incidents
 
 ### Performance
+
 - [x] Response time <2s (p95)
 - [x] API timeout rate <1%
 - [x] Handles 100 concurrent conversations
 - [x] Uptime >99.5%
 
 ### Code Quality
+
 - [x] All modules <50 lines
 - [x] SOLID principles followed
 - [x] DRY compliance (no duplication)
@@ -752,6 +839,7 @@ locust -f tests/load_test.py --users 100 --spawn-rate 10
 ## Rollback Plan
 
 If critical issues found:
+
 1. Revert to previous version (Git tag)
 2. Notify customers via WhatsApp template
 3. Switch to manual booking (fallback)
@@ -763,12 +851,14 @@ If critical issues found:
 ## Post-Launch Monitoring (Week 1)
 
 ### Daily Checks
+
 - [ ] Error rate <1%
 - [ ] Booking completion rate >85%
 - [ ] Average response time <2s
 - [ ] Customer satisfaction >4.5/5
 
 ### Weekly Review
+
 - [ ] Analyze conversation logs
 - [ ] Identify common failure patterns
 - [ ] Optimize slow queries

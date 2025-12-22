@@ -1,6 +1,6 @@
 # API Endpoints Documentation
 
-**Source:** https://documenter.getpostman.com/view/17404097/2sA35D4hpx
+**Source:** <https://documenter.getpostman.com/view/17404097/2sA35D4hpx>
 
 **Date Extracted:** December 22, 2025
 
@@ -29,7 +29,8 @@
 All API endpoints require Bearer Token authentication.
 
 **Authorization Header:**
-```
+
+```bash
 Authorization: Bearer {{bearerToken}}
 ```
 
@@ -37,11 +38,12 @@ Authorization: Bearer {{bearerToken}}
 
 ## Base URL
 
-```
+```bash
 {{apiBaseUrl}}/{{vendorUid}}
 ```
 
 **Variables:**
+
 - `apiBaseUrl`: Base API URL (e.g., `https://api.example.com`)
 - `vendorUid`: Your vendor unique identifier
 
@@ -59,7 +61,7 @@ Send a text message to a contact.
 
 #### Request Headers
 
-```
+```bash
 Content-Type: application/json
 Authorization: Bearer {{bearerToken}}
 ```
@@ -89,6 +91,7 @@ Authorization: Bearer {{bearerToken}}
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
+
 | `from_phone_number_id` | string | No | Phone number ID. If not provided, uses default phone number ID |
 | `phone_number` | string | Yes | Recipient phone number |
 | `message_body` | string | Yes | Message text content |
@@ -129,7 +132,7 @@ curl --location '{{apiBaseUrl}}/{{vendorUid}}/contact/send-message' \
 
 **Status Code:** 200 OK
 
-```
+```bash
 No response body
 ```
 
@@ -145,12 +148,12 @@ Send media content (image, video, document) to a contact.
 
 #### Request Headers
 
-```
+```bash
 Content-Type: application/json
 Authorization: Bearer {{bearerToken}}
 ```
 
-#### Request Body
+#### Request Body media message
 
 ```json
 {
@@ -171,10 +174,11 @@ Authorization: Bearer {{bearerToken}}
 }
 ```
 
-#### Parameters
+#### Parameters media message
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
+
 | `from_phone_number_id` | string | No | Phone number ID. If not provided, uses default phone number ID |
 | `phone_number` | string | Yes | Recipient phone number |
 | `media_type` | string | Yes | Type of media: "document", "image", or "video" |
@@ -189,7 +193,7 @@ Authorization: Bearer {{bearerToken}}
 | `contact.language_code` | string | No | Language code |
 | `contact.groups` | string | No | Comma-separated group names |
 
-#### Example Request (cURL)
+#### Example Request (cURL) media message
 
 ```bash
 curl --location '{{apiBaseUrl}}/{{vendorUid}}/contact/send-media-message' \
@@ -217,7 +221,7 @@ curl --location '{{apiBaseUrl}}/{{vendorUid}}/contact/send-media-message' \
 
 **Status Code:** 200 OK
 
-```
+```bash
 No response body
 ```
 
@@ -233,7 +237,7 @@ Send a WhatsApp template message with dynamic content.
 
 #### Request Headers
 
-```
+```bash
 Content-Type: application/json
 Authorization: Bearer {{bearerToken}}
 ```
@@ -818,7 +822,7 @@ Common variables used in the API:
 
 ## Additional Resources
 
-- **Official Documentation:** https://documenter.getpostman.com/view/17404097/2sA35D4hpx
+- **Official Documentation:** <https://documenter.getpostman.com/view/17404097/2sA35D4hpx>
 - **Support:** Contact your API provider for additional support and documentation
 
 ---

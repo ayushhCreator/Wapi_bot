@@ -1,7 +1,8 @@
 # User Story
 
 ---
-## Introduction 
+
+## Introduction
 
 I'm Creating this chatbot to interact with user to book services (One time and Subscription).
 
@@ -32,5 +33,3 @@ We would like to prevent in this case.
 
 1. [Details Regarding whatsapp Integration is given in](wapi_endpioints.md)
 2. [Details Regarding Webapp Endpoints is given in](frappe_api.md)
-
-

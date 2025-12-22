@@ -9,9 +9,11 @@
 ## 1. Introduction & Context
 
 ### 1.1 Purpose
+
 A production-ready WhatsApp chatbot for booking automotive services (one-time and subscription) that handles complex conversational flows with resilience, state management, and graceful error recovery.
 
 ### 1.2 Core Principles
+
 - **Modular Architecture**: Maximum 50 lines per module
 - **SOLID Principles**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
 - **DRY Compliance**: No code duplication, centralized configuration
@@ -55,21 +57,21 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
    - **Scenario A - Combined Input:**
      - Customer: "Honda City, plate MH12AB1234"
      - System: Extracts brand, model, plate in one turn
-   
+
    - **Scenario B - Sequential Input:**
      - Customer: "I have Honda City"
      - System: "Great! What's the registration number?"
      - Customer: "MH12AB1234"
      - System: Extracts plate in follow-up
-   
-   - **Pitfall Avoided**: 
+
+   - **Pitfall Avoided**:
      - Don't get stuck asking for plate when already provided
      - Handle 50% combined, 50% sequential naturally
      - Prevent race conditions between chat and button inputs
 
 5. **Service Type & Date Selection**
    - Customer: "Full car wash", "Tomorrow morning", "Next Monday 10am"
-   - System: 
+   - System:
      - Fetches available services via API
      - Parses date (relative: tomorrow, next week; absolute: 2025-01-15)
      - Validates date is not in past
@@ -87,7 +89,7 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
      - **Confirm**: "Yes", "Confirm", "Book it"
      - **Edit**: "Change name to Priya", "Edit phone 9999888877"
      - **Cancel**: "Cancel booking", "I changed my mind"
-   - **Pitfall Avoided**: 
+   - **Pitfall Avoided**:
      - Allow edits without restarting entire flow
      - Handle typos: "confrim bokking" → suggest correction
      - Prevent data overwrite during edits
@@ -108,9 +110,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ### 2.2 Secondary Flows
 
 #### 2.2.1 Negotiation & Bargaining
+
 **Scenario:** Customer negotiates price before booking
 
 **Flow:**
+
 1. Customer: "What's the rate?"
 2. System: Fetches pricing via `calculate_booking_price` API
 3. Customer: "Too costly, can you reduce?"
@@ -123,9 +127,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ---
 
 #### 2.2.2 Rescheduling During Booking
+
 **Scenario:** Customer changes date mid-flow
 
 **Flow:**
+
 1. Customer provides date: "Tomorrow morning"
 2. System: "Slot booked for Jan 15, 10 AM"
 3. Customer: "Wait, change to Friday"
@@ -137,9 +143,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ---
 
 #### 2.2.3 Indecisive Customer
+
 **Scenario:** Customer gets frustrated, then re-engages
 
 **Flow:**
+
 1. Customer: "Wait, I'm confused"
 2. System: Detects low interest sentiment (boredom: 7/10)
 3. System: "No worries! Let me simplify. Just need your name and car details"
@@ -154,9 +162,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ---
 
 #### 2.2.4 Error Recovery - Spelling Mistakes
+
 **Scenario:** Customer makes typos
 
 **Flow:**
+
 1. Customer: "confrim bokking" (typos)
 2. System: Detects typos via DSPy signature
 3. System: "Did you mean 'confirm booking'? (Yes/No)"
@@ -168,9 +178,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ---
 
 #### 2.2.5 Cancel & Restart
+
 **Scenario:** Customer cancels then decides to book again
 
 **Flow:**
+
 1. Customer: "Cancel this booking"
 2. System: "Booking cancelled. Can I help with anything else?"
 3. Customer: "Actually, I want to book again"
@@ -186,11 +198,14 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 **Integration Point:** Frappe ERP APIs
 
 #### 2.3.1 Service Discovery
+
 **API:** `get_filtered_services`
 
 **Flow:**
+
 1. Customer: "Show me car wash services"
 2. System calls API:
+
    ```json
    {
      "category": "Car Wash",
@@ -198,7 +213,9 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
      "vehicle_type": "Sedan"
    }
    ```
+
 3. API returns:
+
    ```json
    {
      "success": true,
@@ -212,6 +229,7 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
      ]
    }
    ```
+
 4. System: "We have Premium Wash (₹499) with interior vacuum included"
 
 **Pitfall Avoided**: Cache API responses (5 min TTL) to prevent rate limiting
@@ -219,9 +237,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ---
 
 #### 2.3.2 Add-on Selection
+
 **API:** `get_optional_addons`
 
 **Flow:**
+
 1. System: "Would you like wax polish (₹199) or ceramic coating (₹999)?"
 2. Customer: "Add wax polish"
 3. System updates scratchpad: `addons: [{addon: "ADD-005", quantity: 1}]`
@@ -229,12 +249,15 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ---
 
 #### 2.3.3 Slot Availability Check
+
 **API:** `get_available_slots_enhanced`
 
 **Flow:**
+
 1. Customer: "Tomorrow morning"
 2. System calls API: `date_str: "2025-01-15"`
 3. API returns available slots:
+
    ```json
    {
      "slots": [
@@ -245,6 +268,7 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
      ]
    }
    ```
+
 4. System: "Available slots: 9-10 AM (3 spots), 11-12 PM (1 spot)"
 
 **Pitfall Avoided**: Atomic slot locking via `check_slot_availability` before booking
@@ -252,9 +276,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 ---
 
 #### 2.3.4 Dynamic Pricing
+
 **API:** `calculate_booking_price`
 
 **Flow:**
+
 1. System calculates total:
    - Base: ₹499
    - Addons: ₹199
@@ -270,9 +296,11 @@ A production-ready WhatsApp chatbot for booking automotive services (one-time an
 **Integration Point:** WAPI Endpoints (wapi_endpioints.md)
 
 #### 2.4.1 Send Text Message
+
 **Endpoint:** `POST /contact/send-message`
 
 **Usage:**
+
 ```python
 # Module: wapibot/integrations/wapi/message_sender.py
 def send_text(phone: str, message: str):
@@ -290,9 +318,11 @@ def send_text(phone: str, message: str):
 ---
 
 #### 2.4.2 Send Interactive Buttons
+
 **Endpoint:** `POST /contact/send-interactive-message`
 
 **Usage:**
+
 ```python
 # Confirmation screen with buttons
 def send_confirmation_buttons(phone: str, summary: str):
@@ -313,9 +343,11 @@ def send_confirmation_buttons(phone: str, summary: str):
 ---
 
 #### 2.4.3 Send Template Message
+
 **Endpoint:** `POST /contact/send-template-message`
 
 **Usage:**
+
 ```python
 # Booking confirmation template
 def send_booking_confirmation(phone: str, sr_id: str, date: str):
@@ -331,9 +363,11 @@ def send_booking_confirmation(phone: str, sr_id: str, date: str):
 ---
 
 #### 2.4.4 Send Media (Invoice/Receipt)
+
 **Endpoint:** `POST /contact/send-media-message`
 
 **Usage:**
+
 ```python
 # Send invoice PDF
 def send_invoice(phone: str, invoice_url: str):
@@ -352,13 +386,16 @@ def send_invoice(phone: str, invoice_url: str):
 ### 3.1 Pitfalls from conversation_simulator_v2.py
 
 #### Pitfall 1: State Lock in Name/Address Collection
+
 **Problem:** System gets stuck asking for name repeatedly
 
 **Root Cause:**
+
 - Scratchpad not updating after extraction
 - State transition logic doesn't check completeness
 
 **Solution:**
+
 ```python
 # Module: wapibot/core/state/transition_validator.py (max 50 lines)
 def can_transition(from_state, to_state, scratchpad):
@@ -370,12 +407,15 @@ def can_transition(from_state, to_state, scratchpad):
 ---
 
 #### Pitfall 2: Data Overwrite During Edits
+
 **Problem:** Editing phone number overwrites entire scratchpad
 
 **Root Cause:**
+
 - Scratchpad update logic replaces instead of merging
 
 **Solution:**
+
 ```python
 # Module: wapibot/core/data/scratchpad_merger.py (max 50 lines)
 def merge_update(scratchpad, new_data):
@@ -387,12 +427,15 @@ def merge_update(scratchpad, new_data):
 ---
 
 #### Pitfall 3: Race Condition (Chat vs Button)
+
 **Problem:** User clicks button while typing message → duplicate bookings
 
 **Root Cause:**
+
 - No locking mechanism between /chat and /api/confirmation
 
 **Solution:**
+
 ```python
 # Module: wapibot/core/locks/conversation_lock.py (max 50 lines)
 import redis
@@ -405,13 +448,16 @@ def acquire_lock(conv_id, timeout=5):
 ---
 
 #### Pitfall 4: Silent LLM Failures
+
 **Problem:** DSPy extraction fails, system continues with empty data
 
 **Root Cause:**
+
 - No validation after LLM calls
 - Exceptions swallowed
 
 **Solution:**
+
 ```python
 # Module: wapibot/core/llm/extraction_validator.py (max 50 lines)
 def validate_extraction(result):
@@ -423,13 +469,16 @@ def validate_extraction(result):
 ---
 
 #### Pitfall 5: Network Timeout Cascades
+
 **Problem:** API timeout causes entire conversation to fail
 
 **Root Cause:**
+
 - No retry logic
 - No fallback responses
 
 **Solution:**
+
 ```python
 # Module: wapibot/integrations/api/retry_handler.py (max 50 lines)
 @retry(max_attempts=3, backoff=2)
@@ -445,9 +494,11 @@ def call_api(endpoint, payload):
 ### 3.2 Additional Pitfalls to Avoid
 
 #### Pitfall 6: Typo Detection Not Working
+
 **Problem:** System doesn't suggest corrections for "confrim bokking"
 
 **Solution:**
+
 ```python
 # Module: wapibot/core/nlp/typo_detector.py (max 50 lines)
 from dspy import Signature, ChainOfThought
@@ -461,9 +512,11 @@ class TypoDetector(Signature):
 ---
 
 #### Pitfall 7: Scratchpad Completeness Miscalculation
+
 **Problem:** System shows 100% complete with only 5 fields
 
 **Solution:**
+
 ```python
 # Module: wapibot/core/data/completeness_calculator.py (max 50 lines)
 REQUIRED_FIELDS = 12
@@ -480,7 +533,7 @@ def calculate_completeness(scratchpad):
 
 ### 4.1 Folder Structure (Absolute Imports)
 
-```
+```bash
 wapibot/
 ├── core/
 │   ├── state/
@@ -547,23 +600,28 @@ wapibot/
 ### 4.2 Naming Conventions
 
 #### Files & Folders
+
 - **Folders**: `snake_case` (e.g., `state_machine/`, `data_models/`)
 - **Files**: `snake_case.py` (e.g., `scratchpad_merger.py`)
 - **Test Files**: `test_<module>.py` (e.g., `test_scratchpad_merger.py`)
 
 #### Classes
+
 - **PascalCase**: `ScratchpadMerger`, `StateTransitionValidator`
 - **Pydantic Models**: `<Entity>Model` (e.g., `CustomerModel`, `VehicleModel`)
 
 #### Functions
+
 - **snake_case**: `calculate_completeness()`, `merge_update()`
 - **Private**: `_internal_helper()`
 
 #### Variables
+
 - **snake_case**: `scratchpad_data`, `user_message`
 - **Constants**: `UPPER_SNAKE_CASE` (e.g., `MAX_RETRIES`, `API_TIMEOUT`)
 
 #### Modules
+
 - **Descriptive**: `wapibot.core.state.transition_validator`
 - **Absolute Imports**: `from wapibot.core.state.transition_validator import validate_transition`
 
@@ -572,6 +630,7 @@ wapibot/
 ### 4.3 SOLID & DRY Examples
 
 #### Single Responsibility Principle
+
 ```python
 # ❌ BAD: One class does everything
 class BookingHandler:
@@ -597,6 +656,7 @@ class WhatsAppSender:
 ---
 
 #### DRY Principle
+
 ```python
 # ❌ BAD: Repeated validation logic
 def validate_name(name):
@@ -623,6 +683,7 @@ class FieldValidator:
 ## 5. Data Models (Modularized & SOLID)
 
 ### 5.1 Scratchpad Model
+
 ```python
 # File: wapibot/models/scratchpad_model.py (50 lines max)
 from pydantic import BaseModel, Field
@@ -665,6 +726,7 @@ class ScratchpadModel(BaseModel):
 ---
 
 ### 5.2 Customer Model
+
 ```python
 # File: wapibot/models/customer_model.py (50 lines max)
 from pydantic import BaseModel, validator
@@ -684,6 +746,7 @@ class CustomerModel(BaseModel):
 ---
 
 ### 5.3 Vehicle Model
+
 ```python
 # File: wapibot/models/vehicle_model.py (50 lines max)
 from pydantic import BaseModel, validator
@@ -706,26 +769,31 @@ class VehicleModel(BaseModel):
 ## 6. Testing Strategy (24-Hour Timeline)
 
 ### 6.1 Unit Tests (8 hours)
+
 - Test each 50-line module independently
 - Mock external dependencies (APIs, Redis)
 - Coverage target: 80%
 
 ### 6.2 Integration Tests (6 hours)
+
 - Test API integrations (Frappe, WAPI)
 - Test state transitions
 - Test scratchpad updates
 
 ### 6.3 E2E Tests (6 hours)
+
 - Run conversation_simulator_v2.py scenarios
 - Validate all 7 scenarios pass
 - Check typo detection, error recovery
 
 ### 6.4 Load Tests (2 hours)
+
 - Simulate 100 concurrent conversations
 - Verify no race conditions
 - Check Redis lock performance
 
 ### 6.5 Manual QA (2 hours)
+
 - Test on real WhatsApp
 - Verify button interactions
 - Check template messages
@@ -735,6 +803,7 @@ class VehicleModel(BaseModel):
 ## 7. Deployment Checklist
 
 ### 7.1 Pre-Deployment
+
 - [ ] All unit tests pass
 - [ ] Integration tests pass
 - [ ] E2E scenarios pass (7/7)
@@ -743,6 +812,7 @@ class VehicleModel(BaseModel):
 - [ ] Documentation updated
 
 ### 7.2 Configuration
+
 - [ ] Environment variables set (.env)
 - [ ] Redis connection configured
 - [ ] Frappe API credentials set
@@ -750,6 +820,7 @@ class VehicleModel(BaseModel):
 - [ ] DSPy model downloaded (gemma3:4b)
 
 ### 7.3 Monitoring
+
 - [ ] Logging enabled (INFO level)
 - [ ] Error tracking (Sentry/similar)
 - [ ] Metrics dashboard (Grafana/similar)
@@ -760,18 +831,21 @@ class VehicleModel(BaseModel):
 ## 8. Success Metrics
 
 ### 8.1 Functional Metrics
+
 - **Booking Completion Rate**: >85%
 - **Error Recovery Rate**: >90% (typos, retries)
 - **State Lock Incidents**: 0
 - **Data Overwrite Incidents**: 0
 
 ### 8.2 Performance Metrics
+
 - **Response Time**: <2s (p95)
 - **API Timeout Rate**: <1%
 - **Concurrent Conversations**: 100+
 - **Uptime**: >99.5%
 
 ### 8.3 User Experience Metrics
+
 - **Conversation Abandonment**: <15%
 - **Edit Requests**: <10% of bookings
 - **Cancellation Rate**: <5%
@@ -782,17 +856,20 @@ class VehicleModel(BaseModel):
 ## 9. Appendix
 
 ### 9.1 API Reference
+
 - **Frappe APIs**: See `docs/frappe_api.md`
 - **WAPI Endpoints**: See `docs/wapi_endpioints.md`
 
 ### 9.2 State Machine Diagram
-```
+
+```bash
 GREETING → NAME_COLLECTION → VEHICLE_DETAILS → DATE_SELECTION → CONFIRMATION → COMPLETED
     ↓           ↓                  ↓                 ↓                ↓
 CANCELLED ← CANCELLED ←  CANCELLED ←  CANCELLED ← CANCELLED
 ```
 
 ### 9.3 Example Conversations
+
 - See `example/tests/conversation_simulator_v2.py` for 7 realistic scenarios
 
 ---
