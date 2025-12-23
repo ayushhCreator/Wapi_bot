@@ -1,0 +1,12 @@
+{
+  "godotTools.lsp.enabled": true,
+  "godotTools.editorPath.godot4": "/home/riju279/Documents/Godot/Godot_v4.5.1-stable_linux.x86_64",
+  "godotTools.runOnSave": false,
+  // "files.autoSave": "off",
+  "editor.formatOnSave": true,
+  // Keep unlimited editors open
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.perEditorGroup": false,
+  "workbench.editor.limit.value": 1000,
+}

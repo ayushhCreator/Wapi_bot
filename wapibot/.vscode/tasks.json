@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "claude_syntax_check",
+      "type": "shell",
+      "command": "${workspaceFolder}/claude_check_syntax.sh",
+      "problemMatcher": []
+    }
+  ]
+}
