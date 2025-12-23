@@ -58,3 +58,5 @@ dump.rdb
 # UV
 .uv/
 uv.lock
+# refernces
+example/
