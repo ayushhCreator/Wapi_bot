@@ -2,7 +2,8 @@
   "python.defaultInterpreterPath": "./.venv/bin/python",
   "python.analysis.extraPaths": [
     "./src/",
-    "./tests/"
+    "./tests/",
+    "./backend/src/"
   ],
   "workbench.editorAssociations": {
     "*.md": "vscode.markdown.preview.editor"
