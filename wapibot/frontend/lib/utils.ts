@@ -106,3 +106,40 @@ export function parseDate(dateString: string | Date): Date {
   if (dateString instanceof Date) return dateString;
   return new Date(dateString);
 }
+
+/**
+ * Intelligently selects the best available Ollama model
+ * Priority: savedPreference > preferredModel > firstAvailable
+ *
+ * @param availableModels - List of models available from ollama list
+ * @param savedPreference - User's previously saved model choice (if any)
+ * @param preferredModel - Default preferred model (gemma3:4b by default)
+ * @returns The best available model, or null if no models available
+ */
+export function selectBestAvailableModel(
+  availableModels: string[],
+  savedPreference?: string | null,
+  preferredModel: string = 'gemma3:4b'
+): string | null {
+  // Priority 1: User's saved preference (if still available)
+  if (savedPreference && availableModels.includes(savedPreference)) {
+    console.log('[Model Selection] Using saved preference:', savedPreference);
+    return savedPreference;
+  }
+
+  // Priority 2: Preferred model (gemma3:4b by default)
+  if (availableModels.includes(preferredModel)) {
+    console.log('[Model Selection] Using preferred model:', preferredModel);
+    return preferredModel;
+  }
+
+  // Priority 3: First available model
+  if (availableModels.length > 0) {
+    console.log('[Model Selection] Using first available model:', availableModels[0]);
+    return availableModels[0];
+  }
+
+  // No models available
+  console.warn('[Model Selection] No Ollama models available');
+  return null;
+}

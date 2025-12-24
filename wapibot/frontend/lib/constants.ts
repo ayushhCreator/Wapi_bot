@@ -6,7 +6,7 @@ export const APP_NAME = 'WapiBot';
 export const APP_VERSION = '0.1.0';
 
 // API Configuration
-export const OLLAMA_DEFAULT_MODEL = 'gemma3:4b';
+export const OLLAMA_PREFERRED_MODEL = 'gemma3:4b'; // Preference, not requirement
 export const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 export const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || 'http://localhost:8000';
 

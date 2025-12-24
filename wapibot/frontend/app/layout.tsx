@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import ToastContainer from '@/components/ui/ToastContainer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,6 +31,9 @@ export default function RootLayout({
         <div className="relative z-10 w-full h-screen">
           {children}
         </div>
+
+        {/* Toast Notifications */}
+        <ToastContainer />
       </body>
     </html>
   );

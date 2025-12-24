@@ -24,9 +24,22 @@ export function useOllamaChat(conversationId: string): UseOllamaChatResult {
   const sendMessage = async (content: string) => {
     if (!conversation || !content.trim()) return;
 
+    // Determine which model to use (prefer selectedOllamaModel, fallback to settings)
+    const modelToUse = selectedOllamaModel || backendSettings.ollama.model;
+
+    // Safety check: Ensure a model is available
+    if (!modelToUse) {
+      const errorMessage = 'No Ollama model available. Please select a model in settings or wait for models to load.';
+      setError(errorMessage);
+      console.error('[Chat Error]', errorMessage);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
+
+      console.log('[Chat] Sending message with model:', modelToUse);
 
       // Step 1: Add user message to store FIRST
       addMessage(conversationId, {
@@ -53,7 +66,7 @@ export function useOllamaChat(conversationId: string): UseOllamaChatResult {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: previousMessages,
-          model: selectedOllamaModel,
+          model: modelToUse,
           temperature: backendSettings.ollama.temperature,
           numPredict: backendSettings.ollama.maxTokens,
         }),

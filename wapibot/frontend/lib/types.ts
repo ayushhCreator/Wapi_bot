@@ -85,7 +85,7 @@ export interface ChatRequest {
 export interface BackendSettings {
   ollama: {
     baseUrl: string;
-    model: string;
+    model: string | null; // Allow null during initialization
     timeout: number;
     maxTokens: number;
     temperature: number;
@@ -105,7 +105,7 @@ export interface AppState {
   conversations: Conversation[];
   activeConversationId: string | null;
   backendMode: BackendMode;
-  selectedOllamaModel: string;
+  selectedOllamaModel: string | null; // Allow null during initialization
   availableOllamaModels: string[];
   backendSettings: BackendSettings;
 }

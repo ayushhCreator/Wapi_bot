@@ -6,7 +6,7 @@ import { useConversationStore } from '@/hooks/useConversations';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { X, RotateCcw, Save } from 'lucide-react';
+import { X, RotateCcw, Save, RefreshCw } from 'lucide-react';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -33,12 +33,21 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshSuccess, setRefreshSuccess] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleSaveSettings = () => {
+    // Validate that selected Ollama model is available
+    if (ollamaModel && !availableOllamaModels.includes(ollamaModel)) {
+      console.error(`Selected model "${ollamaModel}" is not available`);
+      alert(`Error: Model "${ollamaModel}" is not available. Please select a valid model or refresh the models list.`);
+      return;
+    }
+
     updateBackendSettings({
       ollama: {
         baseUrl: ollamaBaseUrl,
@@ -57,6 +66,34 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2000);
+  };
+
+  const handleRefreshModels = async () => {
+    try {
+      setIsRefreshing(true);
+      const response = await fetch('/api/ollama/models');
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const modelNames = (data.models || []).map((m: any) => m.name);
+
+      useConversationStore.setState({
+        availableOllamaModels: modelNames,
+      });
+
+      setRefreshSuccess(true);
+      setTimeout(() => setRefreshSuccess(false), 2000);
+
+      console.log('[Settings] Models refreshed:', modelNames.length);
+    } catch (error) {
+      console.error('[Settings] Failed to refresh models:', error);
+      alert('Failed to refresh models. Make sure Ollama is running.');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleResetSettings = () => {
@@ -93,10 +130,15 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
         {/* Content */}
         <div className="p-6 space-y-8">
-          {/* Success Message */}
+          {/* Success Messages */}
           {saveSuccess && (
             <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-3 text-green-300 text-sm">
               ✓ Settings saved successfully
+            </div>
+          )}
+          {refreshSuccess && (
+            <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-3 text-blue-300 text-sm">
+              ✓ Models refreshed successfully ({availableOllamaModels.length} model{availableOllamaModels.length !== 1 ? 's' : ''} found)
             </div>
           )}
 
@@ -117,11 +159,23 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
             {/* Model Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Select Model
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-300">
+                  Select Model
+                </label>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleRefreshModels}
+                  disabled={isRefreshing}
+                  className="flex items-center gap-1.5 text-xs"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh Models'}
+                </Button>
+              </div>
               <select
-                value={ollamaModel}
+                value={ollamaModel || ''}
                 onChange={(e) => setOllamaModel(e.target.value)}
                 className="w-full glass-input px-4 py-2 rounded-lg outline-none text-white bg-white/5"
               >
@@ -139,7 +193,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               </select>
               <p className="text-xs text-gray-400 mt-1">
                 {availableOllamaModels.length === 0
-                  ? 'Run "ollama list" to see available models'
+                  ? 'Run "ollama list" to see available models, or click "Refresh Models" above'
                   : `${availableOllamaModels.length} model(s) available`}
               </p>
             </div>

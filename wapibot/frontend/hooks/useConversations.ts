@@ -3,6 +3,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppState, Conversation, Message, BackendMode, BackendSettings } from '@/lib/types';
+import { selectBestAvailableModel } from '@/lib/utils';
+import { OLLAMA_PREFERRED_MODEL } from '@/lib/constants';
 
 interface ConversationStore extends AppState {
   // Conversation Actions
@@ -42,12 +44,12 @@ export const useConversationStore = create<ConversationStore>()(
       conversations: [],
       activeConversationId: null,
       backendMode: 'ollama',
-      selectedOllamaModel: 'gemma3:4b',
+      selectedOllamaModel: null, // Will be set dynamically on app init
       availableOllamaModels: [],
       backendSettings: {
         ollama: {
           baseUrl: 'http://localhost:11434/v1',
-          model: 'gemma3:4b',
+          model: OLLAMA_PREFERRED_MODEL, // Fallback model when selectedOllamaModel is null
           timeout: 30000,
           maxTokens: 512,
           temperature: 0.7,
@@ -191,11 +193,19 @@ export const useConversationStore = create<ConversationStore>()(
 
       // Reset backend settings to defaults
       resetBackendSettings: () => {
+        // Fetch current available models and select best one
+        const { availableOllamaModels } = get();
+        const bestModel = selectBestAvailableModel(
+          availableOllamaModels,
+          null,
+          OLLAMA_PREFERRED_MODEL
+        );
+
         set({
           backendSettings: {
             ollama: {
               baseUrl: 'http://localhost:11434/v1',
-              model: 'gemma3:4b',
+              model: bestModel || OLLAMA_PREFERRED_MODEL, // Fallback to preference if offline
               timeout: 30000,
               maxTokens: 512,
               temperature: 0.7,
