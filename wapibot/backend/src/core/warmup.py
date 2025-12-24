@@ -8,6 +8,7 @@ Prevents cold-start delays by:
 import asyncio
 import logging
 import os
+import random
 from pathlib import Path
 from typing import List, Dict, Optional
 from datetime import datetime
@@ -23,8 +24,8 @@ WARMUP_STATE_FILE = Path("/tmp/.wapibot_warmup_state")
 class WarmupService:
     """Intelligent LLM warmup to avoid cold-start delays."""
 
-    # Basic warmup prompts to prime KV cache
-    STARTUP_PROMPTS = [
+    # Basic warmup prompt templates (will be randomized to bypass cache)
+    STARTUP_PROMPT_TEMPLATES = [
         "My name is Test User",
         "I have a Honda City",
         "My number is 9876543210",
@@ -32,7 +33,21 @@ class WarmupService:
         "Thanks!"
     ]
 
-    IDLE_PROMPT = "My name is Warmup Check"
+    IDLE_PROMPT_TEMPLATE = "My name is Warmup Check"
+
+    @staticmethod
+    def _randomize_prompt(prompt: str) -> str:
+        """Add randomness to prompt to prevent DSPy cache hits.
+
+        Args:
+            prompt: Base prompt template
+
+        Returns:
+            Prompt with timestamp and random number to bypass cache
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        random_num = random.randint(1000, 9999)
+        return f"{prompt} [{timestamp}_{random_num}]"
 
     def __init__(self):
         self.last_activity = datetime.now()
@@ -98,9 +113,11 @@ class WarmupService:
             extractor = NameExtractor()
 
             # Run warmup questions sequentially
-            for i, prompt in enumerate(self.STARTUP_PROMPTS, 1):
+            for i, prompt_template in enumerate(self.STARTUP_PROMPT_TEMPLATES, 1):
                 try:
-                    logger.info(f"🔥 Warmup {i}/{len(self.STARTUP_PROMPTS)}: {prompt[:30]}...")
+                    # Randomize prompt to bypass DSPy cache
+                    prompt = self._randomize_prompt(prompt_template)
+                    logger.info(f"🔥 Warmup {i}/{len(self.STARTUP_PROMPT_TEMPLATES)}: {prompt_template[:30]}...")
 
                     # Run in executor (DSPy is sync)
                     loop = asyncio.get_event_loop()
@@ -111,8 +128,7 @@ class WarmupService:
                                 conversation_history=[],
                                 user_message=p,
                                 context="Warmup query"
-                            ),
-                            prompt
+                            )
                         ),
                         timeout=self.warmup_timeout  # From config (hardware dependent)
                     )
@@ -154,13 +170,16 @@ class WarmupService:
             from dspy_modules.extractors.name_extractor import NameExtractor
             extractor = NameExtractor()
 
+            # Randomize prompt to bypass DSPy cache
+            prompt = self._randomize_prompt(self.IDLE_PROMPT_TEMPLATE)
+
             loop = asyncio.get_event_loop()
             await asyncio.wait_for(
                 loop.run_in_executor(
                     None,
                     lambda: extractor(
                         conversation_history=[],
-                        user_message=self.IDLE_PROMPT,
+                        user_message=prompt,
                         context="Idle warmup"
                     )
                 ),

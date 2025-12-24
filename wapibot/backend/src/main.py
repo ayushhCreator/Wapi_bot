@@ -83,28 +83,6 @@ async def track_activity(request: Request, call_next):
 register_all_routes(app)
 
 
-@app.get("/")
-async def root():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": settings.app_name,
-        "version": settings.app_version,
-        "llm_provider": settings.primary_llm_provider,
-        "environment": settings.environment
-    }
-
-
-@app.get("/health")
-async def health():
-    """Detailed health check."""
-    return {
-        "status": "healthy",
-        "dspy_configured": dspy_configurator.primary_lm is not None,
-        "provider": settings.primary_llm_provider
-    }
-
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
