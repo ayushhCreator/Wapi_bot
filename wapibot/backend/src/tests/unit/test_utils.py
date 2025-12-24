@@ -51,12 +51,14 @@ class TestCreateDSpyHistory:
     def test_empty_history(self):
         """Test with empty conversation history."""
         result = create_dspy_history([])
-        assert result == ""
+        assert isinstance(result, type(create_dspy_history([])))
+        assert result.messages == []
 
     def test_none_history(self):
         """Test with None as history."""
         result = create_dspy_history(None)
-        assert result == ""
+        assert isinstance(result, type(create_dspy_history([])))
+        assert result.messages == []
 
     def test_single_turn_history(self):
         """Test with single conversation turn."""
@@ -65,7 +67,9 @@ class TestCreateDSpyHistory:
         ]
         result = create_dspy_history(history)
 
-        assert "User: Hello" in result
+        assert len(result.messages) == 1
+        assert result.messages[0]["role"] == "user"
+        assert result.messages[0]["content"] == "Hello"
 
     def test_multi_turn_history(self):
         """Test with multiple conversation turns."""
@@ -76,9 +80,10 @@ class TestCreateDSpyHistory:
         ]
         result = create_dspy_history(history)
 
-        assert "User: Hi there" in result
-        assert "Assistant: Hello! How can I help?" in result
-        assert "User: I need a car wash" in result
+        assert len(result.messages) == 3
+        assert result.messages[0]["content"] == "Hi there"
+        assert result.messages[1]["content"] == "Hello! How can I help?"
+        assert result.messages[2]["content"] == "I need a car wash"
 
     def test_history_order_preserved(self):
         """Test that conversation order is preserved."""
@@ -89,22 +94,19 @@ class TestCreateDSpyHistory:
         ]
         result = create_dspy_history(history)
 
-        # Check order by finding indices
-        first_idx = result.find("First")
-        second_idx = result.find("Second")
-        third_idx = result.find("Third")
+        assert len(result.messages) == 3
+        assert result.messages[0]["content"] == "First"
+        assert result.messages[1]["content"] == "Second"
+        assert result.messages[2]["content"] == "Third"
 
-        assert first_idx < second_idx < third_idx
-
-    def test_role_capitalization(self):
-        """Test that roles are properly capitalized."""
+    def test_role_preservation(self):
+        """Test that roles are preserved correctly."""
         history = [
             {"role": "user", "content": "Test"}
         ]
         result = create_dspy_history(history)
 
-        assert "User:" in result
-        assert "user:" not in result
+        assert result.messages[0]["role"] == "user"
 
     def test_multiline_content(self):
         """Test handling of multiline content."""
@@ -113,9 +115,7 @@ class TestCreateDSpyHistory:
         ]
         result = create_dspy_history(history)
 
-        assert "Line 1" in result
-        assert "Line 2" in result
-        assert "Line 3" in result
+        assert "Line 1\nLine 2\nLine 3" in result.messages[0]["content"]
 
     def test_special_characters_in_content(self):
         """Test handling of special characters."""
@@ -124,8 +124,8 @@ class TestCreateDSpyHistory:
         ]
         result = create_dspy_history(history)
 
-        assert "test@example.com" in result
-        assert "+919876543210" in result
+        assert "test@example.com" in result.messages[0]["content"]
+        assert "+919876543210" in result.messages[0]["content"]
 
     def test_empty_content_handling(self):
         """Test handling of empty content."""
@@ -135,6 +135,6 @@ class TestCreateDSpyHistory:
         ]
         result = create_dspy_history(history)
 
-        # Should still include the turn with empty content
-        assert "User:" in result
-        assert "Assistant: Response" in result
+        assert len(result.messages) == 2
+        assert result.messages[0]["content"] == ""
+        assert result.messages[1]["content"] == "Response"

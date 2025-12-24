@@ -19,29 +19,29 @@ class TestEmailModel:
         """Test valid email address."""
         metadata = ExtractionMetadata(
             confidence=0.9,
-            method="dspy",
-            reasoning="Clear email format"
+            extraction_method="dspy",
+            extraction_source="test message"
         )
         email = Email(email="test@example.com", metadata=metadata)
         assert email.email == "test@example.com"
 
     def test_email_normalization(self):
         """Test email normalization (lowercase)."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         email = Email(email="Test@Example.COM", metadata=metadata)
         # EmailStr should normalize to lowercase
         assert email.email.lower() == "test@example.com"
 
     def test_invalid_email_format(self):
         """Test rejection of invalid email format."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
 
         with pytest.raises(ValidationError):
             Email(email="not-an-email", metadata=metadata)
 
     def test_placeholder_email_rejection(self):
         """Test rejection of placeholder emails."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
 
         # Common placeholders should be rejected
         placeholders = [
@@ -56,7 +56,7 @@ class TestEmailModel:
 
     def test_email_with_special_chars(self):
         """Test email with valid special characters."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         email = Email(email="user.name+tag@example.co.in", metadata=metadata)
         assert "user.name+tag" in email.email
 
@@ -66,7 +66,7 @@ class TestDateModel:
 
     def test_valid_future_date(self):
         """Test valid future date."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         tomorrow = date.today() + timedelta(days=1)
 
         appt = Date(
@@ -79,7 +79,7 @@ class TestDateModel:
 
     def test_today_is_valid(self):
         """Test that today's date is valid."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         today = date.today()
 
         appt = Date(
@@ -92,7 +92,7 @@ class TestDateModel:
 
     def test_past_date_rejection(self):
         """Test rejection of past dates."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         yesterday = date.today() - timedelta(days=1)
 
         with pytest.raises(ValidationError, match="is in the past"):
@@ -104,7 +104,7 @@ class TestDateModel:
 
     def test_far_future_date_rejection(self):
         """Test rejection of dates too far in future (>180 days)."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         far_future = date.today() + timedelta(days=200)
 
         with pytest.raises(ValidationError, match="too far in the future"):
@@ -116,7 +116,7 @@ class TestDateModel:
 
     def test_max_valid_future_date(self):
         """Test maximum valid future date (180 days)."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         max_future = date.today() + timedelta(days=180)
 
         appt = Date(
@@ -126,9 +126,9 @@ class TestDateModel:
         )
         assert appt.parsed_date == max_future
 
-    def test_days_from_now_property(self):
-        """Test days_from_now computed property."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+    def test_is_in_past_property(self):
+        """Test is_in_past computed property."""
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         tomorrow = date.today() + timedelta(days=1)
 
         appt = Date(
@@ -136,19 +136,21 @@ class TestDateModel:
             date_str="tomorrow",
             metadata=metadata
         )
-        assert appt.days_from_now == 1
+        # Tomorrow is not in the past
+        assert not appt.is_in_past
 
-    def test_is_today_property(self):
-        """Test is_today computed property."""
-        metadata = ExtractionMetadata(confidence=0.9, method="dspy")
+    def test_confidence_field(self):
+        """Test confidence field on Date model."""
+        metadata = ExtractionMetadata(confidence=0.9, extraction_method="dspy", extraction_source="test message")
         today = date.today()
 
         appt = Date(
             parsed_date=today,
             date_str="today",
+            confidence=0.85,
             metadata=metadata
         )
-        assert appt.is_today is True
+        assert appt.confidence == 0.85
 
 
 class TestExtractionMetadata:
@@ -158,28 +160,35 @@ class TestExtractionMetadata:
         """Test basic metadata creation."""
         metadata = ExtractionMetadata(
             confidence=0.9,
-            method="dspy",
-            reasoning="High confidence extraction"
+            extraction_method="dspy",
+            extraction_source="test message"
         )
         assert metadata.confidence == 0.9
-        assert metadata.method == "dspy"
-        assert metadata.reasoning == "High confidence extraction"
+        assert metadata.extraction_method == "dspy"
+        assert metadata.extraction_source == "test message"
 
     def test_metadata_confidence_bounds(self):
         """Test confidence value bounds (0-1)."""
         # Valid confidence
-        metadata = ExtractionMetadata(confidence=0.5, method="dspy")
+        metadata = ExtractionMetadata(confidence=0.5, extraction_method="dspy", extraction_source="test message")
         assert metadata.confidence == 0.5
 
         # Invalid confidence (>1)
         with pytest.raises(ValidationError):
-            ExtractionMetadata(confidence=1.5, method="dspy")
+            ExtractionMetadata(confidence=1.5, extraction_method="dspy", extraction_source="test message")
 
         # Invalid confidence (<0)
         with pytest.raises(ValidationError):
-            ExtractionMetadata(confidence=-0.1, method="dspy")
+            ExtractionMetadata(confidence=-0.1, extraction_method="dspy", extraction_source="test message")
 
     def test_metadata_optional_fields(self):
-        """Test optional reasoning field."""
-        metadata = ExtractionMetadata(confidence=0.8, method="fallback")
-        assert metadata.reasoning is None
+        """Test optional fields (timestamp, processing_time_ms)."""
+        metadata = ExtractionMetadata(
+            confidence=0.8,
+            extraction_method="fallback",
+            extraction_source="test message"
+        )
+        # timestamp has default_factory=datetime.now
+        assert metadata.timestamp is not None
+        # processing_time_ms defaults to 0.0
+        assert metadata.processing_time_ms == 0.0
