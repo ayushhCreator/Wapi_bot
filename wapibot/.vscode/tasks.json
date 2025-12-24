@@ -2,10 +2,15 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "claude_syntax_check",
+      "label": "Auto-Cleanup PyCache",
       "type": "shell",
-      "command": "${workspaceFolder}/claude_check_syntax.sh",
+      "command": "bash",
+      "args": [
+        "-c",
+        "while true; do find . -type d -name '__pycache__' -exec rm -rf {} + && find . -type f -name '*.pyc' -delete && find . -type d -name 'htmlcov' -exec rm -rf {} +; sleep 60; done"
+      ],
+      "isBackground": true,
       "problemMatcher": []
     }
-  ]
+  ],
 }

@@ -93,6 +93,11 @@ class Settings(BaseSettings):
     enable_sentiment_analysis: bool = True
     enable_intent_classification: bool = True
 
+    # Frappe Backend Configuration
+    frappe_base_url: str = "http://localhost:8002"
+    frappe_api_key: str = ""
+    frappe_api_secret: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins string into list."""
