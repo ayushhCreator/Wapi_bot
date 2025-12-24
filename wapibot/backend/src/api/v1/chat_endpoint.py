@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from schemas.chat import ChatRequest, ChatResponse
 from workflows.shared.state import BookingState
+from workflows.simple_chat import simple_chat_workflow
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["Chat"])
@@ -46,19 +47,41 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
             f"{request.user_message[:50]}..."
         )
 
-        # TODO: Create BookingState and run workflow
-        # For now, return mock response
+        # Create initial state
+        state: BookingState = {
+            "conversation_id": request.conversation_id,
+            "user_message": request.user_message,
+            "history": [],
+            "customer": None,
+            "vehicle": None,
+            "appointment": None,
+            "sentiment": None,
+            "intent": None,
+            "intent_confidence": 0.0,
+            "current_step": "extract_name",
+            "completeness": 0.0,
+            "errors": [],
+            "response": "",
+            "should_confirm": False,
+            "should_proceed": True,
+            "service_request_id": None,
+            "service_request": None
+        }
+
+        # Run workflow
+        result = await simple_chat_workflow.ainvoke(state)
+
+        # Build response
         response = ChatResponse(
-            message=f"Received your message: '{request.user_message}'. "
-                    "Workflow processing coming soon!",
-            should_confirm=False,
-            completeness=0.0,
+            message=result.get("response", "Processing complete!"),
+            should_confirm=result.get("should_confirm", False),
+            completeness=result.get("completeness", 0.0),
             extracted_data={
-                "customer": None,
-                "vehicle": None,
-                "appointment": None
+                "customer": result.get("customer"),
+                "vehicle": result.get("vehicle"),
+                "appointment": result.get("appointment")
             },
-            service_request_id=None
+            service_request_id=result.get("service_request_id")
         )
 
         logger.info(f"Response: {response.message[:50]}...")

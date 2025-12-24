@@ -17,25 +17,29 @@ logger = logging.getLogger(__name__)
 async def extract_name_dspy(state: BookingState) -> Dict[str, Any]:
     """Extract name using DSPy module (LLM-based)."""
     try:
-        # Import DSPy module (to be implemented)
-        # from dspy_modules.extractors import NameExtractor
-        # extractor = NameExtractor()
+        from dspy_modules.extractors.name_extractor import NameExtractor
+        extractor = NameExtractor()
 
-        # Simulate DSPy extraction (replace with actual implementation)
+        # Run DSPy extraction in thread pool (DSPy is sync)
+        loop = asyncio.get_event_loop()
         result = await asyncio.wait_for(
-            asyncio.sleep(0.1),  # Placeholder: replace with actual DSPy call
-            timeout=5.0
+            loop.run_in_executor(
+                None,
+                lambda: extractor.forward(
+                    conversation_history=state.get("history", []),
+                    user_message=state["user_message"],
+                    context="Collecting customer name for car wash booking"
+                )
+            ),
+            timeout=30.0  # Match Ollama timeout from config
         )
-
-        # Parse result
-        # result = extractor(state["history"], state["user_message"])
 
         # Return extracted data
         return {
-            "first_name": "John",  # Placeholder
-            "last_name": "Doe",    # Placeholder
+            "first_name": result["first_name"],
+            "last_name": result["last_name"],
             "extraction_method": "dspy",
-            "confidence": 0.95
+            "confidence": result["confidence"]
         }
 
     except (TimeoutError, ConnectionError) as e:
