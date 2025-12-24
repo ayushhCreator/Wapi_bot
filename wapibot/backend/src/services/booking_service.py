@@ -6,7 +6,7 @@ Handles creating bookings via Yawlit API.
 import httpx
 from typing import Dict, Any
 
-from models.booking_state import BookingState
+from workflows.shared.state import BookingState
 from core.config import settings
 
 

@@ -6,7 +6,7 @@ Analyzes user message sentiment across 5 dimensions.
 from typing import Dict, Any, List
 
 from dspy_modules.analyzers.sentiment_analyzer import SentimentAnalyzer
-from models.booking_state import BookingState
+from workflows.shared.state import BookingState
 
 
 class AnalyzeSentimentNode:

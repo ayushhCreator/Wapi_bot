@@ -20,7 +20,7 @@ class SentimentAnalyzer(dspy.Module):
 
     def __call__(
         self,
-        conversation_history: List[Dict[str, str]] = None,
+        conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
         context: str = "Analyzing customer sentiment in booking flow"
     ) -> Dict[str, Any]:

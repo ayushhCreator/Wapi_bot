@@ -6,7 +6,7 @@ Detects typos in extracted values and suggests corrections.
 from typing import Dict, Any
 
 from dspy_modules.analyzers.typo_detector import TypoDetector
-from models.booking_state import BookingState
+from workflows.shared.state import BookingState
 
 
 class DetectTyposNode:

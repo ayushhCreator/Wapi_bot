@@ -5,7 +5,7 @@ Calculates scratchpad completeness and determines if ready for confirmation.
 
 from typing import Dict, Any
 
-from models.booking_state import BookingState
+from workflows.shared.state import BookingState
 from services.completeness_service import completeness_service
 
 

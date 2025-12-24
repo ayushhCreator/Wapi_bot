@@ -186,7 +186,7 @@ class WarmupService:
         """Get seconds since last activity."""
         return (datetime.now() - self.last_activity).total_seconds()
 
-    async def start_idle_monitor(self, idle_threshold: int = None) -> None:
+    async def start_idle_monitor(self, idle_threshold: int | None = None) -> None:
         """
         Background task to monitor idle time and trigger warmup.
 

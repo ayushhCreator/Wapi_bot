@@ -6,7 +6,7 @@ Orchestrates typo detection across extracted fields.
 from typing import Dict, Any, List
 
 from nodes.analysis.detect_typos import detect_typos
-from models.booking_state import BookingState
+from workflows.shared.state import BookingState
 
 
 class TypoDetectionService:

@@ -6,7 +6,7 @@ Classifies user intent to route conversation flow.
 from typing import Dict, Any, List
 
 from dspy_modules.analyzers.intent_classifier import IntentClassifier
-from models.booking_state import BookingState
+from workflows.shared.state import BookingState
 
 
 class ClassifyIntentNode:

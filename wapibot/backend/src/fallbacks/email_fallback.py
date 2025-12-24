@@ -50,7 +50,9 @@ class RegexEmailExtractor:
         # Validate using Pydantic EmailStr
         try:
             # EmailStr validation ensures RFC 5322 compliance
-            validated_email = EmailStr._validate(email_candidate)
+            from pydantic import TypeAdapter
+            email_adapter = TypeAdapter(EmailStr)
+            validated_email = email_adapter.validate_python(email_candidate)
             return {"email": str(validated_email)}
         except (ValidationError, ValueError):
             # Invalid email format

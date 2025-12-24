@@ -4,7 +4,7 @@ Calculates scratchpad completeness score based on required fields.
 """
 
 from typing import Dict, Any
-from models.booking_state import BookingState
+from workflows.shared.state import BookingState
 
 
 class CompletenessService:
