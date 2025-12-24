@@ -16,27 +16,41 @@
 **Solution:** Every LLM call has 3-tier fallback
 
 ```python
-async def extract_name_node(state: BookingState):
-    """Extract customer name with 3-tier resilience."""
+# ATOMIC NODE: Can extract ANY data with ANY DSPy module
+async def extract_node(
+    state: BookingState,
+    extractor: dspy.Module,     # ← Configurable: NameExtractor, PhoneExtractor, etc.
+    field_path: str,             # ← Configurable: "customer.first_name", "vehicle.brand"
+    fallback_fn: Callable = None # ← Configurable: regex, rule-based, etc.
+):
+    """Atomic extraction node with 3-tier resilience."""
     try:
         # Tier 1: DSPy (best quality)
-        name_extractor = NameExtractor()  # Your existing DSPy module
         result = await asyncio.wait_for(
-            name_extractor(state["history"], state["message"]),
-            timeout=5.0  # 5-second timeout
+            extractor(state["history"], state["user_message"]),
+            timeout=5.0
         )
-        return {"extracted_data": {"first_name": result.first_name}}
+        set_nested_field(state, field_path, result.value)
+        return state
 
     except (TimeoutError, ConnectionError) as e:
-        # Tier 2: Pydantic validation + regex (fast, reliable)
-        logger.warning(f"DSPy failed, using regex fallback: {e}")
-        result = regex_name_extractor(state["message"])
-        return {"extracted_data": {"first_name": result}}
+        # Tier 2: Fallback (fast, reliable)
+        if fallback_fn:
+            logger.warning(f"DSPy failed, using fallback: {e}")
+            result = fallback_fn(state["user_message"])
+            set_nested_field(state, field_path, result)
+            return state
 
     except Exception as e:
         # Tier 3: Graceful degradation (ask user)
         logger.error(f"All extraction failed: {e}")
-        return {"response": "I didn't catch your name. Could you tell me again?"}
+        state["response"] = f"I didn't catch your {field_path}. Could you repeat?"
+        return state
+
+# Usage (ONE node, multiple purposes):
+# extract_node(state, NameExtractor(), "customer.first_name", regex_name_fallback)
+# extract_node(state, PhoneExtractor(), "customer.phone", regex_phone_fallback)
+# extract_node(state, VehicleExtractor(), "vehicle.brand", None)
 ```
 
 **Benefits:**
@@ -94,25 +108,39 @@ max-function-lines=50  # Hard limit per function
 Exports to:
 
 ```python
+# Atomic nodes configured for specific purposes
 workflow = StateGraph(BookingState)
-workflow.add_node("extract_name", extract_name_node)
-workflow.add_node("extract_vehicle", extract_vehicle_node)
+
+# Configure extract node for name
+workflow.add_node("extract_name",
+    lambda s: extract_node(s, NameExtractor(), "customer.first_name", regex_name_fallback))
+
+# Configure extract node for vehicle (SAME node, different config!)
+workflow.add_node("extract_vehicle",
+    lambda s: extract_node(s, VehicleExtractor(), "vehicle.brand", None))
+
+# Conditional routing
 workflow.add_conditional_edges("extract_name",
-    lambda s: "extract_vehicle" if s["name"] else "ask_name")
+    lambda s: "extract_vehicle" if s.get("customer", {}).get("first_name") else "ask_name")
 ```
 
 ---
 
 ### 4. **Async-First API**
 
-**All nodes are async:**
+**All atomic nodes are async and reusable:**
 
 ```python
-async def extract_name_node(state: BookingState) -> BookingState:
-    """Async extraction with concurrent fallbacks."""
+# ATOMIC NODE: Extract with race condition (fastest wins)
+async def extract_with_race_node(
+    state: BookingState,
+    extractors: List[Tuple[dspy.Module, Callable]],  # [(DSPy, fallback), ...]
+    field_path: str
+) -> BookingState:
+    """Atomic extraction with concurrent fallbacks - fastest result wins."""
     tasks = [
-        asyncio.create_task(dspy_extract_name(state)),  # DSPy (slow)
-        asyncio.create_task(regex_extract_name(state))  # Regex (fast)
+        asyncio.create_task(extractor(state["history"], state["user_message"]))
+        for extractor, _ in extractors
     ]
 
     # Return first successful result
@@ -123,12 +151,18 @@ async def extract_name_node(state: BookingState) -> BookingState:
                 # Cancel other tasks
                 for t in tasks:
                     t.cancel()
-                return result
+                set_nested_field(state, field_path, result.value)
+                return state
         except Exception:
             continue
 
-    # All failed
-    return {"error": "extraction_failed"}
+    # All failed - use first fallback
+    if extractors[0][1]:
+        result = extractors[0][1](state["user_message"])
+        set_nested_field(state, field_path, result)
+    return state
+
+# Usage: Race DSPy vs Regex, use whichever returns first!
 ```
 
 **Benefits:**
@@ -199,30 +233,25 @@ wapibot/
 │       ├── state.py               (50 lines)  - BookingState TypedDict
 │       └── routes.py              (60 lines)  - Conditional routing functions
 │
-├── nodes/                          # Workflow nodes (50-100 lines each)
-│   ├── __init__.py
-│   ├── extraction/                 # Data extraction nodes
-│   │   ├── extract_name.py        (70 lines)  - Name extraction + fallback
-│   │   ├── extract_vehicle.py     (80 lines)  - Vehicle extraction + fallback
-│   │   ├── extract_date.py        (60 lines)  - Date extraction + fallback
-│   │   └── extract_phone.py       (65 lines)  - Phone extraction + fallback
+├── nodes/
+│   ├── atomic/                     # ~10 ATOMIC nodes (reusable, configurable)
+│   │   ├── extract.py             (80 lines)  - Extract using ANY DSPy module
+│   │   ├── validate.py            (60 lines)  - Validate using ANY Pydantic model
+│   │   ├── scan.py                (100 lines) - Scan ANY source (history/DB/API)
+│   │   ├── confidence_gate.py     (50 lines)  - Gate using ANY comparison fn
+│   │   ├── merge.py               (70 lines)  - Merge using ANY strategy
+│   │   ├── transform.py           (60 lines)  - Transform using ANY function
+│   │   ├── condition.py           (40 lines)  - Route using ANY predicate
+│   │   ├── response.py            (80 lines)  - Generate using ANY template/LLM
+│   │   ├── log.py                 (50 lines)  - Log using ANY format
+│   │   └── checkpoint.py          (60 lines)  - Save state at ANY point
 │   │
-│   ├── analysis/                   # AI analysis nodes
-│   │   ├── analyze_sentiment.py   (75 lines)  - Sentiment + fallback
-│   │   └── classify_intent.py     (70 lines)  - Intent + fallback
-│   │
-│   ├── responses/                  # Response generation nodes
-│   │   ├── generate_response.py   (90 lines)  - LLM response + template
-│   │   └── compose_final.py       (85 lines)  - Final response assembly
-│   │
-│   ├── booking/                    # Booking-specific nodes
-│   │   ├── confirm_booking.py     (90 lines)  - Show confirmation
-│   │   ├── create_service_request.py (100 lines) - ServiceRequest creation
-│   │   └── handle_edit.py         (70 lines)  - Handle edit action
-│   │
-│   └── validation/                 # Validation nodes
-│       ├── validate_completeness.py (60 lines) - Check required fields
-│       └── detect_typos.py        (65 lines)  - Typo detection
+│   └── groups/                     # User-created node groups (compositions)
+│       ├── name_extraction.py     (90 lines)  - Composes: extract + validate + scan
+│       ├── phone_extraction.py    (85 lines)  - Composes: extract + validate + format
+│       ├── vehicle_extraction.py  (100 lines) - Composes: extract + validate + enrich
+│       ├── booking_confirmation.py (95 lines) - Composes: validate + response
+│       └── service_request.py     (110 lines) - Composes: merge + transform + save
 │
 ├── models/                         # Pydantic models (30-50 lines each)
 │   ├── __init__.py
@@ -276,10 +305,99 @@ wapibot/
 
 **Metrics:**
 
-- Total files: ~60 files (vs current 50)
+- Total **atomic nodes**: ~10 files (~650 lines total)
+- Total **node groups**: ~5-10 files (user-created compositions)
+- Total **workflows**: ~3-5 files (booking types)
 - Avg file size: **60 lines** (vs current 217 lines)
 - Max file size: **120 lines** (vs current 1,043 lines)
-- Largest reduction: `models.py` 1,043 → 7 files × 40 lines = **280 lines**
+- **Node count**: 10 atomic nodes replace 100+ domain-specific nodes!
+
+---
+
+## 🧩 ATOMIC NODE PHILOSOPHY (Blender-Inspired)
+
+### The Problem with Domain-Specific Nodes
+
+**V1 Approach** (❌ Node Explosion):
+```
+extract_name.py
+extract_phone.py
+extract_vehicle.py
+extract_date.py
+extract_service.py
+extract_slot.py
+extract_address.py
+... 50+ extraction nodes ...
+
+validate_name.py
+validate_phone.py
+validate_vehicle.py
+... 50+ validation nodes ...
+
+Total: 100+ specialized nodes, massive duplication
+```
+
+### The Atomic Node Solution
+
+**V2 Approach** (✅ Configuration over Specialization):
+```python
+# ONE atomic extract node
+nodes/atomic/extract.py  # Works with ANY DSPy module, ANY field
+
+# Configure it for different purposes:
+extract_node(state, NameExtractor(), "customer.first_name")      # Name
+extract_node(state, PhoneExtractor(), "customer.phone")          # Phone
+extract_node(state, VehicleExtractor(), "vehicle.brand")         # Vehicle
+extract_node(state, DateExtractor(), "appointment.date")         # Date
+
+# Result: 1 node replaces 50+ nodes!
+```
+
+### The 10 Atomic Nodes
+
+| Atomic Node | Purpose | Configurable With |
+|-------------|---------|-------------------|
+| `extract.py` | Extract data | ANY DSPy module + field path |
+| `validate.py` | Validate data | ANY Pydantic model + field path |
+| `scan.py` | Scan source | ANY source (history/DB/API) + extractor |
+| `confidence_gate.py` | Gate updates | ANY comparison function |
+| `merge.py` | Merge data | ANY merge strategy |
+| `transform.py` | Transform data | ANY transform function |
+| `condition.py` | Conditional routing | ANY predicate function |
+| `response.py` | Generate response | ANY template/LLM |
+| `log.py` | Logging | ANY logger/format |
+| `checkpoint.py` | Save state | ANY checkpoint trigger |
+
+### Node Groups (User Compositions)
+
+Like Blender's node groups, users compose atomic nodes into reusable workflows:
+
+```python
+# nodes/groups/name_extraction.py
+def create_name_extraction_group():
+    """Compose atomic nodes into name extraction workflow."""
+    graph = StateGraph(BookingState)
+
+    # Atomic node 1: Extract
+    graph.add_node("extract",
+        lambda s: extract_node(s, NameExtractor(), "customer.first_name"))
+
+    # Atomic node 2: Validate
+    graph.add_node("validate",
+        lambda s: validate_node(s, CustomerData, "customer"))
+
+    # Atomic node 3: Scan if missing
+    graph.add_node("scan",
+        lambda s: scan_node(s, HistorySource(), NameExtractor(), "customer.first_name"))
+
+    # Routing
+    graph.add_conditional_edges("extract",
+        lambda s: "validate" if s.get("customer", {}).get("first_name") else "scan")
+
+    return graph.compile()
+
+# This group can be reused in ANY workflow that needs name extraction!
+```
 
 ---
 
@@ -288,36 +406,39 @@ wapibot/
 **File:** `workflows/booking_onetime.py` (100 lines)
 
 ```python
-"""One-time car wash booking workflow with LLM resilience."""
+"""One-time car wash booking workflow using atomic nodes + node groups."""
 
 from langgraph.graph import StateGraph, END
 from workflows.shared.state import BookingState
-from workflows.shared.routes import route_after_name, route_after_vehicle, route_after_date
-from nodes.extraction import extract_name, extract_vehicle, extract_date, extract_phone
-from nodes.analysis import analyze_sentiment, classify_intent
-from nodes.responses import generate_response, compose_final
-from nodes.booking import confirm_booking, create_service_request
-from nodes.validation import validate_completeness
+from workflows.shared.routes import has_field, all_fields_present
+from nodes.atomic import extract, validate, scan, response, transform
+from nodes.groups import name_extraction, vehicle_extraction, phone_extraction
+from dspy_modules.extractors import NameExtractor, VehicleExtractor, PhoneExtractor
+from models import CustomerData, VehicleData
 
 
 def create_onetime_booking_workflow() -> StateGraph:
-    """Create one-time booking workflow graph."""
+    """Create one-time booking workflow using composable atomic nodes."""
 
-    # Initialize graph
     workflow = StateGraph(BookingState)
 
-    # Add nodes
-    workflow.add_node("analyze_sentiment", analyze_sentiment.node)
-    workflow.add_node("classify_intent", classify_intent.node)
-    workflow.add_node("extract_name", extract_name.node)
-    workflow.add_node("extract_vehicle", extract_vehicle.node)
-    workflow.add_node("extract_date", extract_date.node)
-    workflow.add_node("extract_phone", extract_phone.node)
-    workflow.add_node("validate_completeness", validate_completeness.node)
-    workflow.add_node("confirm_booking", confirm_booking.node)
-    workflow.add_node("create_service_request", create_service_request.node)
-    workflow.add_node("generate_response", generate_response.node)
-    workflow.add_node("compose_final", compose_final.node)
+    # Option 1: Use node groups (pre-composed)
+    workflow.add_node("extract_customer_data", name_extraction.create_group())
+    workflow.add_node("extract_vehicle_data", vehicle_extraction.create_group())
+    workflow.add_node("extract_phone_data", phone_extraction.create_group())
+
+    # Option 2: Configure atomic nodes directly
+    workflow.add_node("extract_name",
+        lambda s: extract.node(s, NameExtractor(), "customer.first_name"))
+
+    workflow.add_node("validate_customer",
+        lambda s: validate.node(s, CustomerData, "customer"))
+
+    workflow.add_node("scan_history_for_missing",
+        lambda s: scan.node(s, HistorySource(), NameExtractor(), "customer.first_name"))
+
+    workflow.add_node("generate_confirmation",
+        lambda s: response.node(s, "booking_confirmation", ConfirmationLLM()))
 
     # Define edges (flow control)
     workflow.set_entry_point("analyze_sentiment")

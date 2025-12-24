@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from schemas.chat import ChatRequest, ChatResponse
 from workflows.shared.state import BookingState
-from workflows.simple_chat import simple_chat_workflow
+from workflows.v2_chat import v2_chat_workflow
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["Chat"])
@@ -51,7 +51,7 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
         state: BookingState = {
             "conversation_id": request.conversation_id,
             "user_message": request.user_message,
-            "history": [],
+            "history": request.history or [],
             "customer": None,
             "vehicle": None,
             "appointment": None,
@@ -68,8 +68,8 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
             "service_request": None
         }
 
-        # Run workflow
-        result = await simple_chat_workflow.ainvoke(state)
+        # Run V2 workflow (atomic nodes architecture)
+        result = await v2_chat_workflow.ainvoke(state)
 
         # Build response
         response = ChatResponse(

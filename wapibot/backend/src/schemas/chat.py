@@ -1,7 +1,7 @@
 """Chat API request/response schemas with examples."""
 
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 
 class ChatRequest(BaseModel):
@@ -19,12 +19,21 @@ class ChatRequest(BaseModel):
         description="User's message text",
         examples=["I want to book a car wash for my Honda City tomorrow"]
     )
+    history: Optional[List[Dict[str, str]]] = Field(
+        default=[],
+        description="Conversation history for retroactive scanning",
+        examples=[[
+            {"role": "user", "content": "Hi, I am Hrijul"},
+            {"role": "assistant", "content": "Hello! How can I help?"}
+        ]]
+    )
 
     class Config:
         json_schema_extra = {
             "example": {
                 "conversation_id": "919876543210",
-                "user_message": "I want to book a car wash for my Honda City tomorrow"
+                "user_message": "I want to book a car wash for my Honda City tomorrow",
+                "history": []
             }
         }
 
