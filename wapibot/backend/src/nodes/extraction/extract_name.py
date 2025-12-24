@@ -7,31 +7,43 @@ Tier 3: Ask user (graceful degradation)
 
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from workflows.shared.state import BookingState
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 # Tier 1: DSPy Extraction (best quality, LLM-based)
-async def extract_name_dspy(state: BookingState) -> Dict[str, Any]:
-    """Extract name using DSPy module (LLM-based)."""
+async def extract_name_dspy(
+    state: BookingState,
+    timeout: Optional[float] = None
+) -> Dict[str, Any]:
+    """Extract name using DSPy module (LLM-based).
+
+    Args:
+        state: Current booking state
+        timeout: Extraction timeout in seconds (default: from config)
+    """
     try:
         from dspy_modules.extractors.name_extractor import NameExtractor
         extractor = NameExtractor()
+
+        # Use parameter or fall back to config (no magic numbers!)
+        extraction_timeout = timeout if timeout is not None else settings.extraction_timeout_normal
 
         # Run DSPy extraction in thread pool (DSPy is sync)
         loop = asyncio.get_event_loop()
         result = await asyncio.wait_for(
             loop.run_in_executor(
                 None,
-                lambda: extractor.forward(
+                lambda: extractor(
                     conversation_history=state.get("history", []),
                     user_message=state["user_message"],
                     context="Collecting customer name for car wash booking"
                 )
             ),
-            timeout=30.0  # Match Ollama timeout from config
+            timeout=extraction_timeout  # From config or parameter (hardware dependent)
         )
 
         # Return extracted data
@@ -63,25 +75,32 @@ async def extract_name_regex(state: BookingState) -> Dict[str, Any]:
         return {
             **result,
             "extraction_method": "regex",
-            "confidence": 0.70
+            "confidence": settings.confidence_medium  # From config, not hardcoded
         }
 
     raise ValueError("Regex extraction failed")
 
 
 # Main Node Function
-async def node(state: BookingState) -> BookingState:
+async def node(
+    state: BookingState,
+    timeout: Optional[float] = None
+) -> BookingState:
     """
     Extract customer name with 3-tier resilience.
 
     Tier 1: Try DSPy (LLM-based, best quality)
     Tier 2: Try Regex (fast, reliable)
     Tier 3: Ask user (graceful degradation)
+
+    Args:
+        state: Current booking state
+        timeout: Extraction timeout (default: from config)
     """
 
     # Tier 1: Try DSPy extraction
     try:
-        name_data = await extract_name_dspy(state)
+        name_data = await extract_name_dspy(state, timeout=timeout)
 
         # Update state with extracted name
         if not state.get("customer"):

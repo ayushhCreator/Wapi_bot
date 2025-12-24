@@ -3,13 +3,15 @@
 Modern async lifespan management for DSPy configuration.
 """
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import settings
 from core.dspy_config import dspy_configurator
+from core.warmup import warmup_service
 from api.router_registry import register_all_routes
 
 # Setup logging
@@ -37,6 +39,12 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ DSPy configuration failed: {e}")
         raise
 
+    # Start LLM warmup (non-blocking)
+    asyncio.create_task(warmup_service.startup_warmup())
+
+    # Start idle monitor in background (uses config for all parameters)
+    asyncio.create_task(warmup_service.start_idle_monitor())
+
     yield
 
     # Shutdown
@@ -59,6 +67,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Activity tracking middleware
+@app.middleware("http")
+async def track_activity(request: Request, call_next):
+    """Track API activity for idle warmup monitoring."""
+    # Update activity timestamp on each request
+    warmup_service.update_activity()
+    response = await call_next(request)
+    return response
+
 
 # Register all API routers (centralized in router_registry.py)
 register_all_routes(app)

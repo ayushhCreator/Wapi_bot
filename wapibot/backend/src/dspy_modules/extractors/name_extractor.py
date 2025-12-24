@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 
 from dspy_signatures.extraction.name_signature import NameExtractionSignature
 from utils.history_utils import create_dspy_history
+from core.config import settings
 
 
 class NameExtractor(dspy.Module):
@@ -14,7 +15,7 @@ class NameExtractor(dspy.Module):
         super().__init__()
         self.predictor = dspy.ChainOfThought(NameExtractionSignature)
 
-    def forward(
+    def __call__(
         self,
         conversation_history: List[Dict[str, str]] = None,
         user_message: str = "",
@@ -22,6 +23,8 @@ class NameExtractor(dspy.Module):
     ) -> Dict[str, Any]:
         """
         Extract name from user message.
+
+        Note: Using __call__ instead of forward() per DSPy best practices.
 
         Args:
             conversation_history: List of {"role": "user/assistant", "content": "..."}
@@ -44,10 +47,14 @@ class NameExtractor(dspy.Module):
             context=context
         )
 
-        # Convert confidence to float
-        confidence_map = {"low": 0.5, "medium": 0.7, "high": 0.9}
+        # Convert confidence string to float using config values (no magic numbers!)
+        confidence_map = {
+            "low": settings.confidence_low,
+            "medium": settings.confidence_medium,
+            "high": settings.confidence_high
+        }
         confidence_str = getattr(result, "confidence", "medium").lower()
-        confidence_float = confidence_map.get(confidence_str, 0.7)
+        confidence_float = confidence_map.get(confidence_str, settings.confidence_medium)
 
         return {
             "first_name": getattr(result, "first_name", "").strip(),
