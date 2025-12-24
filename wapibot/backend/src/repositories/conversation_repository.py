@@ -1,22 +1,24 @@
-"""Repository for conversation state persistence.
+"""Repository for conversation state persistence using SQLModel.
 
 Handles CRUD operations for conversation states and history.
-Uses async SQLite for storage.
+Uses SQLModel ORM for type-safe database operations.
 """
 
 import json
 import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from sqlmodel import select, func
 
 from workflows.shared.state import BookingState
 from db.connection import db_connection
+from db.db_models import ConversationStateTable, ConversationHistoryTable
 
 logger = logging.getLogger(__name__)
 
 
 class ConversationRepository:
-    """Repository for conversation state and history."""
+    """Repository for conversation state and history using SQLModel ORM."""
 
     async def save_state(
         self,
@@ -25,144 +27,150 @@ class ConversationRepository:
         state: str,
         completeness: float
     ) -> int:
-        """Save versioned conversation state.
+        """Save versioned conversation state using SQLModel.
 
         Args:
             conversation_id: Unique conversation ID
             booking_state: Current BookingState
             state: State name (collecting, confirmation, completed)
-            completeness: Completeness percentage (0-100)
+            completeness: Completeness score (0-1)
 
         Returns:
             Version number
 
         Example:
-            >>> await repo.save_state("919876543210", state, "collecting", 60.0)
+            >>> await repo.save_state("conv_123", state, "collecting", 0.6)
             1
         """
-        conn = await db_connection.connect()
+        async with await db_connection.get_session() as session:
+            # Get current max version using SQLModel query
+            result = await session.execute(
+                select(func.max(ConversationStateTable.version))
+                .where(ConversationStateTable.conversation_id == conversation_id)
+            )
+            max_version = result.scalar()
+            version = (max_version or 0) + 1
 
-        # Get current version
-        cursor = await conn.execute(
-            "SELECT MAX(version) FROM conversation_states WHERE conversation_id = ?",
-            (conversation_id,)
-        )
-        row = await cursor.fetchone()
-        version = (row[0] or 0) + 1
+            # Create new state record
+            new_state = ConversationStateTable(
+                conversation_id=conversation_id,
+                version=version,
+                state=state,
+                booking_state_json=json.dumps(booking_state),
+                completeness=completeness
+            )
 
-        # Save new version
-        await conn.execute(
-            """
-            INSERT INTO conversation_states
-            (conversation_id, version, state, booking_state_json, completeness)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (conversation_id, version, state, json.dumps(booking_state), completeness)
-        )
+            session.add(new_state)
+            await session.commit()
 
-        await conn.commit()
-        logger.info(f"Saved state v{version} for {conversation_id}")
-        return version
+            logger.info(f"Saved state v{version} for {conversation_id}")
+            return version
 
     async def get_state(
         self,
         conversation_id: str
-    ) -> Optional[BookingState]:
-        """Get latest conversation state.
+    ) -> Optional[Dict[str, Any]]:
+        """Get latest conversation state using SQLModel.
 
         Args:
             conversation_id: Unique conversation ID
 
         Returns:
-            Latest BookingState or None
+            Dict with state, booking_state, completeness, version or None
 
         Example:
-            >>> state = await repo.get_state("919876543210")
+            >>> state = await repo.get_state("conv_123")
+            >>> print(state["version"])
+            1
         """
-        conn = await db_connection.connect()
+        async with await db_connection.get_session() as session:
+            # Get latest version
+            result = await session.execute(
+                select(ConversationStateTable)
+                .where(ConversationStateTable.conversation_id == conversation_id)
+                .order_by(ConversationStateTable.version.desc())
+                .limit(1)
+            )
+            state_record = result.scalar_one_or_none()
 
-        cursor = await conn.execute(
-            """
-            SELECT booking_state_json
-            FROM conversation_states
-            WHERE conversation_id = ?
-            ORDER BY version DESC
-            LIMIT 1
-            """,
-            (conversation_id,)
-        )
+            if not state_record:
+                return None
 
-        row = await cursor.fetchone()
-        if row:
-            return json.loads(row[0])
-
-        return None
+            return {
+                "conversation_id": state_record.conversation_id,
+                "version": state_record.version,
+                "state": state_record.state,
+                "booking_state": json.loads(state_record.booking_state_json),
+                "completeness": state_record.completeness,
+                "created_at": state_record.created_at
+            }
 
     async def get_history(
         self,
-        conversation_id: str,
-        limit: int = 50
-    ) -> List[Dict[str, str]]:
-        """Get conversation history.
+        conversation_id: str
+    ) -> List[Dict[str, Any]]:
+        """Get conversation history using SQLModel.
 
         Args:
             conversation_id: Unique conversation ID
-            limit: Maximum turns to return
 
         Returns:
-            List of {role, content} dicts
+            List of conversation turns
 
         Example:
-            >>> history = await repo.get_history("919876543210")
+            >>> history = await repo.get_history("conv_123")
+            >>> len(history)
+            5
         """
-        conn = await db_connection.connect()
+        async with await db_connection.get_session() as session:
+            result = await session.execute(
+                select(ConversationHistoryTable)
+                .where(ConversationHistoryTable.conversation_id == conversation_id)
+                .order_by(ConversationHistoryTable.turn_number)
+            )
+            records = result.scalars().all()
 
-        cursor = await conn.execute(
-            """
-            SELECT role, content
-            FROM conversation_history
-            WHERE conversation_id = ?
-            ORDER BY turn_number ASC
-            LIMIT ?
-            """,
-            (conversation_id, limit)
-        )
-
-        rows = await cursor.fetchall()
-        return [{"role": row[0], "content": row[1]} for row in rows]
+            return [
+                {
+                    "turn_number": record.turn_number,
+                    "role": record.role,
+                    "content": record.content,
+                    "extracted_data": json.loads(record.extracted_data_json) if record.extracted_data_json else None,
+                    "created_at": record.created_at
+                }
+                for record in records
+            ]
 
     async def add_turn(
         self,
         conversation_id: str,
+        turn_number: int,
         role: str,
         content: str,
-        turn_number: int,
         extracted_data: Optional[Dict[str, Any]] = None
     ) -> None:
-        """Add conversation turn to history.
+        """Add conversation turn using SQLModel.
 
         Args:
             conversation_id: Unique conversation ID
+            turn_number: Turn number
             role: "user" or "assistant"
             content: Message content
-            turn_number: Turn sequence number
-            extracted_data: Optional extracted data
+            extracted_data: Optional extracted data dict
 
         Example:
-            >>> await repo.add_turn("919876543210", "user", "Hi", 1)
+            >>> await repo.add_turn("conv_123", 1, "user", "Hello", {"intent": "greeting"})
         """
-        conn = await db_connection.connect()
+        async with await db_connection.get_session() as session:
+            new_turn = ConversationHistoryTable(
+                conversation_id=conversation_id,
+                turn_number=turn_number,
+                role=role,
+                content=content,
+                extracted_data_json=json.dumps(extracted_data) if extracted_data else None
+            )
 
-        extracted_json = json.dumps(extracted_data) if extracted_data else None
+            session.add(new_turn)
+            await session.commit()
 
-        await conn.execute(
-            """
-            INSERT INTO conversation_history
-            (conversation_id, turn_number, role, content, extracted_data_json)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (conversation_id, turn_number, role, content, extracted_json)
-        )
-
-        await conn.commit()
-        logger.debug(f"Added turn {turn_number} for {conversation_id}")
+            logger.info(f"Added turn {turn_number} for {conversation_id}")
