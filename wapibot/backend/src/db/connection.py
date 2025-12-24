@@ -7,6 +7,7 @@ Single database file for all conversation state.
 from pathlib import Path
 from typing import Optional
 import logging
+import os
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -23,6 +24,13 @@ __all__ = ['DatabaseConnection', 'db_connection', 'ConversationStateTable', 'Con
 # Database configuration
 DB_PATH = Path(__file__).parent.parent.parent / "data" / "conversations.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# Security: Set restrictive permissions on database directory
+try:
+    os.chmod(DB_PATH.parent, 0o700)  # Only owner can read/write/execute
+    logger.debug(f"Database directory permissions set to 0o700: {DB_PATH.parent}")
+except Exception as e:
+    logger.warning(f"Could not set database directory permissions: {e}")
 
 # SQLite async connection string
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
@@ -93,6 +101,14 @@ class DatabaseConnection:
         # Create all tables
         async with engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
+
+        # Security: Set restrictive permissions on database file
+        if DB_PATH.exists():
+            try:
+                os.chmod(DB_PATH, 0o600)  # Only owner can read/write
+                logger.debug(f"Database file permissions set to 0o600: {DB_PATH}")
+            except Exception as e:
+                logger.warning(f"Could not set database file permissions: {e}")
 
         logger.info("Database tables initialized")
 

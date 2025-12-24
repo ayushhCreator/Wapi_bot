@@ -6,6 +6,7 @@ Switch provider by changing PRIMARY_LLM_PROVIDER in .env.txt
 
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 from typing import Literal
 
 # Find .env.txt at project root (wapibot/)
@@ -97,6 +98,24 @@ class Settings(BaseSettings):
     frappe_base_url: str = "http://localhost:8002"
     frappe_api_key: str = ""
     frappe_api_secret: str = ""
+
+    # WAPI Webhook Configuration
+    wapi_webhook_secret: str = ""  # HMAC secret for webhook signature validation
+
+    @field_validator('frappe_api_key', 'frappe_api_secret', 'wapi_webhook_secret')
+    @classmethod
+    def validate_production_secrets(cls, v: str, info) -> str:
+        """Validate that required secrets are set in production."""
+        # Get environment value from the values being validated
+        environment = info.data.get('environment', 'development')
+        field_name = info.field_name
+
+        if environment == 'production' and not v:
+            raise ValueError(
+                f'{field_name} must be set in production environment. '
+                f'Add {field_name.upper()} to .env.txt'
+            )
+        return v
 
     @property
     def cors_origins_list(self) -> list[str]:

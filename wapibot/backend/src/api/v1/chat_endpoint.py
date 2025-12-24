@@ -139,5 +139,5 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
         logger.error(f"Chat processing failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Chat processing error: {str(e)}"
+            detail="Internal server error occurred during chat processing"
         )

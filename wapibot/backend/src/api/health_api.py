@@ -21,9 +21,7 @@ async def root():
     return {
         "status": "healthy",
         "service": settings.app_name,
-        "version": settings.app_version,
-        "llm_provider": settings.primary_llm_provider,
-        "environment": settings.environment
+        "version": settings.app_version
     }
 
 
