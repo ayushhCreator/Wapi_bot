@@ -4,7 +4,7 @@ Provides async HTTP methods with retry logic, logging, and error handling.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Set
 import httpx
 
 from clients.frappe_yawlit.config import FrappeClientConfig
@@ -20,12 +20,48 @@ from clients.frappe_yawlit.utils.exceptions import (
 
 logger = logging.getLogger(__name__)
 
+# Sensitive fields that should never be logged
+SENSITIVE_FIELDS: Set[str] = {
+    "password", "api_key", "api_secret", "token", "secret",
+    "authorization", "cookie", "session", "sid", "otp",
+    "credit_card", "cvv", "ssn", "phone_number", "email"
+}
+
+
+def _sanitize_for_logging(data: Any, depth: int = 0) -> Any:
+    """Recursively sanitize sensitive data for logging.
+
+    Args:
+        data: Data to sanitize (dict, list, or primitive)
+        depth: Recursion depth (prevents infinite loops)
+
+    Returns:
+        Sanitized data safe for logging
+    """
+    if depth > 5:  # Prevent deep recursion
+        return "[MAX_DEPTH]"
+
+    if isinstance(data, dict):
+        sanitized = {}
+        for key, value in data.items():
+            key_lower = str(key).lower()
+            # Check if key contains any sensitive field name
+            if any(sensitive in key_lower for sensitive in SENSITIVE_FIELDS):
+                sanitized[key] = "[REDACTED]"
+            else:
+                sanitized[key] = _sanitize_for_logging(value, depth + 1)
+        return sanitized
+    elif isinstance(data, list):
+        return [_sanitize_for_logging(item, depth + 1) for item in data]
+    else:
+        return data
+
 
 class AsyncHTTPClient:
     """Async HTTP client for Frappe API with retry logic."""
 
     def __init__(self, config: FrappeClientConfig, max_retries: int = 3):
-        """Initialize HTTP client.
+        """Initialize HTTP client with security hardening.
 
         Args:
             config: Frappe client configuration
@@ -35,7 +71,8 @@ class AsyncHTTPClient:
         self.max_retries = max_retries
         self.client = httpx.AsyncClient(
             timeout=config.timeout,
-            follow_redirects=True
+            follow_redirects=False,  # Security: Prevent open redirect attacks
+            verify=True  # Security: Explicitly verify SSL certificates
         )
 
     async def close(self) -> None:
@@ -66,19 +103,23 @@ class AsyncHTTPClient:
             error_data = response.json()
             message = error_data.get("message") or error_data.get("error") or response.text
         except Exception:
+            error_data = {}
             message = response.text or f"HTTP {status_code} error"
+
+        # Security: Sanitize error data to prevent information leakage
+        sanitized_error_data = _sanitize_for_logging(error_data)
 
         # Map status codes to exception types
         if status_code in (401, 403):
-            raise AuthenticationError(message, status_code, error_data if 'error_data' in locals() else None)
+            raise AuthenticationError(message, status_code, sanitized_error_data)
         elif status_code == 404:
-            raise NotFoundError(message, status_code, error_data if 'error_data' in locals() else None)
+            raise NotFoundError(message, status_code, sanitized_error_data)
         elif status_code == 422:
-            raise ValidationError(message, status_code, error_data if 'error_data' in locals() else None)
+            raise ValidationError(message, status_code, sanitized_error_data)
         elif status_code >= 500:
-            raise ServerError(message, status_code, error_data if 'error_data' in locals() else None)
+            raise ServerError(message, status_code, sanitized_error_data)
         else:
-            raise FrappeAPIError(message, status_code, error_data if 'error_data' in locals() else None)
+            raise FrappeAPIError(message, status_code, sanitized_error_data)
 
     async def _request(
         self,
@@ -108,7 +149,9 @@ class AsyncHTTPClient:
 
         logger.debug(f"{method} {url}")
         if data:
-            logger.debug(f"Request data: {data}")
+            # Security: Sanitize sensitive data before logging
+            sanitized_data = _sanitize_for_logging(data)
+            logger.debug(f"Request data: {sanitized_data}")
 
         retries = 0
         last_exception = None
@@ -129,7 +172,9 @@ class AsyncHTTPClient:
 
                 # Parse and return response
                 result = response.json()
-                logger.debug(f"Response: {result}")
+                # Security: Sanitize sensitive data before logging
+                sanitized_result = _sanitize_for_logging(result)
+                logger.debug(f"Response: {sanitized_result}")
                 return result
 
             except httpx.TimeoutException as e:
