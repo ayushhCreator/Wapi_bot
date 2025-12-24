@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Conversation, Message } from '@/lib/types';
 import { useConversationStore } from '@/hooks/useConversations';
 import { useOllamaChat } from '@/hooks/useOllamaChat';
+import { useFastAPIChat } from '@/hooks/useFastAPIChat';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import { Send, Loader2, AlertCircle } from 'lucide-react';
@@ -18,7 +19,14 @@ export default function ChatInterface({ conversation }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const { backendMode } = useConversationStore();
-  const { isLoading, error, sendMessage } = useOllamaChat(conversation.id);
+
+  // Conditional hook usage based on backend mode
+  const ollamaChat = useOllamaChat(conversation.id);
+  const fastapiChat = useFastAPIChat(conversation.id);
+
+  // Select active chat based on mode
+  const activeChat = backendMode === 'fastapi' ? fastapiChat : ollamaChat;
+  const { isLoading, error, sendMessage } = activeChat;
 
   // Auto-scroll to bottom
   useEffect(() => {

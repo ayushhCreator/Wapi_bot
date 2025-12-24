@@ -56,7 +56,7 @@ export const useConversationStore = create<ConversationStore>()(
         },
         fastapi: {
           baseUrl: 'http://localhost:8000',
-          endpoint: '/webhook/chat',
+          endpoint: '/api/v1/chat',
           timeout: 30000,
           retries: 3,
         },
@@ -212,7 +212,7 @@ export const useConversationStore = create<ConversationStore>()(
             },
             fastapi: {
               baseUrl: 'http://localhost:8000',
-              endpoint: '/webhook/chat',
+              endpoint: '/api/v1/chat',
               timeout: 30000,
               retries: 3,
             },

@@ -88,15 +88,25 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
     ```
     """
     try:
+        # Extract fields from either format
+        conversation_id = request.get_conversation_id()
+        user_message = request.get_user_message()
+
         logger.info(
-            f"Processing chat: {request.conversation_id} - "
-            f"{request.user_message[:50]}..."
+            f"Processing chat: {conversation_id} - "
+            f"{user_message[:50]}..."
         )
+
+        # Log which format was used
+        if request.contact:
+            logger.info("[Chat] Using WAPI-like format (frontend testing mode)")
+        else:
+            logger.info("[Chat] Using simple format")
 
         # Create initial state
         state: BookingState = {
-            "conversation_id": request.conversation_id,
-            "user_message": request.user_message,
+            "conversation_id": conversation_id,
+            "user_message": user_message,
             "history": request.history or [],
             "customer": None,
             "vehicle": None,
