@@ -113,7 +113,7 @@ async def node(
         """
         return {
             "method": "POST",
-            "url": f"{wapi_client.base_url}/{wapi_client.vendor_uid}/contact/send-message",
+            "url": f"{wapi_client.base_url}{wapi_client.vendor_uid}/contact/send-message",
             "headers": {
                 "Authorization": f"Bearer {wapi_client.bearer_token}",
                 "Content-Type": "application/json"
