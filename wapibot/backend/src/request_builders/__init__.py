@@ -3,17 +3,25 @@
 Request builders implement the RequestBuilder Protocol and generate
 HTTP request configurations from BookingState.
 
-They are used with call_api.node():
-    await call_api.node(state, FrappeCustomerLookup(), "customer_data")
-    await call_api.node(state, FrappeServicesRequest(), "services")
+IMPORTANT: For Frappe/WAPI APIs, use dedicated nodes instead:
+- Frappe APIs: Use call_frappe.node with YawlitClient (NO request builders)
+- WAPI: Use send_message.node with WAPIClient (NO request builders)
+
+Request builders should ONLY be used for third-party APIs without dedicated clients:
+- Weather APIs
+- Maps/geocoding APIs
+- Payment gateway webhooks
+- SMS providers
+
+Example (third-party API):
+    def weather_request_builder(state):
+        return {
+            "method": "GET",
+            "url": "https://api.weather.com/forecast",
+            "params": {"city": state.get("location")}
+        }
+
+    await call_api.node(state, weather_request_builder, "weather_data")
 """
 
-from request_builders.frappe_customer_lookup import FrappeCustomerLookup
-from request_builders.frappe_services import FrappeServicesRequest
-from request_builders.frappe_create_booking import FrappeCreateBookingRequest
-
-__all__ = [
-    "FrappeCustomerLookup",
-    "FrappeServicesRequest",
-    "FrappeCreateBookingRequest",
-]
+__all__ = []

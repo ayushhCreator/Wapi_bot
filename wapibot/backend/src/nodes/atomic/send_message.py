@@ -7,14 +7,16 @@ SOLID Principles:
 
 DRY Principle:
 - ONE implementation for ALL messaging needs
-- Reuses call_api.node for retry/error/state logic
+- Uses WAPIClient directly (retry/error handling in client layer)
 """
 
 import logging
-from typing import Protocol, Dict, Any
-from workflows.shared.state import BookingState
-from nodes.atomic.call_api import node as call_api_node
+from typing import Protocol
+
+import httpx
+
 from clients.wapi.wapi_client import get_wapi_client
+from workflows.shared.state import BookingState
 
 logger = logging.getLogger(__name__)
 
@@ -46,20 +48,18 @@ async def node(
     state: BookingState,
     message_builder: MessageBuilder,
     store_in_history: bool = True,
-    retry_count: int = 3,
     on_failure: str = "log"
 ) -> BookingState:
-    """Send WhatsApp message using ANY message builder.
+    """Send WhatsApp message using WAPIClient directly.
 
     Single Responsibility: ONLY sends messages (doesn't extract, validate, transform)
 
-    Wraps call_api.node internally to reuse retry/error/state logic (DRY).
+    Uses WAPIClient.send_message() directly - NO call_api wrapper (DRY).
 
     Args:
         state: Current booking state
         message_builder: ANY function implementing MessageBuilder protocol
         store_in_history: Whether to store message in conversation history
-        retry_count: Number of retry attempts (delegated to call_api)
         on_failure: Action on failure - "log" or "raise"
 
     Returns:
@@ -100,44 +100,50 @@ async def node(
         state["errors"].append("no_phone_number")
         return state
 
-    # Create WAPI request builder (wraps WAPI endpoint)
+    # Get WAPI client singleton
     wapi_client = get_wapi_client()
 
-    def wapi_send_request_builder(state: BookingState) -> Dict[str, Any]:  # noqa: ARG001
-        """Build WAPI send-message request.
+    # Call WAPIClient directly (NO request builder, NO call_api wrapper)
+    try:
+        logger.info(f"📤 Sending WhatsApp message ({len(message_text)} chars)")
 
-        This is a RequestBuilder that call_api.node understands.
+        result = await wapi_client.send_message(
+            phone_number=phone_number,
+            message_body=message_text
+        )
 
-        Args:
-            state: BookingState (required by RequestBuilder protocol, not used here)
-        """
-        return {
-            "method": "POST",
-            "url": f"{wapi_client.base_url}{wapi_client.vendor_uid}/contact/send-message",
-            "headers": {
-                "Authorization": f"Bearer {wapi_client.bearer_token}",
-                "Content-Type": "application/json"
-            },
-            "json": {
-                "phone_number": phone_number,
-                "message_body": message_text,
-                "from_phone_number_id": wapi_client.from_phone_number_id
-            }
-        }
+        # Store WAPI response
+        state["wapi_response"] = result
 
-    # Delegate to call_api.node (reuses ALL retry/error/state logic - DRY!)
-    state = await call_api_node(
-        state,
-        wapi_send_request_builder,
-        "wapi_response",
-        retry_count=retry_count,
-        on_failure=on_failure
-    )
+        logger.info("✅ WhatsApp message sent successfully")
+
+    except httpx.HTTPError as e:
+        logger.error(f"❌ WAPI send failed: {e}")
+        if "errors" not in state:
+            state["errors"] = []
+        state["errors"].append("wapi_send_failed")
+
+        if on_failure == "raise":
+            raise
+
+        return state
+
+    except Exception as e:
+        logger.error(f"❌ Unexpected error sending message: {e}")
+        if "errors" not in state:
+            state["errors"] = []
+        state["errors"].append("wapi_unexpected_error")
+
+        if on_failure == "raise":
+            raise
+
+        return state
 
     # Store in history if successful
     if store_in_history and "wapi_response" in state:
         # Only store if no errors occurred
-        if "errors" not in state or "message_send_failed" not in state.get("errors", []):
+        errors = state.get("errors", [])
+        if "errors" not in state or "message_send_failed" not in errors:
             if "history" not in state:
                 state["history"] = []
 

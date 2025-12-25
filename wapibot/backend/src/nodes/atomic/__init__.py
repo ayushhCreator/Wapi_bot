@@ -51,6 +51,7 @@ from nodes.atomic.confidence_gate import node as confidence_gate_node, get_gate_
 from nodes.atomic.scan import node as scan_node
 from nodes.atomic.merge import node as merge_node
 from nodes.atomic.call_api import node as call_api_node
+from nodes.atomic.call_frappe import node as call_frappe_node
 from nodes.atomic.send_message import node as send_message_node
 from nodes.atomic.transform import node as transform_node
 
@@ -67,6 +68,7 @@ __all__ = [
     "scan_node",
     "merge_node",
     "call_api_node",
+    "call_frappe_node",
     "send_message_node",
     "transform_node",
 

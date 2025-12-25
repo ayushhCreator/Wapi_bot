@@ -16,66 +16,68 @@ Flow:
 11. Send success message
 
 DRY Compliance:
-- Uses atomic nodes (send_message, transform, call_api)
+- Uses atomic nodes (send_message, transform, call_frappe)
 - Uses message builders for all messaging
 - Uses transformers for data manipulation
-- Uses request builders for all API calls
+- Uses YawlitClient directly (NO request builders - eliminates duplication)
 
 SOLID Compliance:
 - Workflow orchestration ONLY (no business logic)
 - All nodes have Single Responsibility
-- Builders/transformers are interchangeable
+- Builders/transformers/clients are interchangeable
 """
 
 import re
-from langgraph.graph import StateGraph, END
-from workflows.shared.state import BookingState
 
-# Atomic nodes
-from nodes.atomic.send_message import node as send_message_node
-from nodes.atomic.transform import node as transform_node
-from nodes.atomic.call_api import node as call_api_node
+from langgraph.graph import END, StateGraph
+
+# Frappe client
+from clients.frappe_yawlit import get_yawlit_client
+from message_builders.booking_confirmation import BookingConfirmationBuilder
 
 # Message builders
 from message_builders.greeting import GreetingBuilder
 from message_builders.service_catalog import ServiceCatalogBuilder
-from message_builders.booking_confirmation import BookingConfirmationBuilder
+from nodes.atomic.call_frappe import node as call_frappe_node
+
+# Atomic nodes
+from nodes.atomic.send_message import node as send_message_node
+from nodes.atomic.transform import node as transform_node
 
 # Transformers
 from transformers.filter_services import FilterServicesByVehicle
 from transformers.format_slot_options import FormatSlotOptions
-
-# Request builders
-from request_builders.frappe_customer_lookup import FrappeCustomerLookup
-from request_builders.frappe_services import FrappeServicesRequest
-from request_builders.frappe_create_booking import FrappeCreateBookingRequest
-
+from workflows.shared.state import BookingState
 
 # ============================================================================
 # CUSTOMER LOOKUP & ROUTING
 # ============================================================================
 
 async def lookup_customer_node(state: BookingState) -> BookingState:
-    """Look up customer by phone number."""
-    return await call_api_node(
+    """Look up customer by phone number using YawlitClient."""
+    client = get_yawlit_client()
+
+    return await call_frappe_node(
         state,
-        FrappeCustomerLookup(),
-        "customer_lookup_response"
+        client.customer_lookup.check_customer_exists,
+        "customer_lookup_response",
+        state_extractor=lambda s: {"identifier": s.get("conversation_id", "")}
     )
 
 
 async def check_customer_exists(state: BookingState) -> str:
     """Route based on customer existence."""
     lookup_response = state.get("customer_lookup_response", {})
-    message = lookup_response.get("message", {})
 
-    if message:
+    # YawlitClient returns {"exists": bool, "data": {...}}
+    if lookup_response.get("exists"):
         # Customer found - extract data
+        data = lookup_response.get("data", {})
         state["customer"] = {
-            "customer_uuid": message.get("customer_uuid"),
-            "first_name": message.get("first_name"),
-            "last_name": message.get("last_name"),
-            "enabled": message.get("enabled")
+            "customer_uuid": data.get("customer_uuid"),
+            "first_name": data.get("first_name"),
+            "last_name": data.get("last_name"),
+            "enabled": data.get("enabled")
         }
         return "existing_customer"
     else:
@@ -100,17 +102,21 @@ async def send_please_register_node(state: BookingState) -> BookingState:
 # ============================================================================
 
 async def fetch_services_node(state: BookingState) -> BookingState:
-    """Fetch all services from Frappe."""
-    result = await call_api_node(
+    """Fetch all services from Frappe using YawlitClient."""
+    client = get_yawlit_client()
+
+    result = await call_frappe_node(
         state,
-        FrappeServicesRequest(),
-        "services_response"
+        client.service_catalog.get_filtered_services,
+        "services_response",
+        state_extractor=lambda s: {
+            "vehicle_type": s.get("vehicle", {}).get("vehicle_type")
+        } if s.get("vehicle") else {}
     )
 
-    # Extract services from response
+    # Extract services from Frappe response
     services_response = result.get("services_response", {})
-    message = services_response.get("message", {})
-    services = message.get("services", [])
+    services = services_response.get("message", {}).get("services", [])
 
     result["all_services"] = services
 
@@ -348,25 +354,32 @@ async def send_confirmation_unclear_node(state: BookingState) -> BookingState:
 # ============================================================================
 
 async def create_booking_node(state: BookingState) -> BookingState:
-    """Create booking in Frappe."""
-    # For MVP, mock the booking creation
-    # In production, uncomment this:
-    # return await call_api_node(
-    #     state,
-    #     FrappeCreateBookingRequest(),
-    #     "booking_response"
-    # )
+    """Create booking in Frappe using YawlitClient."""
+    client = get_yawlit_client()
 
-    # Mock successful booking
-    state["booking_response"] = {
-        "message": {
-            "success": True,
-            "booking_id": "BKG-2025-001",
-            "service_request_id": "SR-2025-001"
+    # Extract booking parameters from state
+    def extract_booking_params(s):
+        customer = s.get("customer", {})
+        selected_service = s.get("selected_service", {})
+        appointment = s.get("appointment", {})
+
+        return {
+            "customer_uuid": customer.get("customer_uuid"),
+            "service_id": selected_service.get("product_id"),
+            "vehicle_id": s.get("vehicle", {}).get("vehicle_id"),
+            "slot_id": appointment.get("slot_id"),
+            "date": appointment.get("date"),
+            "address_id": customer.get("default_address_id"),  # Use default address
+            "optional_addons": [],  # No addons for MVP
+            "special_instructions": ""
         }
-    }
 
-    return state
+    return await call_frappe_node(
+        state,
+        client.booking_create.create_booking,
+        "booking_response",
+        state_extractor=extract_booking_params
+    )
 
 
 async def send_success_node(state: BookingState) -> BookingState:
