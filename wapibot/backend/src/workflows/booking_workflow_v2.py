@@ -28,6 +28,16 @@ from workflows.node_groups.slot_group import create_slot_group
 from workflows.node_groups.booking_group import create_booking_group
 
 
+def should_continue(state: BookingState) -> str:
+    """Check if workflow should continue or end after each node group.
+
+    Returns:
+        - "continue": Proceed to next node group
+        - "end": Stop workflow (error occurred or completed)
+    """
+    return "continue" if state.get("should_proceed", True) else "end"
+
+
 def create_booking_workflow():
     """Create existing user booking workflow.
 
@@ -45,12 +55,33 @@ def create_booking_workflow():
     workflow.add_node("slot_selection", create_slot_group())
     workflow.add_node("booking_confirmation", create_booking_group())
 
-    # Chain groups sequentially
+    # Chain groups with conditional routing (stop on error)
     workflow.set_entry_point("profile_check")
-    workflow.add_edge("profile_check", "vehicle_selection")
-    workflow.add_edge("vehicle_selection", "service_selection")
-    workflow.add_edge("service_selection", "slot_selection")
-    workflow.add_edge("slot_selection", "booking_confirmation")
+
+    workflow.add_conditional_edges(
+        "profile_check",
+        should_continue,
+        {"continue": "vehicle_selection", "end": END}
+    )
+
+    workflow.add_conditional_edges(
+        "vehicle_selection",
+        should_continue,
+        {"continue": "service_selection", "end": END}
+    )
+
+    workflow.add_conditional_edges(
+        "service_selection",
+        should_continue,
+        {"continue": "slot_selection", "end": END}
+    )
+
+    workflow.add_conditional_edges(
+        "slot_selection",
+        should_continue,
+        {"continue": "booking_confirmation", "end": END}
+    )
+
     workflow.add_edge("booking_confirmation", END)
 
     # Compile with checkpointing (checkpointer initialized in main.py lifespan)

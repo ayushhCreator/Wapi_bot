@@ -38,8 +38,35 @@ async def process_vehicle_selection(state: BookingState) -> BookingState:
 
 async def send_vehicle_error(state: BookingState) -> BookingState:
     """Send error message for invalid vehicle selection."""
-    error_msg = state.get("error", "Invalid selection. Please try again.")
-    return await send_message_node(state, lambda s: error_msg)
+    error_msg = state.get("selection_error", "Invalid selection. Please try again.")
+    result = await send_message_node(state, lambda s: error_msg)
+    result["should_proceed"] = False  # Stop and wait for next user message
+    return result
+
+
+def check_if_vehicle_needed(state: BookingState) -> str:
+    """Check if vehicle selection is needed.
+
+    Returns:
+        - "skip": Vehicle already selected, no action needed
+        - "select": Need to show options and get user selection
+    """
+    # If vehicle already selected, skip this group
+    if state.get("vehicle_selected", False):
+        return "skip"
+
+    # If no vehicle options, skip (shouldn't happen)
+    vehicle_options = state.get("vehicle_options", [])
+    if len(vehicle_options) == 0:
+        return "skip"
+
+    return "select"
+
+
+async def skip_vehicle_selection(state: BookingState) -> BookingState:
+    """Skip vehicle selection (already done)."""
+    state["should_proceed"] = True
+    return state
 
 
 def create_vehicle_group() -> StateGraph:
@@ -55,23 +82,38 @@ def create_vehicle_group() -> StateGraph:
     workflow = StateGraph(BookingState)
 
     # Add nodes
+    workflow.add_node("skip_selection", skip_vehicle_selection)
     workflow.add_node("show_options", show_vehicle_options)
     workflow.add_node("process_selection", process_vehicle_selection)
     workflow.add_node("send_error", send_vehicle_error)
 
-    # Flow
-    workflow.set_entry_point("show_options")
+    # Entry point: check if selection is needed
+    workflow.set_entry_point("skip_selection")
+
+    # Conditional routing based on whether vehicle is already selected
+    workflow.add_conditional_edges(
+        "skip_selection",
+        check_if_vehicle_needed,
+        {
+            "skip": END,  # Vehicle already selected, end immediately
+            "select": "show_options"  # Need to show options
+        }
+    )
+
+    # Show options, then process selection
     workflow.add_edge("show_options", "process_selection")
 
+    # After processing selection
     workflow.add_conditional_edges(
         "process_selection",
         route_after_selection,
         {
-            "selection_error": "send_error",
-            "selection_success": END
+            "selection_error": "send_error",  # Invalid selection
+            "selection_success": END  # Valid selection, done
         }
     )
 
-    workflow.add_edge("send_error", "show_options")  # Re-prompt
+    # Error path: send error and END (don't loop!)
+    workflow.add_edge("send_error", END)
 
     return workflow.compile()

@@ -27,30 +27,40 @@ from nodes.message_builders.vehicle_options import VehicleOptionsBuilder
 
 async def send_greeting(state: BookingState) -> BookingState:
     """Send personalized greeting message."""
-    return await send_message_node(state, GreetingBuilder())
+    result = await send_message_node(state, GreetingBuilder())
+    result["should_proceed"] = True  # Profile ready, continue to vehicle selection
+    return result
 
 
 async def send_vehicle_options(state: BookingState) -> BookingState:
     """Send vehicle selection options."""
-    return await send_message_node(state, VehicleOptionsBuilder())
+    result = await send_message_node(state, VehicleOptionsBuilder())
+    result["should_proceed"] = False  # Need user input, stop here
+    return result
 
 
 async def send_please_register(state: BookingState) -> BookingState:
     """Send registration prompt."""
     message = lambda s: "Please register first: https://yawlit.in/register"
-    return await send_message_node(state, message)
+    result = await send_message_node(state, message)
+    result["should_proceed"] = False  # Error state, stop workflow
+    return result
 
 
 async def send_profile_incomplete(state: BookingState) -> BookingState:
     """Send profile completion prompt."""
     message = lambda s: "Please complete your profile at https://yawlit.in/profile"
-    return await send_message_node(state, message)
+    result = await send_message_node(state, message)
+    result["should_proceed"] = False  # Error state, stop workflow
+    return result
 
 
 async def send_no_vehicles(state: BookingState) -> BookingState:
     """Send vehicle addition prompt."""
     message = lambda s: "Please add a vehicle at https://yawlit.in/vehicles"
-    return await send_message_node(state, message)
+    result = await send_message_node(state, message)
+    result["should_proceed"] = False  # Error state, stop workflow
+    return result
 
 
 def create_profile_group() -> StateGraph:

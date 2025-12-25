@@ -80,9 +80,16 @@ async def fetch_complete_profile(state: BookingState) -> BookingState:
         missing_fields = [f for f in required_fields if not profile.get(f)]
         state["profile_complete"] = len(missing_fields) == 0
 
+        # Debug: Log what we found
+        logger.info(f"🔍 Profile fields check: {[(f, profile.get(f)) for f in required_fields]}")
+        logger.info(f"🔍 Missing fields: {missing_fields}")
+        logger.info(f"🔍 Profile complete: {state['profile_complete']}")
+
         if missing_fields:
             state["missing_profile_fields"] = missing_fields
             logger.warning(f"⚠️ Profile incomplete - missing: {missing_fields}")
+        else:
+            logger.info("✅ Profile is complete")
 
         # Process vehicles
         vehicles = profile.get("vehicles", [])

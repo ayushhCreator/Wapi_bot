@@ -48,14 +48,14 @@ async def handle_selection(
     except ValueError:
         error_msg = f"Please reply with a number from 1 to {len(options)}"
         logger.warning(f"⚠️ Invalid input: not a number")
-        state["error"] = error_msg
+        state["selection_error"] = error_msg
         return state
 
     # Validate index in range
     if selection_index < 0 or selection_index >= len(options):
         error_msg = f"Please reply with a number from 1 to {len(options)}"
         logger.warning(f"⚠️ Invalid input: out of range ({selection_index + 1})")
-        state["error"] = error_msg
+        state["selection_error"] = error_msg
         return state
 
     # Store selection
@@ -64,7 +64,7 @@ async def handle_selection(
     state[f"{selected_key}_selected"] = True
 
     # Clear error and options
-    state["error"] = None
+    state["selection_error"] = None
     state[options_key] = []
 
     logger.info(f"✅ {selection_type.capitalize()} selected: {selected_item}")
@@ -79,7 +79,7 @@ async def route_after_selection(state: BookingState) -> str:
         - "selection_error": Invalid input, re-prompt
         - "selection_success": Valid selection made
     """
-    has_error = state.get("error") is not None
+    has_error = state.get("selection_error") is not None
     route = "selection_error" if has_error else "selection_success"
     logger.info(f"🔀 Route after selection: {route}")
     return route

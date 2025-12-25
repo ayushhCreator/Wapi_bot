@@ -27,6 +27,12 @@ class BookingState(TypedDict):
     vehicle: Optional[Dict[str, Any]]   # {vehicle_id, vehicle_make, vehicle_model, vehicle_number, vehicle_type}
     appointment: Optional[Dict[str, Any]]  # {date, time_slot, service_type}
 
+    # Profile Validation
+    profile_complete: bool  # True if all required profile fields present
+    missing_profile_fields: Optional[List[str]]  # List of missing required fields
+    addresses: Optional[List[Dict[str, Any]]]  # Customer addresses from profile
+    profile_error: Optional[str]  # Error message from profile fetch
+
     # Vehicle Selection (for multi-vehicle customers)
     vehicle_options: Optional[List[Dict[str, Any]]]  # Available vehicles to choose from
     vehicle_selected: bool  # True if valid vehicle selected
@@ -55,12 +61,14 @@ class BookingState(TypedDict):
 
     # Service Selection
     filtered_services: Optional[List[Dict[str, Any]]]  # Services filtered by vehicle type
+    service_options: Optional[List[Dict[str, Any]]]  # Services available for selection
     selected_service: Optional[Dict[str, Any]]  # User's selected service
     service_selected: bool  # True if valid service selected
     selection_error: Optional[str]  # Error message for invalid selection
 
     # Slot Selection
     available_slots: Optional[List[Dict[str, Any]]]  # Available appointment slots
+    slot_options: Optional[List[Dict[str, Any]]]  # Slots available for selection
     formatted_slots: Optional[str]  # Human-readable slot options
     slot_selected: bool  # True if valid slot selected
 
@@ -69,6 +77,7 @@ class BookingState(TypedDict):
     confirmed: Optional[bool]  # True=confirmed, False=cancelled, None=unclear
 
     # Booking Result
+    booking_response: Optional[Dict[str, Any]]  # Response from booking creation API
     service_request_id: Optional[str]  # Created when booking confirmed
     service_request: Optional[Dict[str, Any]]  # Full service request details
 
