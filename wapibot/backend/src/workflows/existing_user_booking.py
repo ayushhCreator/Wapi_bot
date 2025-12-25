@@ -33,6 +33,7 @@ from langgraph.graph import END, StateGraph
 
 # Frappe client
 from clients.frappe_yawlit import get_yawlit_client
+from core.checkpointer import checkpointer_manager
 from message_builders.booking_confirmation import BookingConfirmationBuilder
 
 # Message builders
@@ -201,14 +202,32 @@ async def fetch_vehicles_node(state: BookingState) -> BookingState:
     )
 
     vehicles_response = state.get("vehicles_response", {})
+
+    # Log the raw response structure for debugging
+    logger.info(f"🔍 Raw vehicles_response keys: {list(vehicles_response.keys())}")
+    logger.info(f"🔍 Full vehicles_response: {vehicles_response}")
+
+    # Try multiple possible response structures
     vehicles = vehicles_response.get("message", {}).get("vehicles", [])
 
     # Handle edge case: response might have vehicles at top level
     if not vehicles:
         vehicles = vehicles_response.get("vehicles", [])
 
+    # Handle edge case: response might have data wrapper
+    if not vehicles:
+        vehicles = vehicles_response.get("data", {}).get("vehicles", [])
+
+    # Handle edge case: response might have message as string (Frappe sometimes returns this)
+    if not vehicles and "message" in vehicles_response:
+        msg = vehicles_response["message"]
+        if isinstance(msg, list):
+            vehicles = msg
+
+    logger.info(f"🚗 Found {len(vehicles)} vehicle(s)")
+
     if len(vehicles) == 0:
-        logger.info("No vehicles found - user needs to add vehicle")
+        logger.warning("No vehicles found - user needs to add vehicle")
         state["vehicle"] = None
         state["vehicle_options"] = []
         state["vehicle_selected"] = False
@@ -354,6 +373,9 @@ async def send_please_register_node(state: BookingState) -> BookingState:
 
 async def fetch_services_node(state: BookingState) -> BookingState:
     """Fetch all services from Frappe using YawlitClient."""
+    import logging
+
+    logger = logging.getLogger(__name__)
     client = get_yawlit_client()
 
     result = await call_frappe_node(
@@ -367,7 +389,28 @@ async def fetch_services_node(state: BookingState) -> BookingState:
 
     # Extract services from Frappe response
     services_response = result.get("services_response", {})
+
+    # Log the raw response structure for debugging
+    logger.info(f"🔍 Raw services_response keys: {list(services_response.keys())}")
+
+    # Try multiple possible response structures
     services = services_response.get("message", {}).get("services", [])
+
+    # Fallback: services at top level
+    if not services:
+        services = services_response.get("services", [])
+
+    # Fallback: services in data wrapper
+    if not services:
+        services = services_response.get("data", {}).get("services", [])
+
+    # Fallback: message might be a list directly
+    if not services and "message" in services_response:
+        msg = services_response["message"]
+        if isinstance(msg, list):
+            services = msg
+
+    logger.info(f"🛠️ Found {len(services)} service(s)")
 
     result["all_services"] = services
 
@@ -660,6 +703,8 @@ async def send_cancelled_node(state: BookingState) -> BookingState:
 def create_existing_user_booking_workflow():
     """Create the complete existing user booking workflow.
 
+    Uses the in-memory checkpointer from checkpointer_manager for fast state persistence.
+
     Returns:
         Compiled LangGraph workflow with full booking flow
     """
@@ -800,16 +845,5 @@ def create_existing_user_booking_workflow():
     # New customer flow ends
     workflow.add_edge("send_please_register", END)
 
-    # Add SqliteSaver for state persistence across messages
-    import sqlite3
-    from langgraph.checkpoint.sqlite import SqliteSaver
-    from pathlib import Path
-
-    db_path = Path(__file__).parent.parent.parent / "data" / "langgraph_checkpoints.db"
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Create persistent sqlite3 connection and SqliteSaver instance
-    conn = sqlite3.connect(str(db_path), check_same_thread=False)
-    memory = SqliteSaver(conn)
-
-    return workflow.compile(checkpointer=memory)
+    # Use in-memory checkpointer (initialized at FastAPI startup)
+    return workflow.compile(checkpointer=checkpointer_manager.memory)
