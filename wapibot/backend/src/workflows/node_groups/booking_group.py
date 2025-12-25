@@ -1,0 +1,158 @@
+"""Booking confirmation and creation node group.
+
+Handles:
+- Price calculation
+- Showing booking summary
+- Processing confirmation
+- Creating booking
+- Success/error messages
+
+Replaces 5 old nodes:
+- calculate_price
+- send_confirmation
+- extract_confirmation
+- create_booking
+- send_success/cancelled
+"""
+
+import logging
+from langgraph.graph import StateGraph, END
+from workflows.shared.state import BookingState
+from nodes.atomic.send_message import node as send_message_node
+from nodes.atomic.call_frappe import node as call_frappe_node
+from nodes.message_builders.booking_confirmation import BookingConfirmationBuilder
+from clients.frappe_yawlit import get_yawlit_client
+
+logger = logging.getLogger(__name__)
+
+
+async def calculate_price(state: BookingState) -> BookingState:
+    """Calculate total price."""
+    selected_service = state.get("service", {})
+    base_price = selected_service.get("base_price", 0)
+    state["total_price"] = base_price
+    logger.info(f"💰 Calculated price: ₹{base_price}")
+    return state
+
+
+async def send_confirmation(state: BookingState) -> BookingState:
+    """Send booking confirmation for user approval."""
+    return await send_message_node(state, BookingConfirmationBuilder())
+
+
+async def extract_confirmation(state: BookingState) -> BookingState:
+    """Extract YES/NO confirmation from user message."""
+    user_message = state.get("user_message", "").lower()
+
+    if "yes" in user_message or "confirm" in user_message or "ok" in user_message:
+        state["confirmed"] = True
+    elif "no" in user_message or "cancel" in user_message:
+        state["confirmed"] = False
+    else:
+        state["confirmed"] = None  # Unclear
+
+    logger.info(f"🔍 Confirmation extracted: {state.get('confirmed')}")
+    return state
+
+
+async def route_confirmation(state: BookingState) -> str:
+    """Route based on user confirmation."""
+    confirmed = state.get("confirmed")
+    if confirmed is True:
+        return "confirmed"
+    elif confirmed is False:
+        return "cancelled"
+    else:
+        return "unclear"
+
+
+async def create_booking(state: BookingState) -> BookingState:
+    """Create booking in Frappe using YawlitClient."""
+    client = get_yawlit_client()
+
+    def extract_booking_params(s):
+        customer = s.get("customer", {})
+        service = s.get("service", {})
+        slot = s.get("slot", {})
+
+        return {
+            "customer_uuid": customer.get("customer_uuid"),
+            "service_id": service.get("product_id"),
+            "vehicle_id": s.get("vehicle", {}).get("vehicle_id"),
+            "slot_id": slot.get("slot_id"),
+            "date": slot.get("date"),
+            "address_id": customer.get("default_address_id"),
+            "optional_addons": [],
+            "special_instructions": ""
+        }
+
+    logger.info("📝 Creating booking...")
+    return await call_frappe_node(
+        state,
+        client.booking_create.create_booking,
+        "booking_response",
+        state_extractor=extract_booking_params
+    )
+
+
+async def send_success(state: BookingState) -> BookingState:
+    """Send booking success message."""
+    def success_message(s):
+        booking_response = s.get("booking_response", {})
+        message = booking_response.get("message", {})
+        booking_id = message.get("booking_id", "Unknown")
+        return f"✅ Booking confirmed!\n\nYour booking ID is: {booking_id}\n\nWe'll send you a confirmation shortly. Thank you for choosing Yawlit!"
+
+    return await send_message_node(state, success_message)
+
+
+async def send_cancelled(state: BookingState) -> BookingState:
+    """Send booking cancelled message."""
+    def cancelled_message(s):
+        return "❌ Booking cancelled. Feel free to start a new booking anytime!"
+
+    return await send_message_node(state, cancelled_message)
+
+
+async def send_unclear(state: BookingState) -> BookingState:
+    """Send message for unclear confirmation."""
+    def unclear_message(s):
+        return "Please reply with YES to confirm or NO to cancel the booking."
+
+    return await send_message_node(state, unclear_message)
+
+
+def create_booking_group() -> StateGraph:
+    """Create booking confirmation and creation node group."""
+    workflow = StateGraph(BookingState)
+
+    # Add nodes
+    workflow.add_node("calculate_price", calculate_price)
+    workflow.add_node("send_confirmation", send_confirmation)
+    workflow.add_node("extract_confirmation", extract_confirmation)
+    workflow.add_node("create_booking", create_booking)
+    workflow.add_node("send_success", send_success)
+    workflow.add_node("send_cancelled", send_cancelled)
+    workflow.add_node("send_unclear", send_unclear)
+
+    # Flow
+    workflow.set_entry_point("calculate_price")
+    workflow.add_edge("calculate_price", "send_confirmation")
+    workflow.add_edge("send_confirmation", "extract_confirmation")
+
+    workflow.add_conditional_edges(
+        "extract_confirmation",
+        route_confirmation,
+        {
+            "confirmed": "create_booking",
+            "cancelled": "send_cancelled",
+            "unclear": "send_unclear"
+        }
+    )
+
+    workflow.add_edge("create_booking", "send_success")
+    workflow.add_edge("send_success", END)
+    workflow.add_edge("send_cancelled", END)
+    workflow.add_edge("send_unclear", END)
+
+    return workflow.compile()

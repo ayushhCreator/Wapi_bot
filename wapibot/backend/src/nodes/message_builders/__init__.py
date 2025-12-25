@@ -8,10 +8,10 @@ They are used with send_message.node():
     await send_message.node(state, ServiceCatalogBuilder())
 """
 
-from message_builders.greeting import GreetingBuilder
-from message_builders.service_catalog import ServiceCatalogBuilder
-from message_builders.booking_confirmation import BookingConfirmationBuilder
-from message_builders.vehicle_options import VehicleOptionsBuilder
+from nodes.message_builders.greeting import GreetingBuilder
+from nodes.message_builders.service_catalog import ServiceCatalogBuilder
+from nodes.message_builders.booking_confirmation import BookingConfirmationBuilder
+from nodes.message_builders.vehicle_options import VehicleOptionsBuilder
 
 __all__ = [
     "GreetingBuilder",
