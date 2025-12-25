@@ -209,4 +209,28 @@ class YawlitClient:
         self.config.clear_session()
 
 
-__all__ = ["YawlitClient"]
+# Global singleton instance
+_yawlit_client: YawlitClient | None = None
+
+
+def get_yawlit_client() -> YawlitClient:
+    """Get global YawlitClient singleton instance.
+
+    Creates client on first call, reuses thereafter.
+    Reads configuration from settings.
+
+    Returns:
+        Configured YawlitClient instance
+
+    Example:
+        >>> client = get_yawlit_client()
+        >>> result = await client.customer_lookup.check_customer_exists("phone")
+    """
+    global _yawlit_client
+    if _yawlit_client is None:
+        _yawlit_client = YawlitClient()
+        logger.info("YawlitClient singleton initialized")
+    return _yawlit_client
+
+
+__all__ = ["YawlitClient", "get_yawlit_client"]

@@ -55,18 +55,42 @@ from workflows.shared.state import BookingState
 
 async def lookup_customer_node(state: BookingState) -> BookingState:
     """Look up customer by phone number using YawlitClient."""
+    import logging
+    from models.customer import Phone
+    from models.core import ExtractionMetadata
+
+    logger = logging.getLogger(__name__)
     client = get_yawlit_client()
+
+    # Normalize phone number (remove +91/91 prefix)
+    raw_phone = state.get("conversation_id", "")
+    phone_model = Phone(
+        phone_number=raw_phone,
+        metadata=ExtractionMetadata(
+            confidence=1.0,
+            extraction_method="direct",
+            extraction_source="wapi_webhook"
+        )
+    )
+    normalized_phone = phone_model.phone_number
+
+    logger.info(
+        f"📞 Customer lookup: {raw_phone} → {normalized_phone}"
+    )
 
     return await call_frappe_node(
         state,
         client.customer_lookup.check_customer_exists,
         "customer_lookup_response",
-        state_extractor=lambda s: {"identifier": s.get("conversation_id", "")}
+        state_extractor=lambda s: {"identifier": normalized_phone}
     )
 
 
 async def check_customer_exists(state: BookingState) -> str:
     """Route based on customer existence."""
+    import logging
+
+    logger = logging.getLogger(__name__)
     lookup_response = state.get("customer_lookup_response", {})
 
     # YawlitClient returns {"exists": bool, "data": {...}}
@@ -79,8 +103,13 @@ async def check_customer_exists(state: BookingState) -> str:
             "last_name": data.get("last_name"),
             "enabled": data.get("enabled")
         }
+        logger.info(
+            f"✅ Customer found: {data.get('first_name')} "
+            f"{data.get('last_name')} ({data.get('customer_uuid')})"
+        )
         return "existing_customer"
     else:
+        logger.info("❌ Customer not found - routing to registration")
         return "new_customer"
 
 

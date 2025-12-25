@@ -14,7 +14,6 @@ DRY Principle:
 import logging
 from typing import Any, Callable, Dict, Optional, Protocol
 
-from clients.frappe_yawlit import YawlitClient
 from clients.frappe_yawlit.utils.exceptions import FrappeAPIError, NotFoundError
 from utils.field_utils import set_nested_field
 from workflows.shared.state import BookingState
@@ -42,26 +41,6 @@ class FrappeOperation(Protocol):
             API response data
         """
         ...
-
-
-# Global YawlitClient instance (singleton pattern)
-_yawlit_client: Optional[YawlitClient] = None
-
-
-def get_yawlit_client() -> YawlitClient:
-    """Get global YawlitClient instance.
-
-    Creates client on first call, reuses thereafter.
-    Reads configuration from settings.
-
-    Returns:
-        Configured YawlitClient instance
-    """
-    global _yawlit_client
-    if _yawlit_client is None:
-        _yawlit_client = YawlitClient()
-        logger.info("YawlitClient singleton initialized")
-    return _yawlit_client
 
 
 async def node(

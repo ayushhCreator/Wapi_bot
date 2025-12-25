@@ -100,8 +100,14 @@ class CustomerLookupClient:
                 "/api/method/frappe.client.get_value",
                 {
                     "doctype": "User",
-                    "filters": {"phone": phone},
-                    "fieldname": ["name", "customer_uuid", "enabled"]
+                    "filters": {"mobile_no": phone},
+                    "fieldname": [
+                        "name",
+                        "customer_uuid",
+                        "enabled",
+                        "first_name",
+                        "last_name"
+                    ]
                 }
             )
             if result.get("message"):

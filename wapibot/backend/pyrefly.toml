@@ -2,3 +2,11 @@ project-includes = [
     "**/*.py*",
     "**/*.ipynb",
 ]
+
+# NOTE: Workflow files have expected type-checking false positives
+# These don't affect runtime behavior:
+# - TypedDict allows dynamic keys at runtime (bad-typed-dict-key)
+# - Protocol duck typing works at runtime (bad-argument-type)
+# - LangGraph has complex type annotations (no-matching-overload)
+#
+# Use `ruff check` for actual code quality issues.
