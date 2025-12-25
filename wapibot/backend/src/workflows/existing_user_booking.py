@@ -207,6 +207,17 @@ async def fetch_vehicles_node(state: BookingState) -> BookingState:
     logger.info(f"🔍 Raw vehicles_response keys: {list(vehicles_response.keys())}")
     logger.info(f"🔍 Full vehicles_response: {vehicles_response}")
 
+    # Check for Frappe error responses
+    if isinstance(vehicles_response.get("message"), dict):
+        if vehicles_response["message"].get("success") is False:
+            error_msg = vehicles_response["message"].get("message", "Unknown error")
+            logger.error(f"❌ Frappe API error: {error_msg}")
+            state["vehicle"] = None
+            state["vehicle_options"] = []
+            state["vehicle_selected"] = False
+            state["frappe_error"] = error_msg
+            return state
+
     # Try multiple possible response structures
     vehicles = vehicles_response.get("message", {}).get("vehicles", [])
 
@@ -258,6 +269,10 @@ async def fetch_vehicles_node(state: BookingState) -> BookingState:
 
 async def check_vehicle_selected(state: BookingState) -> str:
     """Route based on whether vehicle is selected."""
+    # Check for Frappe API errors first
+    if state.get("frappe_error"):
+        return "frappe_error"
+
     if state.get("vehicle_selected"):
         return "vehicle_selected"
     elif not state.get("vehicle_options"):
@@ -280,6 +295,19 @@ async def send_no_vehicles_node(state: BookingState) -> BookingState:
         )
 
     return await send_message_node(state, no_vehicles_message)
+
+
+async def send_frappe_error_node(state: BookingState) -> BookingState:
+    """Send message when Frappe API returns an error."""
+    def frappe_error_message(s):
+        error = s.get("frappe_error", "Unknown error occurred")
+        return (
+            f"⚠️ Unable to fetch your profile information:\n\n"
+            f"{error}\n\n"
+            f"Please complete your profile at https://yawlit.duckdns.org/customer/profile"
+        )
+
+    return await send_message_node(state, frappe_error_message)
 
 
 async def extract_vehicle_selection_node(state: BookingState) -> BookingState:
@@ -718,6 +746,7 @@ def create_existing_user_booking_workflow():
     workflow.add_node("extract_vehicle_selection", extract_vehicle_selection_node)
     workflow.add_node("send_vehicle_error", send_vehicle_selection_error_node)
     workflow.add_node("send_no_vehicles", send_no_vehicles_node)
+    workflow.add_node("send_frappe_error", send_frappe_error_node)
     workflow.add_node("send_greeting", send_greeting_node)
     workflow.add_node("send_please_register", send_please_register_node)
     workflow.add_node("fetch_services", fetch_services_node)
@@ -771,11 +800,13 @@ def create_existing_user_booking_workflow():
         {
             "vehicle_selected": "send_greeting",
             "vehicle_selection_required": "send_vehicle_options",
-            "no_vehicles": "send_no_vehicles"
+            "no_vehicles": "send_no_vehicles",
+            "frappe_error": "send_frappe_error"
         }
     )
     workflow.add_edge("send_vehicle_options", END)  # Wait for user to select
     workflow.add_edge("send_no_vehicles", END)  # User needs to add vehicle first
+    workflow.add_edge("send_frappe_error", END)  # User needs to fix profile
 
     # Vehicle selection extraction (called on next message when user selects)
     workflow.add_conditional_edges(
