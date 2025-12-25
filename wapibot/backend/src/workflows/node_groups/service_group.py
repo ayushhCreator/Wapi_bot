@@ -75,8 +75,10 @@ async def process_service_selection(state: BookingState) -> BookingState:
 
 async def send_service_error(state: BookingState) -> BookingState:
     """Send error message for invalid service selection."""
-    error_msg = state.get("error", "Invalid selection. Please try again.")
-    return await send_message_node(state, lambda s: error_msg)
+    error_msg = state.get("selection_error", "Invalid selection. Please try again.")
+    result = await send_message_node(state, lambda s: error_msg)
+    result["should_proceed"] = False  # Stop and wait for next user message
+    return result
 
 
 def create_service_group() -> StateGraph:
@@ -103,6 +105,7 @@ def create_service_group() -> StateGraph:
         }
     )
 
-    workflow.add_edge("send_error", "show_catalog")  # Re-prompt
+    # Error path: send error and END (don't loop!)
+    workflow.add_edge("send_error", END)
 
     return workflow.compile()

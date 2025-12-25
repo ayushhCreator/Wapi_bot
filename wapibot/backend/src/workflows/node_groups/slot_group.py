@@ -72,8 +72,10 @@ async def process_slot_selection(state: BookingState) -> BookingState:
 
 async def send_slot_error(state: BookingState) -> BookingState:
     """Send error message for invalid slot selection."""
-    error_msg = state.get("error", "Invalid selection. Please try again.")
-    return await send_message_node(state, lambda s: error_msg)
+    error_msg = state.get("selection_error", "Invalid selection. Please try again.")
+    result = await send_message_node(state, lambda s: error_msg)
+    result["should_proceed"] = False  # Stop and wait for next user message
+    return result
 
 
 def create_slot_group() -> StateGraph:
@@ -100,6 +102,7 @@ def create_slot_group() -> StateGraph:
         }
     )
 
-    workflow.add_edge("send_error", "show_slots")  # Re-prompt
+    # Error path: send error and END (don't loop!)
+    workflow.add_edge("send_error", END)
 
     return workflow.compile()
