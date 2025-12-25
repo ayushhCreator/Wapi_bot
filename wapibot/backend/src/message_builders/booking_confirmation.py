@@ -6,7 +6,6 @@ SOLID Principles:
 - Dependency Inversion: Implements MessageBuilder Protocol
 """
 
-from typing import Optional
 from workflows.shared.state import BookingState
 
 
@@ -53,10 +52,10 @@ class BookingConfirmationBuilder:
         if first_name:
             message += f"Customer: {first_name}\n"
 
-        # Vehicle details
-        brand = vehicle.get("brand", "")
-        model = vehicle.get("model", "")
-        number_plate = vehicle.get("number_plate", "")
+        # Vehicle details (supports both old and new field names)
+        brand = vehicle.get("vehicle_make") or vehicle.get("brand", "")
+        model = vehicle.get("vehicle_model") or vehicle.get("model", "")
+        number_plate = vehicle.get("vehicle_number") or vehicle.get("number_plate", "")
         if brand and model:
             message += f"Vehicle: {brand} {model}"
             if number_plate:

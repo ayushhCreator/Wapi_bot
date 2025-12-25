@@ -11,9 +11,11 @@ They are used with send_message.node():
 from message_builders.greeting import GreetingBuilder
 from message_builders.service_catalog import ServiceCatalogBuilder
 from message_builders.booking_confirmation import BookingConfirmationBuilder
+from message_builders.vehicle_options import VehicleOptionsBuilder
 
 __all__ = [
     "GreetingBuilder",
     "ServiceCatalogBuilder",
     "BookingConfirmationBuilder",
+    "VehicleOptionsBuilder",
 ]

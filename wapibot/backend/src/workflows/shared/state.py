@@ -24,8 +24,13 @@ class BookingState(TypedDict):
 
     # Extracted Data (replaces scratchpad)
     customer: Optional[Dict[str, Any]]  # {first_name, last_name, phone, customer_uuid}
-    vehicle: Optional[Dict[str, Any]]   # {brand, model, number_plate, vehicle_type}
+    vehicle: Optional[Dict[str, Any]]   # {vehicle_id, vehicle_make, vehicle_model, vehicle_number, vehicle_type}
     appointment: Optional[Dict[str, Any]]  # {date, time_slot, service_type}
+
+    # Vehicle Selection (for multi-vehicle customers)
+    vehicle_options: Optional[List[Dict[str, Any]]]  # Available vehicles to choose from
+    vehicle_selected: bool  # True if valid vehicle selected
+    vehicles_response: Optional[Dict[str, Any]]  # Raw API response from get_vehicles
 
     # AI Analysis
     sentiment: Optional[Dict[str, float]]  # {interest, anger, disgust, boredom}

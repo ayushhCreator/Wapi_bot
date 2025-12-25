@@ -38,6 +38,7 @@ from message_builders.booking_confirmation import BookingConfirmationBuilder
 # Message builders
 from message_builders.greeting import GreetingBuilder
 from message_builders.service_catalog import ServiceCatalogBuilder
+from message_builders.vehicle_options import VehicleOptionsBuilder
 from nodes.atomic.call_frappe import node as call_frappe_node
 
 # Atomic nodes
@@ -48,6 +49,69 @@ from nodes.atomic.transform import node as transform_node
 from transformers.filter_services import FilterServicesByVehicle
 from transformers.format_slot_options import FormatSlotOptions
 from workflows.shared.state import BookingState
+
+# ============================================================================
+# ENTRY ROUTER (Determines where to resume based on state)
+# ============================================================================
+
+async def entry_router_node(state: BookingState) -> BookingState:
+    """Entry router - determines resume point based on current state.
+
+    This node runs at the start of every message to decide where to go:
+    - If waiting for vehicle selection: go to extract_vehicle_selection
+    - If waiting for service selection: go to extract_service_selection
+    - If waiting for slot selection: go to extract_slot_selection
+    - If waiting for confirmation: go to extract_confirmation
+    - Otherwise: start from lookup_customer
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Log current state for debugging
+    vehicle_selected = state.get("vehicle_selected", False)
+    service_selected = state.get("service_selected", False)
+    slot_selected = state.get("slot_selected", False)
+    confirmed = state.get("confirmed")
+
+    logger.info(
+        f"🔀 Entry router: vehicle_selected={vehicle_selected}, "
+        f"service_selected={service_selected}, slot_selected={slot_selected}, "
+        f"confirmed={confirmed}"
+    )
+
+    return state
+
+
+async def check_resume_point(state: BookingState) -> str:
+    """Route to the correct resume point based on state.
+
+    Returns:
+        - "awaiting_vehicle": User needs to select vehicle
+        - "awaiting_service": User needs to select service
+        - "awaiting_slot": User needs to select slot
+        - "awaiting_confirmation": User needs to confirm booking
+        - "fresh_start": New conversation or completed flow
+    """
+    # Check if waiting for vehicle selection
+    if state.get("vehicle_options") and not state.get("vehicle_selected"):
+        return "awaiting_vehicle"
+
+    # Check if waiting for service selection
+    if state.get("filtered_services") and not state.get("service_selected"):
+        return "awaiting_service"
+
+    # Check if waiting for slot selection
+    if state.get("available_slots") and not state.get("slot_selected"):
+        return "awaiting_slot"
+
+    # Check if waiting for confirmation
+    if state.get("selected_service") and state.get("slot_selected") and state.get("confirmed") is None:
+        return "awaiting_confirmation"
+
+    # Fresh start or completed
+    return "fresh_start"
+
 
 # ============================================================================
 # CUSTOMER LOOKUP & ROUTING
@@ -105,6 +169,152 @@ async def lookup_customer_node(state: BookingState) -> BookingState:
     return state
 
 
+# ============================================================================
+# VEHICLE FETCHING & SELECTION
+# ============================================================================
+
+async def fetch_vehicles_node(state: BookingState) -> BookingState:
+    """Fetch customer vehicles and auto-select if single vehicle.
+
+    Sets state["vehicle"] to:
+    - Selected vehicle if only 1 vehicle exists (auto-select)
+    - None if multiple vehicles (user must choose)
+    - None if no vehicles (user needs to add vehicle)
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+    client = get_yawlit_client()
+
+    customer = state.get("customer", {})
+    if not customer or not customer.get("customer_uuid"):
+        logger.info("No customer found - skipping vehicle fetch")
+        state["vehicle_selected"] = False
+        return state
+
+    # Fetch vehicles using call_frappe_node
+    state = await call_frappe_node(
+        state,
+        client.customer_profile.get_vehicles,
+        "vehicles_response",
+        state_extractor=lambda s: {}  # No params needed - uses auth token
+    )
+
+    vehicles_response = state.get("vehicles_response", {})
+    vehicles = vehicles_response.get("message", {}).get("vehicles", [])
+
+    # Handle edge case: response might have vehicles at top level
+    if not vehicles:
+        vehicles = vehicles_response.get("vehicles", [])
+
+    if len(vehicles) == 0:
+        logger.info("No vehicles found - user needs to add vehicle")
+        state["vehicle"] = None
+        state["vehicle_options"] = []
+        state["vehicle_selected"] = False
+
+    elif len(vehicles) == 1:
+        # Auto-select single vehicle
+        vehicle = vehicles[0]
+        state["vehicle"] = {
+            "vehicle_id": vehicle.get("name"),
+            "vehicle_make": vehicle.get("vehicle_make"),
+            "vehicle_model": vehicle.get("vehicle_model"),
+            "vehicle_number": vehicle.get("vehicle_number"),
+            "vehicle_type": vehicle.get("vehicle_type")
+        }
+        state["vehicle_options"] = None
+        state["vehicle_selected"] = True
+        logger.info(f"Auto-selected single vehicle: {vehicle.get('vehicle_number')}")
+
+    else:
+        # Multiple vehicles - user must choose
+        logger.info(f"Multiple vehicles found ({len(vehicles)}) - user must select")
+        state["vehicle"] = None
+        state["vehicle_options"] = vehicles
+        state["vehicle_selected"] = False
+
+    return state
+
+
+async def check_vehicle_selected(state: BookingState) -> str:
+    """Route based on whether vehicle is selected."""
+    if state.get("vehicle_selected"):
+        return "vehicle_selected"
+    elif not state.get("vehicle_options"):
+        return "no_vehicles"
+    else:
+        return "vehicle_selection_required"
+
+
+async def send_vehicle_options_node(state: BookingState) -> BookingState:
+    """Send vehicle selection options to customer."""
+    return await send_message_node(state, VehicleOptionsBuilder())
+
+
+async def send_no_vehicles_node(state: BookingState) -> BookingState:
+    """Send message when customer has no vehicles."""
+    def no_vehicles_message(s):
+        return (
+            "You don't have any vehicles registered yet.\n\n"
+            "Please add a vehicle at https://yawlit.duckdns.org/customer/profile to book a service."
+        )
+
+    return await send_message_node(state, no_vehicles_message)
+
+
+async def extract_vehicle_selection_node(state: BookingState) -> BookingState:
+    """Extract vehicle selection from user message (1, 2, 3, 4)."""
+    import logging
+    import re
+
+    logger = logging.getLogger(__name__)
+
+    user_message = state.get("user_message", "")
+    vehicle_options = state.get("vehicle_options", [])
+
+    if not vehicle_options:
+        logger.warning("No vehicle options available for selection")
+        return state
+
+    # Extract number (1, 2, 3, 4)
+    number_match = re.search(r'\b(\d+)\b', user_message)
+
+    if number_match:
+        index = int(number_match.group(1)) - 1  # Convert to 0-based
+
+        if 0 <= index < len(vehicle_options):
+            vehicle = vehicle_options[index]
+            state["vehicle"] = {
+                "vehicle_id": vehicle.get("name"),
+                "vehicle_make": vehicle.get("vehicle_make"),
+                "vehicle_model": vehicle.get("vehicle_model"),
+                "vehicle_number": vehicle.get("vehicle_number"),
+                "vehicle_type": vehicle.get("vehicle_type")
+            }
+            state["vehicle_selected"] = True
+            logger.info(f"Vehicle selected: {vehicle.get('vehicle_number')}")
+        else:
+            logger.warning(f"Invalid vehicle number: {number_match.group(1)}")
+            state["selection_error"] = "Invalid vehicle number"
+            state["vehicle_selected"] = False
+    else:
+        logger.warning("No vehicle number found in message")
+        state["selection_error"] = "Please reply with a number (1, 2, 3, etc.)"
+        state["vehicle_selected"] = False
+
+    return state
+
+
+async def send_vehicle_selection_error_node(state: BookingState) -> BookingState:
+    """Send error message for invalid vehicle selection."""
+    def error_message(s):
+        error = s.get("selection_error", "Invalid selection")
+        return f"Sorry, {error}. Please reply with the vehicle number (1, 2, 3, etc.)"
+
+    return await send_message_node(state, error_message)
+
+
 async def check_customer_exists(state: BookingState) -> str:
     """Route based on customer existence.
 
@@ -133,7 +343,7 @@ async def send_greeting_node(state: BookingState) -> BookingState:
 async def send_please_register_node(state: BookingState) -> BookingState:
     """Send registration request to new customer."""
     def please_register(s):
-        return "Welcome to Yawlit! To book a service, please register first at https://yawlit.in/register"
+        return "Welcome to Yawlit! To book a service, please register first at https://yawlit.duckdns.org/customer/auth/register"
 
     return await send_message_node(state, please_register)
 
@@ -456,7 +666,13 @@ def create_existing_user_booking_workflow():
     workflow = StateGraph(BookingState)
 
     # Add all nodes
+    workflow.add_node("entry_router", entry_router_node)
     workflow.add_node("lookup_customer", lookup_customer_node)
+    workflow.add_node("fetch_vehicles", fetch_vehicles_node)
+    workflow.add_node("send_vehicle_options", send_vehicle_options_node)
+    workflow.add_node("extract_vehicle_selection", extract_vehicle_selection_node)
+    workflow.add_node("send_vehicle_error", send_vehicle_selection_error_node)
+    workflow.add_node("send_no_vehicles", send_no_vehicles_node)
     workflow.add_node("send_greeting", send_greeting_node)
     workflow.add_node("send_please_register", send_please_register_node)
     workflow.add_node("fetch_services", fetch_services_node)
@@ -477,24 +693,61 @@ def create_existing_user_booking_workflow():
     workflow.add_node("send_success", send_success_node)
     workflow.add_node("send_cancelled", send_cancelled_node)
 
-    # Set entry point
-    workflow.set_entry_point("lookup_customer")
+    # Set entry point (always go through router first)
+    workflow.set_entry_point("entry_router")
+
+    # Entry router - determines where to resume based on state
+    workflow.add_conditional_edges(
+        "entry_router",
+        check_resume_point,
+        {
+            "fresh_start": "lookup_customer",
+            "awaiting_vehicle": "extract_vehicle_selection",
+            "awaiting_service": "extract_service_selection",
+            "awaiting_slot": "extract_slot_selection",
+            "awaiting_confirmation": "extract_confirmation"
+        }
+    )
 
     # Customer lookup routing
     workflow.add_conditional_edges(
         "lookup_customer",
         check_customer_exists,
         {
-            "existing_customer": "send_greeting",
+            "existing_customer": "fetch_vehicles",  # Go to vehicle fetching first
             "new_customer": "send_please_register"
         }
     )
+
+    # Vehicle selection flow
+    workflow.add_conditional_edges(
+        "fetch_vehicles",
+        check_vehicle_selected,
+        {
+            "vehicle_selected": "send_greeting",
+            "vehicle_selection_required": "send_vehicle_options",
+            "no_vehicles": "send_no_vehicles"
+        }
+    )
+    workflow.add_edge("send_vehicle_options", END)  # Wait for user to select
+    workflow.add_edge("send_no_vehicles", END)  # User needs to add vehicle first
+
+    # Vehicle selection extraction (called on next message when user selects)
+    workflow.add_conditional_edges(
+        "extract_vehicle_selection",
+        check_vehicle_selected,
+        {
+            "vehicle_selected": "send_greeting",
+            "vehicle_selection_required": "send_vehicle_error"  # Invalid selection
+        }
+    )
+    workflow.add_edge("send_vehicle_error", END)  # Wait for retry
 
     # Service catalog flow
     workflow.add_edge("send_greeting", "fetch_services")
     workflow.add_edge("fetch_services", "filter_services")
     workflow.add_edge("filter_services", "send_catalog")
-    workflow.add_edge("send_catalog", "extract_service_selection")
+    workflow.add_edge("send_catalog", END)  # Wait for user to select service
 
     # Service selection routing
     workflow.add_conditional_edges(
@@ -510,7 +763,7 @@ def create_existing_user_booking_workflow():
     # Appointment slot flow
     workflow.add_edge("fetch_slots", "format_slots")
     workflow.add_edge("format_slots", "send_slots")
-    workflow.add_edge("send_slots", "extract_slot_selection")
+    workflow.add_edge("send_slots", END)  # Wait for user to select slot
 
     # Slot selection routing
     workflow.add_conditional_edges(
@@ -525,7 +778,7 @@ def create_existing_user_booking_workflow():
 
     # Confirmation flow
     workflow.add_edge("calculate_price", "send_confirmation")
-    workflow.add_edge("send_confirmation", "extract_confirmation")
+    workflow.add_edge("send_confirmation", END)  # Wait for user to confirm
 
     # Confirmation routing
     workflow.add_conditional_edges(
@@ -547,4 +800,16 @@ def create_existing_user_booking_workflow():
     # New customer flow ends
     workflow.add_edge("send_please_register", END)
 
-    return workflow.compile()
+    # Add SqliteSaver for state persistence across messages
+    import sqlite3
+    from langgraph.checkpoint.sqlite import SqliteSaver
+    from pathlib import Path
+
+    db_path = Path(__file__).parent.parent.parent / "data" / "langgraph_checkpoints.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Create persistent sqlite3 connection and SqliteSaver instance
+    conn = sqlite3.connect(str(db_path), check_same_thread=False)
+    memory = SqliteSaver(conn)
+
+    return workflow.compile(checkpointer=memory)
