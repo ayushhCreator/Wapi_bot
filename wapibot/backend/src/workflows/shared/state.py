@@ -69,6 +69,7 @@ class BookingState(TypedDict):
     # Slot Selection
     available_slots: Optional[List[Dict[str, Any]]]  # Available appointment slots
     slot_options: Optional[List[Dict[str, Any]]]  # Slots available for selection
+    slot: Optional[Dict[str, Any]]  # User's selected slot
     formatted_slots: Optional[str]  # Human-readable slot options
     slot_selected: bool  # True if valid slot selected
 

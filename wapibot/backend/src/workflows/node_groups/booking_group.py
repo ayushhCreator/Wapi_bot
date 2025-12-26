@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 async def calculate_price(state: BookingState) -> BookingState:
     """Calculate total price."""
-    selected_service = state.get("service", {})
+    selected_service = state.get("selected_service", {})
     base_price = selected_service.get("base_price", 0)
     state["total_price"] = base_price
     logger.info(f"💰 Calculated price: ₹{base_price}")
@@ -81,12 +81,12 @@ async def create_booking(state: BookingState) -> BookingState:
 
     def extract_booking_params(s):
         customer = s.get("customer", {})
-        service = s.get("service", {})
+        selected_service = s.get("selected_service", {})
         slot = s.get("slot", {})
 
         return {
             "customer_uuid": customer.get("customer_uuid"),
-            "service_id": service.get("product_id"),
+            "service_id": selected_service.get("product_id"),
             "vehicle_id": s.get("vehicle", {}).get("vehicle_id"),
             "slot_id": slot.get("slot_id"),
             "date": slot.get("date"),

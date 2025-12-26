@@ -35,13 +35,8 @@ async def fetch_slots(state: BookingState) -> BookingState:
     """
     client = get_yawlit_client()
 
-    # Debug: log all keys in state
-    logger.info(f"🔍 DEBUG fetch_slots - state keys: {list(state.keys())}")
-    logger.info(f"🔍 DEBUG fetch_slots - selected_service: {state.get('selected_service')}")
-    logger.info(f"🔍 DEBUG fetch_slots - service: {state.get('service')}")
-
     # Get service ID from selected service
-    selected_service = state.get("selected_service") or state.get("service")
+    selected_service = state.get("selected_service")
     service_id = selected_service.get("name") if selected_service else None
 
     # Get vehicle type from vehicle

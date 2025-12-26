@@ -74,11 +74,11 @@ async def process_service_selection(state: BookingState) -> BookingState:
         state,
         selection_type="service",
         options_key="service_options",
-        selected_key="service"
+        selected_key="selected_service"  # Must match BookingState field name!
     )
     # Clear current_step to indicate we're moving to the next step (slot selection)
     # This allows slot_group to do a fresh fetch with the selected service
-    if result.get("service"):
+    if result.get("selected_service"):
         result["current_step"] = ""
         result["should_proceed"] = True  # Continue to next step
     return result
