@@ -81,7 +81,8 @@ class QRGenerationService:
         qr.add_data(upi_string)
         qr.make(fit=True)
 
-        img = qr.make_image(fill_color="black", back_color="white")
+        # Convert to RGB for WAPI compatibility (requires RGB/RGBA, 8-bit/channel)
+        img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
 
         # Convert to PNG bytes
         img_bytes_io = io.BytesIO()

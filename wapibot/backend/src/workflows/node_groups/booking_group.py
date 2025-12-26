@@ -19,10 +19,13 @@ import logging
 from langgraph.graph import StateGraph, END
 from workflows.shared.state import BookingState
 from nodes.atomic.send_message import node as send_message_node
+from nodes.atomic.send_media import node as send_media_node
 from nodes.atomic.call_frappe import node as call_frappe_node
 from nodes.message_builders.booking_confirmation import BookingConfirmationBuilder
+from nodes.message_builders.payment_instructions import build_payment_instructions_caption
 from nodes.payments import generate_qr_node, schedule_reminders_node
 from clients.frappe_yawlit import get_yawlit_client
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -119,18 +122,25 @@ async def schedule_payment_reminders(state: BookingState) -> BookingState:
 
 
 async def send_qr_message(state: BookingState) -> BookingState:
-    """Send QR code payment message to user."""
+    """Send QR code IMAGE with professional payment instructions."""
 
-    def qr_message(s):
+    def qr_media_builder(s):
+        session_id = s.get("payment_session_id")
         amount = s.get("payment_amount", 0)
-        return (
-            f"💳 *Payment Required*\n\n"
-            f"Amount: ₹{amount:.2f}\n\n"
-            f"Please scan the QR code below and complete the payment.\n\n"
-            f"We'll send you payment reminders over the next 7 days."
-        )
 
-    return await send_message_node(state, qr_message)
+        # Construct public URL for QR image
+        media_url = f"{settings.public_base_url}/api/v1/qr/{session_id}.png"
+
+        # Build professional payment instructions with all payment modes
+        caption = build_payment_instructions_caption(amount)
+
+        return {
+            "media_type": "image",
+            "media_url": media_url,
+            "caption": caption
+        }
+
+    return await send_media_node(state, qr_media_builder)
 
 
 async def send_success(state: BookingState) -> BookingState:

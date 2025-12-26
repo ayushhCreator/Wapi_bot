@@ -114,11 +114,26 @@ class Settings(BaseSettings):
     wapi_webhook_secret: str = ""  # HMAC secret for webhook signature validation
     wapi_webhook_url: str = ""  # Current ngrok webhook URL (update when ngrok restarts)
 
+    # Public Base URL (for media serving to external APIs like WAPI)
+    public_base_url: str = "http://localhost:8000"  # Override with ngrok URL in .env
+
     # UPI Payment Configuration
     upi_id: str = ""  # Merchant UPI ID (format: user@bank)
     payment_instant_reminder: bool = True  # Send instant reminder when QR generated
     payment_reminder_intervals: List[int] = [24, 48, 72]  # Hours between reminders
     payment_cutoff_hours: int = 168  # Payment expiry (7 days = 168 hours)
+
+    # Bank Transfer Details
+    bank_name: str = "State Bank of India"
+    bank_branch: str = "Kalikapur"
+    bank_ifsc: str = "SBIN0003907"
+    bank_account_no: str = ""
+    bank_account_name: str = "YAWLIT AUTOMOTIVES PVT. LTD."
+
+    # Business Contact
+    company_name: str = "Yawlit Automotives"
+    company_phone: str = ""
+    payment_help_text: str = "If you need any help making your payment, please contact us at your earliest convenience."
 
     # Celery Configuration
     celery_broker_url: str = "redis://localhost:6379/0"  # Redis broker for tasks

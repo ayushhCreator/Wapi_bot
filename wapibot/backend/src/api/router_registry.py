@@ -9,6 +9,7 @@ from api.health_api import router as health_router
 from api.v1.chat_endpoint import router as chat_router
 from api.v1.wapi_webhook import router as wapi_router
 from api.v1.admin_payment_endpoint import router as payment_router
+from api.v1.qr_endpoint import router as qr_router
 
 
 def register_all_routes(app: FastAPI) -> None:
@@ -27,6 +28,7 @@ def register_all_routes(app: FastAPI) -> None:
     app.include_router(chat_router)
     app.include_router(wapi_router)
     app.include_router(payment_router)
+    app.include_router(qr_router)
 
     # Add more routers here as you build them:
     # app.include_router(booking_router)
