@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from core.config import settings
 from services.qr_service import qr_service
 from clients.wapi import get_wapi_client
+from nodes.message_builders.payment_instructions import build_payment_instructions_caption
 import uuid
 
 
@@ -78,15 +79,14 @@ async def test_qr_image_delivery():
     try:
         client = get_wapi_client()
 
+        # Build professional payment instructions
+        caption = build_payment_instructions_caption(amount)
+
         result = await client.send_media(
             phone_number=phone,
             media_type="image",
             media_url=endpoint_url,
-            caption=(
-                f"💳 Payment QR Code\n\n"
-                f"Amount: ₹{amount:.2f}\n\n"
-                f"Scan this code to complete your payment."
-            )
+            caption=caption
         )
 
         wamid = result.get("data", {}).get("wamid", "N/A")
