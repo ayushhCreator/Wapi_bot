@@ -75,8 +75,10 @@ class ShutdownManager:
                 logger.warning(f"   ⚠️  Cleanup callback failed: {e}")
 
         logger.info("👋 All services stopped. Goodbye!")
-        # Don't call sys.exit() - let uvicorn/asyncio handle graceful shutdown
-        # Calling sys.exit() interrupts event loop cleanup and causes CancelledError
+
+        # Exit after cleanup is complete - shutdown handler intercepts SIGINT
+        # so uvicorn never gets it. We must exit explicitly after cleanup.
+        sys.exit(0)
 
     def register_signal_handlers(self):
         """Register SIGINT and SIGTERM handlers."""
