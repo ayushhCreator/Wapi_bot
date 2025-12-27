@@ -4,11 +4,13 @@ import os
 import logging
 from typing import Dict, Optional
 import dspy
-from dspy_modules.brain.conflict_detector import ConflictDetector
-from dspy_modules.brain.intent_predictor import IntentPredictor
-from dspy_modules.brain.quality_evaluator import QualityEvaluator
-from dspy_modules.brain.goal_decomposer import GoalDecomposer
-from dspy_modules.brain.response_generator import ResponseGenerator
+from dspy_modules.brain import (
+    ConflictDetector,
+    IntentPredictor,
+    QualityEvaluator,
+    GoalDecomposer,
+    ResponseGenerator
+)
 
 logger = logging.getLogger(__name__)
 

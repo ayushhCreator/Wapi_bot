@@ -7,11 +7,13 @@ from repositories.brain_decision_repo import BrainDecisionRepository
 from core.brain_config import get_brain_settings
 from core.dspy_config import dspy_configurator
 from services.dataset_builder import DatasetBuilder
-from dspy_modules.brain.conflict_detector import ConflictDetector
-from dspy_modules.brain.intent_predictor import IntentPredictor
-from dspy_modules.brain.quality_evaluator import QualityEvaluator
-from dspy_modules.brain.goal_decomposer import GoalDecomposer
-from dspy_modules.brain.response_generator import ResponseGenerator
+from dspy_modules.brain import (
+    ConflictDetector,
+    IntentPredictor,
+    QualityEvaluator,
+    GoalDecomposer,
+    ResponseGenerator
+)
 from dspy_modules.metrics import (
     conflict_metric,
     intent_metric,
