@@ -106,6 +106,25 @@ class BookingState(TypedDict):
     payment_confirmed_by: Optional[str]  # Admin email who confirmed
     payment_reminders_scheduled: Optional[int]  # Number of reminders scheduled
 
+    # Brain System Fields (Phase 2+)
+    conflict_detected: Optional[str]  # "frustration" | "bargaining" | "cancellation" | None
+    predicted_intent: Optional[str]  # "continue_booking" | "ask_question" | "cancel" etc.
+    conversation_quality: float  # 0.0-1.0 quality score
+    booking_completeness: float  # 0.0-1.0 booking completion
+    user_satisfaction: Optional[float]  # 0.0-1.0 estimated satisfaction
+    decomposed_goals: Optional[List[str]]  # Sub-goals from goal decomposer
+    required_info: Optional[List[str]]  # Required information identified by brain
+    proposed_response: Optional[str]  # Brain's proposed response (conscious mode)
+    brain_mode: str  # "shadow" | "reflex" | "conscious"
+    action_taken: Optional[str]  # Action brain took (if any)
+    brain_confidence: float  # Brain's confidence in decision
+    brain_decision_id: Optional[str]  # RL Gym decision ID for tracking
+    dream_applied: bool  # Whether a dream learning was applied
+    recalled_memories: Optional[List[Dict[str, Any]]]  # Memories for dreaming
+    generated_dreams: Optional[List[Dict[str, Any]]]  # Generated dream scenarios
+    can_dream: bool  # Whether enough data for dreaming
+    dream_status: Optional[str]  # "skipped" | "generated"
+
 
 # Type alias for cleaner imports
 State = BookingState

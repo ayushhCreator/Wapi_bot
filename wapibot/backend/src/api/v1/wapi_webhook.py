@@ -7,8 +7,10 @@ from fastapi import APIRouter, HTTPException, Request, Header
 from typing import Optional
 
 from core.config import settings
+from core.brain_config import get_brain_settings
 from schemas.wapi import WAPIWebhookPayload, WAPIResponse
 from workflows.shared.state import BookingState
+from workflows.node_groups.brain_group import create_brain_workflow
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/wapi", tags=["WAPI"])
@@ -165,6 +167,7 @@ async def wapi_webhook(
             logger.info(f"Resuming conversation for {phone}")
         else:
             # New conversation - initialize state
+            brain_settings = get_brain_settings()
             state: BookingState = {
                 "conversation_id": phone,
                 "user_message": body,
@@ -199,11 +202,44 @@ async def wapi_webhook(
                 "total_price": None,
                 "confirmed": None,
                 "gate_decision": None,
+                # Brain system fields
+                "conflict_detected": None,
+                "predicted_intent": None,
+                "conversation_quality": 0.5,
+                "booking_completeness": 0.0,
+                "user_satisfaction": None,
+                "decomposed_goals": None,
+                "required_info": None,
+                "proposed_response": None,
+                "brain_mode": brain_settings.brain_mode,
+                "action_taken": None,
+                "brain_confidence": 0.0,
+                "brain_decision_id": None,
+                "dream_applied": False,
+                "recalled_memories": None,
+                "generated_dreams": None,
+                "can_dream": False,
+                "dream_status": None,
             }
             logger.info(f"Starting new conversation for {phone}")
 
         # Run workflow with config for checkpointing
         result = await workflow.ainvoke(state, config=config)
+
+        # Run brain workflow (observes conversation in parallel)
+        brain_settings = get_brain_settings()
+        if brain_settings.brain_enabled:
+            try:
+                logger.info(f"🧠 Running brain in {brain_settings.brain_mode} mode")
+                brain_workflow = create_brain_workflow()
+                # Brain observes the completed conversation (with response)
+                brain_result = await brain_workflow.ainvoke(result)
+                # Update state with brain observations
+                result.update(brain_result)
+                logger.info(f"🧠 Brain processing complete")
+            except Exception as e:
+                logger.error(f"🧠 Brain processing failed: {e}", exc_info=True)
+                # Brain failure doesn't block main workflow
 
         # Check if workflow already sent messages (via send_message_node)
         # send_message_node sends directly via WAPI, so no need to send again
