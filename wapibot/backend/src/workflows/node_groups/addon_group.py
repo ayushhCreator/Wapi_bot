@@ -128,10 +128,22 @@ async def extract_addon_selection(state: BookingState) -> BookingState:
 
     if selected_indices:
         state["selected_addons"] = selected_addons
-        state["addon_ids"] = addon_ids
+
+        # Build proper addon structure for API: [{"addon": id, "quantity": 1, "unit_price": price}, ...]
+        formatted_addons = []
+        for addon in selected_addons:
+            formatted_addons.append({
+                "addon": addon.get("name"),           # AddOn DocType ID
+                "quantity": 1,
+                "unit_price": addon.get("unit_price", 0)
+            })
+
+        state["addon_ids"] = formatted_addons
         state["addon_selection_complete"] = True
         state["skipped_addons"] = False
-        logger.info(f"➕ Addons selected: {addon_ids} (options {selected_indices})")
+        addon_names = [a.get("addon_name", a.get("name")) for a in selected_addons]
+        logger.info(f"➕ Addons selected: {addon_names} (options {selected_indices})")
+        logger.info(f"➕ Addon structure: {formatted_addons}")
     else:
         state["addon_selection_complete"] = False
         logger.warning(f"Could not parse addon selection: {user_message}")
