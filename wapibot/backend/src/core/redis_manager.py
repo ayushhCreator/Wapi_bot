@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 import redis as redis_client
+import redis.asyncio as aioredis
 
 logger = logging.getLogger(__name__)
 
@@ -90,3 +91,22 @@ def ensure_redis_running(
     except Exception as e:
         logger.error(f"❌ Redis startup error: {e}")
         return False
+
+
+async def get_redis_client() -> aioredis.Redis:
+    """Get async Redis client for health checks and monitoring.
+
+    Returns:
+        Async Redis client instance
+
+    Note:
+        Uses celery_broker_url from settings. Client is created fresh on each call
+        to avoid connection pooling issues across async contexts.
+    """
+    from core.config import settings
+
+    return await aioredis.from_url(
+        settings.celery_broker_url,
+        encoding="utf-8",
+        decode_responses=True,
+    )

@@ -15,7 +15,7 @@ async def check_redis_health(diagnosis: Dict[str, Any]) -> None:
     from core.redis_manager import get_redis_client
 
     try:
-        redis_client = get_redis_client()
+        redis_client = await get_redis_client()
         start = datetime.now()
         await redis_client.ping()
         latency_ms = (datetime.now() - start).total_seconds() * 1000

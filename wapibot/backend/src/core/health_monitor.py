@@ -65,7 +65,7 @@ class HealthMonitor:
         """
         try:
             from core.redis_manager import get_redis_client
-            redis_client = get_redis_client()
+            redis_client = await get_redis_client()
 
             # Try to ping Redis
             await redis_client.ping()
