@@ -8,7 +8,7 @@ from typing import Optional
 
 from core.config import settings
 from core.brain_config import get_brain_settings
-from schemas.wapi import WAPIWebhookPayload, WAPIResponse
+from models.wapi_schemas import WAPIWebhookPayload, WAPIResponse
 from workflows.shared.state import BookingState
 from workflows.node_groups.brain_group import create_brain_workflow
 
@@ -79,42 +79,39 @@ def verify_webhook_signature(payload_body: bytes, signature: str) -> bool:
     return hmac.compare_digest(signature, expected_signature)
 
 
-@router.post("/webhook", response_model=WAPIResponse)
+@router.post(
+    "/webhook",
+    response_model=WAPIResponse,
+    summary="Handle WhatsApp messages from WAPI",
+    responses={
+        200: {"description": "Message received and processed successfully"},
+        401: {
+            "description": "Invalid webhook signature",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid webhook signature"}
+                }
+            },
+        },
+        500: {
+            "description": "Workflow execution failed",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Workflow execution failed"}
+                }
+            },
+        },
+    },
+)
 async def wapi_webhook(
     request: Request,
     payload: WAPIWebhookPayload,
     x_wapi_signature: Optional[str] = Header(None, alias="X-WAPI-Signature")
 ) -> WAPIResponse:
-    """
-    Handle incoming WhatsApp messages from WAPI with signature validation.
+    """Handle incoming WhatsApp messages from WAPI with signature validation.
 
-    **Security:**
-    - Validates HMAC-SHA256 signature from X-WAPI-Signature header
-    - Rejects requests with invalid or missing signatures (in production)
-
-    **Flow:**
-    1. Validate webhook signature using HMAC-SHA256
-    2. Extract message from WAPI format
-    3. Convert to internal BookingState
-    4. Run LangGraph workflow
-    5. Send response via WAPI API
-
-    **Example Webhook Payload:**
-    ```json
-    {
-      "contact": {
-        "phone_number": "919876543210",
-        "first_name": "Ravi"
-      },
-      "message": {
-        "whatsapp_message_id": "wamid.abc123",
-        "body": "I want to book a car wash"
-      }
-    }
-    ```
-
-    **Headers:**
-    - X-WAPI-Signature: HMAC-SHA256 signature of request body
+    Validates HMAC-SHA256 signature, processes message through LangGraph workflow,
+    and sends response via WAPI API. Security: Rejects invalid signatures in production.
     """
     try:
         # Security: Verify webhook signature
