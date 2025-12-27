@@ -45,12 +45,25 @@ async def fetch_slots(state: BookingState) -> BookingState:
         state["slot_options"] = []
         return state
 
-    # Fetch slots for next 7 days
+    # Fetch slots based on preferred date or next 7 days
     all_slots = []
     today = datetime.now().date()
 
+    # Check if user has a preferred date
+    preferred_date = state.get("preferred_date", "")
+    if preferred_date:
+        try:
+            # Parse preferred date and fetch around it
+            start_date = datetime.fromisoformat(preferred_date).date()
+            logger.info(f"📅 Fetching slots for preferred date: {preferred_date} and surrounding dates")
+        except (ValueError, TypeError):
+            logger.warning(f"⚠️ Invalid preferred_date format: {preferred_date}, using today")
+            start_date = today
+    else:
+        start_date = today
+
     for i in range(7):
-        date = today + timedelta(days=i)
+        date = start_date + timedelta(days=i)
         date_str = date.strftime("%Y-%m-%d")
 
         try:
