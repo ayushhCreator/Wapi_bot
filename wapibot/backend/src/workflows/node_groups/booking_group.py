@@ -39,17 +39,12 @@ async def calculate_price(state: BookingState) -> BookingState:
         client = get_yawlit_client()
 
         def extract_price_params(s):
-            vehicle = s.get("vehicle", {})
-            # Wrap in price_data to match calculate_price(price_data: Dict) signature
+            # API expects flat parameters, not wrapped in price_data
             return {
-                "price_data": {
-                    "service_id": selected_service.get("product_id"),
-                    "vehicle_type": vehicle.get("vehicle_type"),
-                    "optional_addons": s.get("addon_ids", []),
-                    "coupon_code": s.get("discount_code", ""),
-                    "electricity_provided": s.get("electricity_provided", 1),
-                    "water_provided": s.get("water_provided", 1)
-                }
+                "product_id": selected_service.get("name"),
+                "optional_addons": s.get("addon_ids", []),
+                "electricity_provided": s.get("electricity_provided", 1),
+                "water_provided": s.get("water_provided", 1)
             }
 
         logger.info("💰 Calling calculate_booking_price API...")
@@ -145,9 +140,9 @@ async def create_booking(state: BookingState) -> BookingState:
         logger.info(f"📱 Phone normalized: {s.get('conversation_id')} → {phone}")
 
         # Extract booking data fields
-        product_id = selected_service.get("product_id")
+        product_id = selected_service.get("name")
         booking_date = slot.get("date")
-        slot_id = slot.get("slot_id")
+        slot_id = slot.get("name")  # slot.name is the actual slot ID (e.g., "SLOT-1568")
         vehicle_id = s.get("vehicle", {}).get("vehicle_id")
         address_id = s.get("selected_address_id") or customer.get("default_address_id")
 
@@ -191,22 +186,31 @@ async def create_booking(state: BookingState) -> BookingState:
         }
 
     logger.info("📝 Creating booking via create_booking_by_phone...")
-    return await call_frappe_node(
+    result = await call_frappe_node(
         state,
         client.booking_create.create_booking_by_phone,
-        "booking_response",
+        "booking_api_response",
         state_extractor=extract_booking_params
     )
+
+    # Extract booking data from nested response structure
+    api_response = result.get("booking_api_response", {})
+    message = api_response.get("message", {})
+
+    # Store unwrapped booking data
+    result["booking_response"] = message
+    result["booking_id"] = message.get("booking_id", "Unknown")
+    result["booking_data"] = message.get("booking_data", {})
+
+    logger.info(f"✅ Booking created: {result.get('booking_id')}")
+    return result
 
 
 async def generate_payment_qr(state: BookingState) -> BookingState:
     """Generate UPI QR code for payment."""
     amount = state.get("total_price")
-    # Backward-compatible extraction (new API: direct field, old API: nested in message)
-    booking_response = state.get("booking_response", {})
-    logger.info(f"🔍 DEBUG: booking_response keys = {list(booking_response.keys())}")
-    logger.info(f"🔍 DEBUG: booking_response = {booking_response}")
-    booking_id = booking_response.get("booking_id") or booking_response.get("message", {}).get("booking_id", "Unknown")
+    booking_id = state.get("booking_id", "Unknown")
+    logger.info(f"🔍 Generating QR for booking: {booking_id}")
 
     return await generate_qr_node(
         state,
@@ -246,9 +250,7 @@ async def send_success(state: BookingState) -> BookingState:
     """Send booking success message."""
 
     def success_message(s):
-        booking_response = s.get("booking_response", {})
-        # Backward-compatible extraction (new API: direct field, old API: nested in message)
-        booking_id = booking_response.get("booking_id") or booking_response.get("message", {}).get("booking_id", "Unknown")
+        booking_id = s.get("booking_id", "Unknown")
         return f"✅ Booking confirmed!\n\nYour booking ID is: {booking_id}\n\nWe'll send you a confirmation shortly. Thank you for choosing Yawlit!"
 
     return await send_message_node(state, success_message)

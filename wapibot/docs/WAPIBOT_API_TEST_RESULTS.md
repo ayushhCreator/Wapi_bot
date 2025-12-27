@@ -2,6 +2,7 @@
 
 **Date:** December 25, 2024  
 **Credentials Used:**
+
 - API Key: `57ebe42fbfc0dd0`
 - API Secret: `8d0ec8869a43f53`
 
@@ -17,6 +18,7 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 ```
 
 **Result:** 84 slots returned for 2025-12-26
+
 - Slots from 06:00-18:00
 - Multiple vendors available
 - Capacity: 2 per slot
@@ -33,6 +35,7 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 ```
 
 **Result:** 4 services returned
+
 1. **HatchBack Premium** - ₹499
 2. **SUV Premium** - ₹599
 3. **Sedan Premium** - ₹599
@@ -50,6 +53,7 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 ```
 
 **Result:** 11 optional addons returned
+
 - Ceiling Cleaning - ₹800
 - Door Panel Detailing - ₹450
 - Eco Wash - ₹100
@@ -67,6 +71,7 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 ## Test 4: Calculate Booking Price ✅ SUCCESS
 
 ### Scenario A: All resources provided
+
 ```bash
 curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.api.booking.calculate_booking_price \
   -H "Content-Type: application/json" \
@@ -75,11 +80,13 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 ```
 
 **Result:**
+
 - Base Price: ₹599
 - Surcharges: ₹0
 - **Total: ₹599**
 
 ### Scenario B: No electricity
+
 ```bash
 curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.api.booking.calculate_booking_price \
   -H "Content-Type: application/json" \
@@ -88,11 +95,13 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 ```
 
 **Result:**
+
 - Base Price: ₹599
 - Electricity Surcharge: ₹150
 - **Total: ₹749**
 
 ### Scenario C: No electricity, no water
+
 ```bash
 curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.api.booking.calculate_booking_price \
   -H "Content-Type: application/json" \
@@ -101,6 +110,7 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 ```
 
 **Result:**
+
 - Base Price: ₹599
 - Water Surcharge: ₹150
 - Electricity Surcharge: ₹150
@@ -114,6 +124,7 @@ curl -X POST https://yawlit.duckdns.org/api/method/yawlit_automotive_services.ap
 
 | API | Status | Response Time |
 |-----|--------|---------------|
+
 | get_available_slots | ✅ Working | Fast |
 | get_filtered_services | ✅ Working | Fast |
 | get_optional_addons | ✅ Working | Fast |
