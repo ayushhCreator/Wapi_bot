@@ -1,6 +1,7 @@
 """Dream node group - Scheduled dreaming workflow for Celery."""
 
 import logging
+import requests
 from langgraph.graph import StateGraph
 from models.brain_state import BrainState
 from nodes.brain import recall_memories, generate_dreams
@@ -30,12 +31,37 @@ class OllamaDreamGenerator:
 
         Returns:
             Generated dream text
-
-        Note: This is a stub. Actual implementation uses Ollama API.
         """
-        # TODO: Implement actual Ollama API call
-        logger.info(f"Generating dream with {model}")
-        return f"Dream scenario generated from prompt: {prompt[:50]}..."
+        try:
+            # Call Ollama API
+            response = requests.post(
+                f"{self.base_url}/api/generate",
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.9,  # High for creativity
+                        "top_p": 0.95,
+                        "num_predict": 500
+                    }
+                },
+                timeout=60
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            dream_text = result.get("response", "")
+
+            logger.info(f"✨ Generated dream ({len(dream_text)} chars) using {model}")
+            return dream_text
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"❌ Ollama API call failed: {e}")
+            return f"Dream scenario: {prompt[:100]}... (generation failed)"
+        except Exception as e:
+            logger.error(f"❌ Dream generation failed: {e}")
+            return f"Dream scenario: {prompt[:100]}... (error: {e})"
 
 
 def route_dream_action(state: BrainState) -> str:

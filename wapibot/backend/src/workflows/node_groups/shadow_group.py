@@ -11,39 +11,46 @@ from nodes.brain import (
     response_proposer,
     log_decision
 )
-from dspy_modules.brain import (
-    ConflictDetector,
-    IntentPredictor,
-    QualityEvaluator,
-    GoalDecomposer,
-    ResponseGenerator
-)
+from dspy_modules.module_loader import load_all_modules
 from repositories.brain_decision_repo import BrainDecisionRepository
+from core.brain_config import get_brain_settings
 
 logger = logging.getLogger(__name__)
 
 
-def create_shadow_workflow() -> StateGraph:
+def create_shadow_workflow(use_optimized: bool = None) -> StateGraph:
     """Create shadow mode workflow.
 
     Shadow mode:
     - Observes ALL conversations
-    - Processes with brain modules
+    - Processes with brain modules (baseline or optimized)
     - Logs decisions to RL Gym
     - NEVER takes action (no response sent)
+
+    Args:
+        use_optimized: Use GEPA-optimized modules (None = from config)
 
     Returns:
         Compiled LangGraph workflow
     """
     workflow = StateGraph(BrainState)
 
-    # Initialize DSPy modules
-    conflict_detector = ConflictDetector()
-    intent_pred = IntentPredictor()
-    quality_eval = QualityEvaluator()
-    goal_decomp = GoalDecomposer()
-    response_gen = ResponseGenerator()
+    # Get settings
+    settings = get_brain_settings()
+    if use_optimized is None:
+        use_optimized = settings.use_optimized_modules
+
+    # Load brain modules (optimized or baseline)
+    modules = load_all_modules(use_optimized=use_optimized)
+
+    conflict_detector = modules["conflict"]
+    intent_pred = modules["intent"]
+    quality_eval = modules["quality"]
+    goal_decomp = modules["goals"]
+    response_gen = modules["response"]
     decision_repo = BrainDecisionRepository()
+
+    logger.info(f"🧠 Shadow workflow using {'optimized' if use_optimized else 'baseline'} modules")
 
     # Add brain processing nodes
     workflow.add_node("monitor_conflict",

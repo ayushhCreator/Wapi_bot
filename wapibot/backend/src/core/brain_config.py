@@ -44,6 +44,12 @@ class BrainSettings(Settings):
     rl_gym_log_all: bool = Field(default=True)
     rl_gym_optimize_interval: int = Field(default=100)
 
+    # GEPA Optimization
+    use_optimized_modules: bool = Field(default=True, description="Use GEPA-optimized modules if available")
+    gepa_teacher_model: str = Field(default="qwen3:8b", description="Teacher LLM for GEPA reflection")
+    gepa_breadth: int = Field(default=10, description="Number of prompt candidates in GEPA")
+    gepa_depth: int = Field(default=3, description="Optimization iterations in GEPA")
+
 
 _brain_settings: BrainSettings | None = None
 
