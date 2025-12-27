@@ -14,6 +14,8 @@ from core.dspy_config import dspy_configurator
 from core.warmup import warmup_service
 from core.checkpointer import checkpointer_manager
 from db.connection import db_connection
+from db.websocket_db import websocket_db_connection
+from core.redis_subscriber import redis_subscriber
 from api.router_registry import register_all_routes
 
 # Multi-process and middleware management
@@ -65,6 +67,9 @@ async def lifespan(app: FastAPI):
     await db_connection.init_tables()
     logger.info("✅ Database initialized")
 
+    await websocket_db_connection.init_tables()
+    logger.info("✅ WebSocket database initialized")
+
     dspy_configurator.configure()
     logger.info(f"✅ DSPy configured ({settings.primary_llm_provider})")
 
@@ -75,6 +80,11 @@ async def lifespan(app: FastAPI):
     logger.info("📋 5/5: Starting Background Services...")
     asyncio.create_task(warmup_service.startup_warmup())
     asyncio.create_task(warmup_service.start_idle_monitor())
+
+    # Start Redis Streams subscriber for WebSocket message delivery
+    if settings.websocket_enabled:
+        await redis_subscriber.start()
+        logger.info("✅ Redis Streams subscriber started (WebSocket messages)")
 
     logger.info("=" * 70)
     logger.info("✅ All services started!")
@@ -90,6 +100,12 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("🛑 Shutting down...")
+
+    # Stop Redis Streams subscriber
+    if settings.websocket_enabled:
+        await redis_subscriber.stop()
+        logger.info("✅ Redis Streams subscriber stopped")
+
     await checkpointer_manager.shutdown()
 
 
