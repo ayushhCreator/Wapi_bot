@@ -39,12 +39,14 @@ async def calculate_price(state: BookingState) -> BookingState:
         client = get_yawlit_client()
 
         def extract_price_params(s):
-            # API expects flat parameters, not wrapped in price_data
+            # Wrap in price_data because calculate_price(price_data: Dict) expects it
             return {
-                "product_id": selected_service.get("name"),
-                "optional_addons": s.get("addon_ids", []),
-                "electricity_provided": s.get("electricity_provided", 1),
-                "water_provided": s.get("water_provided", 1)
+                "price_data": {
+                    "product_id": selected_service.get("name"),
+                    "optional_addons": s.get("addon_ids", []),
+                    "electricity_provided": s.get("electricity_provided", 1),
+                    "water_provided": s.get("water_provided", 1)
+                }
             }
 
         logger.info("💰 Calling calculate_booking_price API...")
@@ -55,9 +57,10 @@ async def calculate_price(state: BookingState) -> BookingState:
             state_extractor=extract_price_params
         )
 
-        # Extract total_price from API response
-        price_breakdown = result.get("price_breakdown", {})
-        total_price = price_breakdown.get("total_price")
+        # Extract total_price from API response (unwrap message structure)
+        price_api_response = result.get("price_breakdown", {})
+        price_breakdown = price_api_response.get("message", {})
+        total_price = price_breakdown.get("total_amount")  # API uses total_amount, not total_price
 
         if total_price and total_price > 0:
             result["total_price"] = total_price
@@ -167,7 +170,8 @@ async def create_booking(state: BookingState) -> BookingState:
             logger.error(f"   customer keys: {list(customer.keys())}")
 
         # Log booking data for debugging
-        logger.info(f"📋 Booking data: product_id={product_id}, date={booking_date}, slot_id={slot_id}, vehicle_id={vehicle_id}, address_id={address_id}")
+        addon_ids = s.get("addon_ids", [])
+        logger.info(f"📋 Booking data: product_id={product_id}, date={booking_date}, slot_id={slot_id}, vehicle_id={vehicle_id}, address_id={address_id}, addon_ids={addon_ids}")
 
         # Return phone_number and booking_data separately (method signature requirement)
         return {
