@@ -1,8 +1,12 @@
 """Brain system configuration from environment variables."""
 
+from pathlib import Path
 from typing import Literal
 from pydantic import Field
 from core.config import Settings
+
+# Default path for brain_gym.db in backend/data/
+_DEFAULT_BRAIN_GYM_PATH = str(Path(__file__).parent.parent.parent / "data" / "brain_gym.db")
 
 
 class BrainSettings(Settings):
@@ -40,7 +44,7 @@ class BrainSettings(Settings):
 
     # RL Gym
     rl_gym_enabled: bool = Field(default=True)
-    rl_gym_db_path: str = Field(default="brain_gym.db")
+    rl_gym_db_path: str = Field(default=_DEFAULT_BRAIN_GYM_PATH)
     rl_gym_log_all: bool = Field(default=True)
     rl_gym_optimize_interval: int = Field(default=100)
 
