@@ -1,7 +1,6 @@
 """Brain decision repository - CRUD for RL Gym decisions."""
 
 import sqlite3
-import json
 from typing import List, Optional
 from models.brain_decision import BrainDecision
 from core.brain_config import get_brain_settings

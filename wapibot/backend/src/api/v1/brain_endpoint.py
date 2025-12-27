@@ -5,9 +5,7 @@ from fastapi import APIRouter, HTTPException
 from api.v1.brain_schemas import (
     DreamTriggerRequest,
     TrainTriggerRequest,
-    BrainStatusResponse,
-    DecisionListResponse,
-    DecisionRecord
+    BrainStatusResponse
 )
 from services.brain_service import get_brain_service
 

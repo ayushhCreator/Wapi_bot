@@ -6,7 +6,6 @@ from models.brain_state import BrainState
 from nodes.brain import conflict_monitor, log_decision
 from dspy_modules.brain import ConflictDetector
 from repositories.brain_decision_repo import BrainDecisionRepository
-from core.brain_toggles import can_customize_template
 
 logger = logging.getLogger(__name__)
 

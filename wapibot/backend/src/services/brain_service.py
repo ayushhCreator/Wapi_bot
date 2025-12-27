@@ -3,7 +3,17 @@
 import logging
 from typing import Dict, Any, List
 from core.brain_config import get_brain_settings
-from core.brain_toggles import *
+from core.brain_toggles import (
+    can_customize_template,
+    can_confirm_dates,
+    can_suggest_addons,
+    can_answer_qa,
+    can_handle_bargaining,
+    can_escalate_human,
+    can_cancel_booking,
+    can_reset_flow,
+    can_create_dynamic_graph
+)
 from repositories.brain_decision_repo import BrainDecisionRepository
 from tasks.dream_task import run_dream_cycle
 from tasks.gepa_optimization_task import run_gepa_optimization

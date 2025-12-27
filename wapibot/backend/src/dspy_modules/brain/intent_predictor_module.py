@@ -1,7 +1,7 @@
 """Intent predictor module - OFC-like function (Orbitofrontal Cortex)."""
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import dspy
 from dspy_signatures.brain.intent_prediction_signature import IntentPredictionSignature
 

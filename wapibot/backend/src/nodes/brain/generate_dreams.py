@@ -3,7 +3,6 @@
 import logging
 from typing import Protocol, List, Dict, Any
 from models.brain_state import BrainState
-import random
 
 logger = logging.getLogger(__name__)
 

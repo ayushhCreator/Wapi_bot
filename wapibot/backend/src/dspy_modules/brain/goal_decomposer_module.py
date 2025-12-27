@@ -1,7 +1,7 @@
 """Goal decomposer module - aPFC-like function (anterior Prefrontal Cortex)."""
 
 import logging
-from typing import List, Dict, Any
+from typing import Dict, Any
 import dspy
 from dspy_signatures.brain.goal_decomposition_signature import GoalDecompositionSignature
 

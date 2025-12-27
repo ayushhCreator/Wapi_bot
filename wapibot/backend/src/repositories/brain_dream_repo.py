@@ -1,7 +1,6 @@
 """Brain dream repository - CRUD for dream learnings."""
 
 import sqlite3
-from datetime import datetime
 from typing import List, Optional
 from models.dream_config import DreamResult
 from core.brain_config import get_brain_settings

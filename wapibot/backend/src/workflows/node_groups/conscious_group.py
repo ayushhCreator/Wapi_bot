@@ -21,8 +21,6 @@ from dspy_modules.brain import (
 from repositories.brain_decision_repo import BrainDecisionRepository
 from core.brain_toggles import (
     can_customize_template,
-    can_confirm_dates,
-    can_suggest_addons,
     can_answer_qa,
     can_handle_bargaining,
     can_escalate_human,

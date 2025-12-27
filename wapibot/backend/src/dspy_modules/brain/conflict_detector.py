@@ -1,7 +1,7 @@
 """Conflict detector module - ACC-like function (Anterior Cingulate Cortex)."""
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import dspy
 from dspy_signatures.brain.conflict_signature import ConflictSignature
 
