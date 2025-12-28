@@ -45,6 +45,18 @@ class GroupedSlotsBuilder:
         preferred_date = state.get("preferred_date", "")
         preferred_time_range = state.get("preferred_time_range", "")
 
+        # Fallback: If grouped_slots is empty, try filtered_slot_options
+        if not grouped_slots or not any(grouped_slots.get(k) for k in ["morning", "afternoon", "evening"]):
+            filtered_slots = state.get("filtered_slot_options", [])
+            if filtered_slots:
+                # Group slots by time of day
+                grouped_slots = self._group_slots_by_time(filtered_slots)
+            else:
+                # Last resort: use slot_options
+                slot_options = state.get("slot_options", [])
+                if slot_options:
+                    grouped_slots = self._group_slots_by_time(slot_options)
+
         # Build header
         date_display = self._format_date_display(preferred_date)
         time_context = f" {preferred_time_range}" if preferred_time_range else ""
@@ -98,6 +110,27 @@ class GroupedSlotsBuilder:
         end_display = self._format_time_12h(end_time)
 
         return f"{start_display} - {end_display}"
+
+    def _group_slots_by_time(self, slots: List[Dict[str, Any]]) -> Dict[str, List]:
+        """Group slots by time of day (morning/afternoon/evening)."""
+        grouped = {"morning": [], "afternoon": [], "evening": []}
+
+        for slot in slots:
+            start_time = slot.get("start_time", "")
+            if start_time:
+                try:
+                    hour = int(start_time.split(":")[0])
+                    if hour < 12:
+                        grouped["morning"].append(slot)
+                    elif hour < 17:  # 5 PM
+                        grouped["afternoon"].append(slot)
+                    else:
+                        grouped["evening"].append(slot)
+                except (ValueError, IndexError):
+                    # If can't parse, skip
+                    pass
+
+        return grouped
 
     def _format_time_12h(self, time_str: str) -> str:
         """Convert 24h time to 12h format (e.g., '14:00' -> '2:00 PM')."""

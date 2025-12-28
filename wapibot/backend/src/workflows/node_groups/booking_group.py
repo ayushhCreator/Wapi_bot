@@ -39,13 +39,18 @@ async def calculate_price(state: BookingState) -> BookingState:
         client = get_yawlit_client()
 
         def extract_price_params(s):
-            vehicle = s.get("vehicle", {})
-            return {
-                "service_id": selected_service.get("product_id"),
-                "vehicle_type": vehicle.get("vehicle_type"),
-                "optional_addons": s.get("addon_ids", []),
-                "coupon_code": s.get("discount_code", "")
+            # Wrap in price_data because calculate_price(price_data: Dict) expects it
+            addon_ids = s.get("addon_ids", [])
+            price_params = {
+                "price_data": {
+                    "product_id": selected_service.get("name"),
+                    "optional_addons": addon_ids,
+                    "electricity_provided": s.get("electricity_provided", 1),
+                    "water_provided": s.get("water_provided", 1)
+                }
             }
+            logger.info(f"💰 Price params: product={selected_service.get('name')}, addons={addon_ids}, elec={s.get('electricity_provided', 1)}, water={s.get('water_provided', 1)}")
+            return price_params
 
         logger.info("💰 Calling calculate_booking_price API...")
         result = await call_frappe_node(
@@ -55,13 +60,17 @@ async def calculate_price(state: BookingState) -> BookingState:
             state_extractor=extract_price_params
         )
 
-        # Extract total_price from API response
-        price_breakdown = result.get("price_breakdown", {})
-        total_price = price_breakdown.get("total_price")
+        # Extract total_price from API response (unwrap message structure)
+        price_api_response = result.get("price_breakdown", {})
+        price_breakdown = price_api_response.get("message", {})
+        total_price = price_breakdown.get("total_amount")  # API uses total_amount, not total_price
 
         if total_price and total_price > 0:
             result["total_price"] = total_price
-            logger.info(f"💰 API price: ₹{total_price} (base: {price_breakdown.get('base_price', 0)}, addons: {price_breakdown.get('addon_price', 0)}, tax: {price_breakdown.get('tax', 0)})")
+            # Try both field names (addon_price and addons_total)
+            addon_amount = price_breakdown.get('addon_price', 0) or price_breakdown.get('addons_total', 0)
+            logger.info(f"💰 API price: ₹{total_price} (base: {price_breakdown.get('base_price', 0)}, addons: {addon_amount}, tax: {price_breakdown.get('tax', 0)})")
+            logger.info(f"💰 Full price breakdown: {price_breakdown}")
             return result
         else:
             # API returned invalid price, use fallback
@@ -139,15 +148,46 @@ async def create_booking(state: BookingState) -> BookingState:
 
         logger.info(f"📱 Phone normalized: {s.get('conversation_id')} → {phone}")
 
+        # Extract booking data fields
+        product_id = selected_service.get("name")
+        booking_date = slot.get("date")
+        slot_id = slot.get("name")  # slot.name is the actual slot ID (e.g., "SLOT-1568")
+        vehicle_id = s.get("vehicle", {}).get("vehicle_id")
+        address_id = s.get("selected_address_id") or customer.get("default_address_id")
+
+        # Validate required fields
+        missing_fields = []
+        if not product_id:
+            missing_fields.append("product_id")
+        if not booking_date:
+            missing_fields.append("booking_date")
+        if not slot_id:
+            missing_fields.append("slot_id")
+        if not vehicle_id:
+            missing_fields.append("vehicle_id")
+        if not address_id:
+            missing_fields.append("address_id")
+
+        if missing_fields:
+            logger.error(f"❌ Missing required fields: {', '.join(missing_fields)}")
+            logger.error(f"   selected_service keys: {list(selected_service.keys())}")
+            logger.error(f"   slot keys: {list(slot.keys())}")
+            logger.error(f"   vehicle keys: {list(s.get('vehicle', {}).keys())}")
+            logger.error(f"   customer keys: {list(customer.keys())}")
+
+        # Log booking data for debugging
+        addon_ids = s.get("addon_ids", [])
+        logger.info(f"📋 Booking data: product_id={product_id}, date={booking_date}, slot_id={slot_id}, vehicle_id={vehicle_id}, address_id={address_id}, addon_ids={addon_ids}")
+
         # Return phone_number and booking_data separately (method signature requirement)
         return {
             "phone_number": phone,
             "booking_data": {
-                "product_id": selected_service.get("product_id"),
-                "booking_date": slot.get("date"),
-                "slot_id": slot.get("slot_id"),
-                "vehicle_id": s.get("vehicle", {}).get("vehicle_id"),
-                "address_id": s.get("selected_address_id") or customer.get("default_address_id"),
+                "product_id": product_id,
+                "booking_date": booking_date,
+                "slot_id": slot_id,
+                "vehicle_id": vehicle_id,
+                "address_id": address_id,
                 "electricity_provided": s.get("electricity_provided", 1),
                 "water_provided": s.get("water_provided", 1),
                 "addon_ids": s.get("addon_ids", []),
@@ -156,22 +196,33 @@ async def create_booking(state: BookingState) -> BookingState:
         }
 
     logger.info("📝 Creating booking via create_booking_by_phone...")
-    return await call_frappe_node(
+    result = await call_frappe_node(
         state,
         client.booking_create.create_booking_by_phone,
-        "booking_response",
+        "booking_api_response",
         state_extractor=extract_booking_params
     )
+
+    # Extract booking data from nested response structure
+    api_response = result.get("booking_api_response", {})
+    message = api_response.get("message", {})
+
+    # Preserve state and merge in new booking data
+    state["booking_response"] = message
+    state["booking_id"] = message.get("booking_id", "Unknown")
+    state["booking_data"] = message.get("booking_data", {})
+
+    logger.info(f"✅ Booking created: {state.get('booking_id')}")
+    logger.info(f"📋 Booking ID in state: {state.get('booking_id')}")
+    logger.info(f"📋 State keys: {list(state.keys())}")
+    return state
 
 
 async def generate_payment_qr(state: BookingState) -> BookingState:
     """Generate UPI QR code for payment."""
     amount = state.get("total_price")
-    # Backward-compatible extraction (new API: direct field, old API: nested in message)
-    booking_response = state.get("booking_response", {})
-    logger.info(f"🔍 DEBUG: booking_response keys = {list(booking_response.keys())}")
-    logger.info(f"🔍 DEBUG: booking_response = {booking_response}")
-    booking_id = booking_response.get("booking_id") or booking_response.get("message", {}).get("booking_id", "Unknown")
+    booking_id = state.get("booking_id", "Unknown")
+    logger.info(f"🔍 Generating QR for booking: {booking_id}")
 
     return await generate_qr_node(
         state,
@@ -211,9 +262,7 @@ async def send_success(state: BookingState) -> BookingState:
     """Send booking success message."""
 
     def success_message(s):
-        booking_response = s.get("booking_response", {})
-        # Backward-compatible extraction (new API: direct field, old API: nested in message)
-        booking_id = booking_response.get("booking_id") or booking_response.get("message", {}).get("booking_id", "Unknown")
+        booking_id = s.get("booking_id", "Unknown")
         return f"✅ Booking confirmed!\n\nYour booking ID is: {booking_id}\n\nWe'll send you a confirmation shortly. Thank you for choosing Yawlit!"
 
     return await send_message_node(state, success_message)

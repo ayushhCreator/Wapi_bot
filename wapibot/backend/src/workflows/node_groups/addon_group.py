@@ -24,18 +24,22 @@ async def fetch_addons(state: BookingState) -> BookingState:
 
     def extract_service_id(s):
         selected_service = s.get("selected_service", {})
-        return {"service_id": selected_service.get("product_id")}
+        return {"service_id": selected_service.get("name")}
 
     logger.info("➕ Fetching optional addons from API...")
     result = await call_frappe_node(
         state,
         client.service_catalog.get_optional_addons,
-        "available_addons",
+        "addons_response",
         state_extractor=extract_service_id
     )
 
-    # Check if any addons available
-    addons = result.get("available_addons", [])
+    # Extract addons from response
+    addons_response = result.get("addons_response", {})
+    addons = addons_response.get("message", {}).get("optional_addons", [])
+
+    # Store unwrapped addons in state
+    result["available_addons"] = addons
     if not addons:
         logger.info("No addons available for this service - auto-skipping")
         result["skipped_addons"] = True
@@ -50,14 +54,14 @@ async def show_addon_options(state: BookingState) -> BookingState:
 
     def build_addon_message(s):
         addons = s.get("available_addons", [])
-        service_name = s.get("selected_service", {}).get("service_name", "service")
+        service_name = s.get("selected_service", {}).get("product_name", "service")
         customer_name = s.get("customer", {}).get("first_name", "there")
 
         # Build addon list
         addon_list = []
         for idx, addon in enumerate(addons, 1):
             addon_name = addon.get("addon_name", "")
-            price = addon.get("price", 0)
+            price = addon.get("unit_price", 0)
             description = addon.get("description", "")
 
             addon_text = f"{idx}. *{addon_name}* - ₹{price}"
@@ -124,10 +128,22 @@ async def extract_addon_selection(state: BookingState) -> BookingState:
 
     if selected_indices:
         state["selected_addons"] = selected_addons
-        state["addon_ids"] = addon_ids
+
+        # Build proper addon structure for API: [{"addon": id, "quantity": 1, "unit_price": price}, ...]
+        formatted_addons = []
+        for addon in selected_addons:
+            formatted_addons.append({
+                "addon": addon.get("name"),           # AddOn DocType ID
+                "quantity": 1,
+                "unit_price": addon.get("unit_price", 0)
+            })
+
+        state["addon_ids"] = formatted_addons
         state["addon_selection_complete"] = True
         state["skipped_addons"] = False
-        logger.info(f"➕ Addons selected: {addon_ids} (options {selected_indices})")
+        addon_names = [a.get("addon_name", a.get("name")) for a in selected_addons]
+        logger.info(f"➕ Addons selected: {addon_names} (options {selected_indices})")
+        logger.info(f"➕ Addon structure: {formatted_addons}")
     else:
         state["addon_selection_complete"] = False
         logger.warning(f"Could not parse addon selection: {user_message}")

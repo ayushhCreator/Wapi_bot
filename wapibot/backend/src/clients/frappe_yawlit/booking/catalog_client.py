@@ -123,7 +123,7 @@ class ServiceCatalogClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.get_optional_addons",
-                {"service_id": service_id}
+                {"product_id": service_id}
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching optional addons for {service_id}: {e}")
