@@ -13,10 +13,14 @@ Blender Design:
 """
 
 import logging
+import json
+import uuid
 from typing import Optional
 from datetime import datetime
 from workflows.shared.state import BookingState
 from core.brain_config import get_brain_settings
+from repositories.brain_decision_repo import BrainDecisionRepository
+from models.brain_decision import BrainDecision
 
 logger = logging.getLogger(__name__)
 
@@ -81,13 +85,34 @@ async def node(
         state["checkpoints"] = []
     state["checkpoints"].append(checkpoint)
 
-    # TODO: Save to brain memory for learning (Phase 4)
+    # Save to brain memory for learning (Phase 4 Integration)
     # Brain will analyze checkpoint sequences to learn:
     # - Which paths lead to successful bookings
-    # - Where users abandon the conversation
+    # - Where users abandon conversations
     # - Common error patterns
+    if save_to_brain and brain_settings.brain_enabled and brain_settings.rl_gym_enabled:
+        try:
+            # Create brain decision record for this checkpoint
+            decision = BrainDecision(
+                decision_id=f"chk_{uuid.uuid4().hex[:8]}",
+                conversation_id=state.get("conversation_id", "unknown"),
+                user_message=state.get("user_message", ""),
+                conversation_history=json.dumps(state.get("history", [])[-5:]),  # Last 5 messages
+                state_snapshot=json.dumps({
+                    "completeness": state.get("completeness", 0.0),
+                    "current_step": state.get("current_step"),
+                    "errors": state.get("errors", [])
+                }),
+                brain_mode=brain_settings.brain_mode,
+                action_taken=f"checkpoint:{checkpoint_name}",
+                workflow_outcome=checkpoint_type  # milestone | error | decision_point
+            )
 
-    if save_to_brain and brain_settings.brain_enabled:
-        logger.debug(f"🧠 Checkpoint saved for brain analysis: {checkpoint_name}")
+            # Save to RL Gym database
+            repo = BrainDecisionRepository()
+            repo.save(decision)
+            logger.debug(f"🧠 Checkpoint saved to brain_gym.db: {checkpoint_name}")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to save checkpoint to brain memory: {e}")
 
     return state

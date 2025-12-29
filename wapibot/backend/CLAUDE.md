@@ -509,3 +509,117 @@ A workflow is well-designed if:
 - ✅ Clear dataflow (state in → state out)
 - ✅ No hidden dependencies
 - ✅ Reusable sub-workflows
+
+## Complete Brain Activity Analysis ✅ (Updated: Dec 29, 2025)
+
+### 📁 Directory Structure Confirmed
+
+```
+wapibot/ (root)
+├── main.py                      ← Entry point wrapper (adds backend/src to path)
+└── backend/
+    ├── data/brain_gym.db        ← Target database (WORKING after path fix)
+    └── src/
+        ├── main.py              ← FastAPI application (actual server)
+        ├── repositories/
+        │   └── brain_decision_repo.py  ← ✅ Fixed path resolution
+        ├── workflows/node_groups/
+        │   ├── brain_group.py         ← Main brain router
+        │   └── shadow_group.py        ← Shadow mode workflow (6 nodes)
+        └── nodes/brain/
+            ├── conflict_monitor.py    ← Node 1: Detect conflicts
+            ├── intent_predictor.py    ← Node 2: Predict user intent
+            ├── state_evaluator.py     ← Node 3: Evaluate conversation quality
+            ├── goal_decomposer.py     ← Node 4: Decompose user goals
+            ├── response_proposer.py   ← Node 5: Generate optimal response
+            └── log_decision.py        ← Node 6: Save to RL Gym database
+```
+
+### 🔍 Brain Activity Investigation Summary:
+
+**FINDING:** All 6 brain nodes ARE executing, but most log silently when processing status webhooks (no user_message).
+
+**Execution Flow (verified via debug script):**
+
+1. ✅ **conflict_monitor** - Runs, logs "No user message in state" warning
+2. ✅ **intent_predictor** - Runs, sets `predicted_intent="unclear"` (NO LOG when empty)
+3. ✅ **state_evaluator** - Runs, calculates quality metrics (ALWAYS logs)
+4. ✅ **goal_decomposer** - Runs, sets `decomposed_goals=["continue_conversation"]` (NO LOG when empty)
+5. ✅ **response_proposer** - Runs, sets `proposed_response=None` (NO LOG when empty)
+6. ✅ **log_decision** - Runs, saves decision to brain_gym.db (ALWAYS logs after fix)
+
+**Debug Evidence (from debug_shadow_workflow.py):**
+```
+Workflow nodes: ['__start__', 'monitor_conflict', 'predict_intent', 'evaluate_quality',
+                 'decompose_goals', 'propose_response', 'log_to_gym']
+
+Result fields:
+  conflict_detected: None                      ← Set by conflict_monitor
+  predicted_intent: unclear                    ← Set by intent_predictor ✓
+  conversation_quality: 0.5                    ← Set by state_evaluator
+  decomposed_goals: ['continue_conversation']  ← Set by goal_decomposer ✓
+  proposed_response: None                      ← Set by response_proposer
+  brain_decision_id: 91627413-c5f6-4a4e-...   ← Set by log_decision ✓
+```
+
+### ⚠️ Why It Looked Incomplete:
+
+**Silent Node Behavior:**
+- `intent_predictor.py:52-54` - Returns early WITHOUT logging when `user_message` is empty
+- `goal_decomposer.py:53-55` - Returns early WITHOUT logging when `user_message` is empty or intent is "unclear"
+- `response_proposer.py:60-62` - Returns early WITHOUT logging when `user_message` is empty
+
+**Why This Happens:**
+- Brain processes EVERY WAPI webhook including status updates (sent, delivered, read receipts)
+- Status webhooks have `user_message=""` (empty string)
+- Most brain nodes short-circuit silently for empty messages
+- Only conflict_monitor and state_evaluator log when there's no message
+
+### ✅ What's Actually Working:
+
+1. **Complete workflow execution** - All 6 nodes run in correct order
+2. **Brain activation** - Triggers on every WAPI webhook (messages + status updates)
+3. **DSPy modules** - All 5 load successfully (conflict, intent, quality, goals, response)
+4. **Workflow compilation** - Shadow/reflex/conscious graphs compile correctly
+5. **State evaluation** - Quality metrics calculated even without user message
+6. **Database persistence** - ✅ NOW WORKING after path fix (server restarted at 06:10)
+7. **Non-blocking execution** - Errors don't crash main workflow
+8. **Mode selection** - Shadow mode correctly selected from config
+
+### 🔧 Fix Applied (Database Path Resolution):
+
+**File:** `src/repositories/brain_decision_repo.py`
+**Lines:** 20-25
+
+```python
+# CRITICAL: If path is relative, resolve it from backend root directory
+# This ensures SQLite finds the file regardless of current working directory
+if not os.path.isabs(db_path):
+    # Resolve relative to backend root (where main.py is located)
+    backend_root = Path(__file__).parent.parent.parent  # backend/
+    db_path = str(backend_root / db_path)
+```
+
+**Effect:**
+- `data/brain_gym.db` → `/absolute/path/to/backend/data/brain_gym.db`
+- Works regardless of current working directory
+- Preserves relative path in .env.txt for deployment portability
+
+**Status:** ✅ **FIXED and OPERATIONAL** (server restarted at 06:10, logs show "Decision logged to RL Gym" after restart)
+
+### 📊 Current Status (After Restart):
+
+- ✅ **log_decision successfully saving to brain_gym.db**
+- ✅ **Shadow mode observations persisting**
+- ✅ **RL Gym accumulating training data** (8+ decisions logged since 06:14)
+- ✅ **Brain learning foundation operational**
+- ⚠️ **Limited DSPy usage** - Only 1 DSPy execution found (for booking extraction, not brain modules)
+- ⚠️ **Most observations are status webhooks** - Need actual user conversations for meaningful learning
+
+### 🎯 Next Steps for Brain System:
+
+1. **Monitor real user conversations** - Brain needs actual user messages (not just status webhooks)
+2. **Verify DSPy module execution** - Confirm baseline modules run with real user messages
+3. **Check node logging** - Add debug logs to intent_predictor, goal_decomposer, response_proposer for user messages
+4. **Optimize workflow creation** - Currently creates 3 workflows on every webhook (inefficient, should cache)
+5. **Dream system testing** - Verify dream generation works with accumulated RL Gym data

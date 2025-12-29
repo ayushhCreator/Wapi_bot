@@ -6,7 +6,8 @@ from pydantic import Field
 from core.config import Settings
 
 # Default path for brain_gym.db in backend/data/
-_DEFAULT_BRAIN_GYM_PATH = str(Path(__file__).parent.parent.parent / "data" / "brain_gym.db")
+# CRITICAL: Must be absolute path to work across different working directories
+_DEFAULT_BRAIN_GYM_PATH = str((Path(__file__).parent.parent.parent / "data" / "brain_gym.db").resolve())
 
 
 class BrainSettings(Settings):

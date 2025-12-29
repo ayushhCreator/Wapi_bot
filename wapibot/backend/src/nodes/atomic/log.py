@@ -12,10 +12,14 @@ Blender Design:
 """
 
 import logging
+import json
+import uuid
 from typing import Optional, Dict, Any
 from datetime import datetime
 from workflows.shared.state import BookingState
 from core.brain_config import get_brain_settings
+from repositories.brain_decision_repo import BrainDecisionRepository
+from models.brain_decision import BrainDecision
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +90,31 @@ async def node(
     else:
         logger.info(log_message)
 
-    # TODO: Send to brain memory for RL learning (Phase 4)
-    # This will be integrated with brain observation system
+    # Send to brain memory for RL learning (Phase 4 Integration)
     # Brain will use these logs to learn patterns and improve decisions
+    if brain_settings.brain_enabled and brain_settings.rl_gym_enabled:
+        try:
+            # Create brain decision record for this event
+            decision = BrainDecision(
+                decision_id=f"log_{uuid.uuid4().hex[:8]}",
+                conversation_id=state.get("conversation_id", "unknown"),
+                user_message=state.get("user_message", ""),
+                conversation_history=json.dumps(state.get("history", [])[-3:]),  # Last 3 messages
+                state_snapshot=json.dumps({
+                    "event_type": event_type,
+                    "severity": severity,
+                    "data": event_data or {}
+                }),
+                brain_mode=brain_settings.brain_mode,
+                action_taken=f"log:{event_type}",
+                workflow_outcome=severity  # Maps to success/warning/error
+            )
+
+            # Save to RL Gym database
+            repo = BrainDecisionRepository()
+            repo.save(decision)
+            logger.debug(f"🧠 Event logged to brain_gym.db: {event_type}")
+        except Exception as e:
+            logger.debug(f"⚠️ Failed to save event to brain memory: {e}")
 
     return state

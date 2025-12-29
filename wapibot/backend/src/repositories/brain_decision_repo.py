@@ -1,6 +1,8 @@
 """Brain decision repository - CRUD for RL Gym decisions."""
 
 import sqlite3
+import os
+from pathlib import Path
 from typing import List, Optional
 from models.brain_decision import BrainDecision
 from core.brain_config import get_brain_settings
@@ -14,6 +16,14 @@ class BrainDecisionRepository:
         if db_path is None:
             settings = get_brain_settings()
             db_path = settings.rl_gym_db_path
+
+        # CRITICAL: If path is relative, resolve it from backend root directory
+        # This ensures SQLite finds the file regardless of current working directory
+        if not os.path.isabs(db_path):
+            # Resolve relative to backend root (where main.py is located)
+            backend_root = Path(__file__).parent.parent.parent
+            db_path = str(backend_root / db_path)
+
         self.db_path = db_path
 
     def save(self, decision: BrainDecision) -> None:

@@ -163,4 +163,11 @@ register_all_routes(app)
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host=settings.host, port=settings.port, reload=settings.reload, log_level=settings.log_level.lower())
+    uvicorn.run(
+        "main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.reload,
+        reload_excludes=["*/tests/*", "*/tests/**/*", "**/test_*.py"],  # Exclude tests from watchfiles
+        log_level=settings.log_level.lower()
+    )
