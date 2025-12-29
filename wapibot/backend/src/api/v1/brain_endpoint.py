@@ -5,7 +5,8 @@ from fastapi import APIRouter, HTTPException
 from models.brain_schemas import (
     DreamTriggerRequest,
     TrainTriggerRequest,
-    BrainStatusResponse
+    BrainStatusResponse,
+    BrainMetricsResponse
 )
 from services.brain_service import get_brain_service
 
@@ -122,4 +123,27 @@ async def get_recent_decisions(limit: int = 100):
         return {"decisions": decisions, "total": len(decisions)}
     except Exception as e:
         logger.error(f"Decisions fetch failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/metrics",
+    response_model=BrainMetricsResponse,
+    summary="Get brain metrics aggregated by mode",
+    responses={
+        200: {"description": "Metrics retrieved successfully"},
+        500: {"description": "Metrics fetch failed"},
+    },
+)
+async def get_brain_metrics():
+    """Get brain metrics aggregated by mode.
+
+    Returns counts of shadow observations, reflex actions, conscious decisions,
+    and learning accuracy (average confidence score across all decisions).
+    """
+    try:
+        service = get_brain_service()
+        return await service.get_brain_metrics()
+    except Exception as e:
+        logger.error(f"Metrics fetch failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

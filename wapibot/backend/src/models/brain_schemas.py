@@ -194,3 +194,38 @@ class DecisionListResponse(BaseModel):
                 "page_size": 20,
             }
         }
+
+
+class BrainMetricsResponse(BaseModel):
+    """Brain metrics aggregated by mode."""
+
+    shadow_observations: int = Field(
+        ...,
+        description="Number of shadow mode observations (observe only)",
+        examples=[150],
+    )
+    reflex_actions: int = Field(
+        ...,
+        description="Number of reflex mode actions (regex-first, template-only)",
+        examples=[45],
+    )
+    conscious_decisions: int = Field(
+        ...,
+        description="Number of conscious mode decisions (LLM-driven)",
+        examples=[12],
+    )
+    learning_accuracy: float = Field(
+        ...,
+        description="Average confidence score across all decisions (0.0-1.0)",
+        examples=[0.87],
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "shadow_observations": 150,
+                "reflex_actions": 45,
+                "conscious_decisions": 12,
+                "learning_accuracy": 0.87,
+            }
+        }

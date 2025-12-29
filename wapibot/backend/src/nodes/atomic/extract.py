@@ -117,15 +117,24 @@ async def node(
             if method_name == "dspy":
                 logger.info(f"🔍 Extracting {field_path} using {extractor.__class__.__name__}")
 
+                # Prepare extractor kwargs with conversation context
+                extractor_kwargs = {
+                    "conversation_history": state.get("history", []),
+                    "user_message": state["user_message"]
+                }
+
+                # Add recalled memories as context if available (brain enhancement)
+                recalled_memories = state.get("recalled_memories", [])
+                if recalled_memories:
+                    extractor_kwargs["recalled_memories"] = recalled_memories
+                    logger.info(f"🧠 Using {len(recalled_memories)} recalled memories for extraction")
+
                 # Run extractor in thread pool (DSPy is sync)
                 loop = asyncio.get_event_loop()
                 result = await asyncio.wait_for(
                     loop.run_in_executor(
                         None,
-                        lambda: extractor(
-                            conversation_history=state.get("history", []),
-                            user_message=state["user_message"]
-                        )
+                        lambda: extractor(**extractor_kwargs)
                     ),
                     timeout=extraction_timeout
                 )

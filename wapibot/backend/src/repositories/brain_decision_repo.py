@@ -63,3 +63,29 @@ class BrainDecisionRepository:
         conn.close()
 
         return [BrainDecision(**dict(row)) for row in rows]
+
+    def get_metrics(self) -> dict:
+        """Get brain metrics aggregated by mode."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        # Count decisions by brain_mode
+        cursor.execute("""
+            SELECT brain_mode, COUNT(*) as count
+            FROM brain_decisions
+            GROUP BY brain_mode
+        """)
+        mode_counts = {row[0]: row[1] for row in cursor.fetchall()}
+
+        # Calculate average confidence
+        cursor.execute("SELECT AVG(confidence) FROM brain_decisions WHERE confidence IS NOT NULL")
+        avg_confidence = cursor.fetchone()[0] or 0.0
+
+        conn.close()
+
+        return {
+            "shadow_observations": mode_counts.get("shadow", 0),
+            "reflex_actions": mode_counts.get("reflex", 0),
+            "conscious_decisions": mode_counts.get("conscious", 0),
+            "learning_accuracy": round(avg_confidence, 2)
+        }

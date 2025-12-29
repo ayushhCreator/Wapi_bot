@@ -32,6 +32,8 @@ import logging
 from langgraph.graph import StateGraph, END
 from workflows.shared.state import BookingState
 from core.checkpointer import checkpointer_manager
+from core.brain_router import get_brain_mode
+from core.brain_workflow import BrainWorkflow
 
 # Import node groups (mini-workflows)
 from workflows.node_groups.profile_group import create_profile_group
@@ -97,8 +99,14 @@ def should_continue(state: BookingState) -> str:
 
 
 async def entry_router(state: BookingState) -> BookingState:
-    """Entry point that resets should_proceed for resuming."""
+    """Entry point that resets should_proceed for resuming and sets brain mode."""
     state["should_proceed"] = True
+
+    # Set brain mode for workflow (brain nodes use this)
+    brain_mode = get_brain_mode()
+    state["brain_mode"] = brain_mode
+    logger.info(f"🧠 Brain mode: {brain_mode}")
+
     return state
 
 
@@ -205,4 +213,7 @@ def create_existing_user_booking_workflow():
     workflow.add_edge("booking_confirmation", END)
 
     # Compile with checkpointing (checkpointer initialized in main.py lifespan)
-    return workflow.compile(checkpointer=checkpointer_manager.memory)
+    compiled_workflow = workflow.compile(checkpointer=checkpointer_manager.memory)
+
+    # Wrap with brain observation for shadow mode and telemetry
+    return BrainWorkflow(compiled_workflow)

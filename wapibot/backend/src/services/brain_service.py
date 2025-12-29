@@ -72,6 +72,10 @@ class BrainService:
         decisions = self.decision_repo.get_recent(limit)
         return [d.dict() for d in decisions]
 
+    async def get_brain_metrics(self) -> Dict[str, Any]:
+        """Get brain metrics aggregated by mode."""
+        return self.decision_repo.get_metrics()
+
 
 # Singleton instance
 _brain_service: BrainService | None = None
