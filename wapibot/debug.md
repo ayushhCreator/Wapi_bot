@@ -1,6 +1,6 @@
 # Comprehensive Debugging Plan: WapiBot Backend Critical Fixes
 
-## Executive Summary
+## Executive Summary of the bugs
 
 Based on log analysis (1393 lines) and codebase exploration (12 agents), we've identified **5 critical bugs** affecting booking workflow:
 
