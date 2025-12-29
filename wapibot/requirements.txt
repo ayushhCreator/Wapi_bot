@@ -66,7 +66,7 @@ openai>=1.50.0  # Optional: for OpenAI models
 # DATABASE & PERSISTENCE
 # ============================================================================
 sqlmodel>=0.0.27
-aiosqlite>=0.20.0
+aiosqlite>=0.20.0,<0.22.0  # Pin to <0.22.0 due to langgraph-checkpoint-sqlite bug #6178
 
 # ============================================================================
 # TESTING EXTRAS
