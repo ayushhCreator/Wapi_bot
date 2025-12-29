@@ -6,7 +6,8 @@ from langgraph.graph import StateGraph, END
 from workflows.shared.state import BookingState
 from nodes.atomic.send_message import node as send_message_node
 from nodes.message_builders.bargaining_responses import BargainingResponseBuilder
-from nodes.brain.conflict_monitor import node as conflict_monitor
+from nodes.brain.conflict_monitor import node as conflict_monitor_node
+from dspy_modules.brain.conflict_detector import ConflictDetector
 
 logger = logging.getLogger(__name__)
 
@@ -74,10 +75,16 @@ async def mark_for_escalation(state: BookingState) -> BookingState:
     return state
 
 
+async def detect_conflict(state: BookingState) -> BookingState:
+    """Wrapper for conflict monitor brain node."""
+    detector = ConflictDetector()
+    return conflict_monitor_node(state, detector)
+
+
 def create_bargaining_group() -> StateGraph:
     """Create bargaining handler workflow with brain conflict detection."""
     workflow = StateGraph(BookingState)
-    workflow.add_node("detect_conflict", conflict_monitor)  # Brain detects bargaining/frustration FIRST
+    workflow.add_node("detect_conflict", detect_conflict)  # Brain detects bargaining/frustration FIRST
     workflow.add_node("initialize", initialize_bargaining)
     workflow.add_node("respond", send_bargaining_response)
     workflow.add_node("escalate", mark_for_escalation)

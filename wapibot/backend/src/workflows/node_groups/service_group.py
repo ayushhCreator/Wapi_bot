@@ -10,7 +10,8 @@ from nodes.message_builders.service_catalog import ServiceCatalogBuilder
 from nodes.routing.resume_router import create_resume_router
 from nodes.error_handling.selection_error_handler import handle_selection_error
 from clients.frappe_yawlit import get_yawlit_client
-from nodes.brain.intent_predictor import node as intent_predictor
+from nodes.brain.intent_predictor import node as intent_predictor_node
+from dspy_modules.brain.intent_predictor_module import IntentPredictor
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,12 @@ async def send_service_error(state: BookingState) -> BookingState:
     )
 
 
+async def predict_intent(state: BookingState) -> BookingState:
+    """Wrapper for intent predictor brain node."""
+    predictor = IntentPredictor()
+    return intent_predictor_node(state, predictor)
+
+
 # Create resume router for entry point
 route_service_entry = create_resume_router(
     awaiting_step="awaiting_service_selection",
@@ -93,7 +100,7 @@ route_service_entry = create_resume_router(
 def create_service_group() -> StateGraph:
     """Create service selection workflow with brain intent prediction."""
     workflow = StateGraph(BookingState)
-    workflow.add_node("predict_intent", intent_predictor)
+    workflow.add_node("predict_intent", predict_intent)
     workflow.add_node("entry", lambda s: s)
     workflow.add_node("fetch_services", fetch_services)
     workflow.add_node("show_catalog", show_service_catalog)

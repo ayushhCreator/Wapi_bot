@@ -4,7 +4,8 @@ import logging
 from datetime import datetime
 from langgraph.graph import StateGraph, END
 from workflows.shared.state import BookingState
-from nodes.brain.conflict_monitor import node as conflict_monitor
+from nodes.brain.conflict_monitor import node as conflict_monitor_node
+from dspy_modules.brain.conflict_detector import ConflictDetector
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +69,16 @@ async def send_cancellation_message(state: BookingState) -> BookingState:
     return state
 
 
+async def detect_conflict(state: BookingState) -> BookingState:
+    """Wrapper for conflict monitor brain node."""
+    detector = ConflictDetector()
+    return conflict_monitor_node(state, detector)
+
+
 def create_cancellation_group() -> StateGraph:
     """Create cancellation policy workflow with brain conflict detection."""
     workflow = StateGraph(BookingState)
-    workflow.add_node("detect_conflict", conflict_monitor)
+    workflow.add_node("detect_conflict", detect_conflict)
     workflow.add_node("check_policy", check_cancellation_policy)
     workflow.add_node("send_message", send_cancellation_message)
     workflow.set_entry_point("detect_conflict")

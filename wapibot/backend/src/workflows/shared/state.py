@@ -139,6 +139,17 @@ class BookingState(TypedDict):
     can_dream: bool  # Whether enough data for dreaming
     dream_status: Optional[str]  # "skipped" | "generated"
 
+    # Bargaining/Escalation Fields
+    bargaining_stage: Optional[int]  # 1-4, tracks escalation level
+    bargaining_count: Optional[int]  # Number of bargaining attempts
+    bargaining_handled: Optional[bool]  # True if bargaining was handled
+    should_escalate_human: Optional[bool]  # True if needs human escalation
+    escalation_reason: Optional[str]  # Reason for escalation
+
+    # Cancellation Fields
+    can_cancel_free: Optional[bool]  # True if within free cancellation window
+    cancellation_message: Optional[str]  # Message explaining cancellation policy
+
 
 # Type alias for cleaner imports
 State = BookingState

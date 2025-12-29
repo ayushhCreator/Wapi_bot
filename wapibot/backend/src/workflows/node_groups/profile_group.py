@@ -23,7 +23,8 @@ from nodes.profile.validate_profile import route_after_profile_fetch
 from nodes.atomic.send_message import node as send_message_node
 from nodes.message_builders.greeting import GreetingBuilder
 from nodes.message_builders.vehicle_options import VehicleOptionsBuilder
-from nodes.brain.intent_predictor import node as intent_predictor
+from nodes.brain.intent_predictor import node as intent_predictor_node
+from dspy_modules.brain.intent_predictor_module import IntentPredictor
 
 
 async def send_greeting(state: BookingState) -> BookingState:
@@ -68,6 +69,12 @@ async def send_no_vehicles(state: BookingState) -> BookingState:
     return result
 
 
+async def predict_intent(state: BookingState) -> BookingState:
+    """Wrapper for intent predictor brain node."""
+    predictor = IntentPredictor()
+    return intent_predictor_node(state, predictor)
+
+
 def create_profile_group() -> StateGraph:
     """Create profile check node group.
 
@@ -89,7 +96,7 @@ def create_profile_group() -> StateGraph:
     workflow = StateGraph(BookingState)
 
     # Brain observation
-    workflow.add_node("predict_intent", intent_predictor)
+    workflow.add_node("predict_intent", predict_intent)
 
     # Core nodes
     workflow.add_node("fetch_profile", fetch_complete_profile)

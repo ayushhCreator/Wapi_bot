@@ -14,7 +14,8 @@ from nodes.domain import calculate_booking_price
 from nodes.transformers.extract_booking_params import ExtractBookingParams
 from clients.frappe_yawlit import get_yawlit_client
 from core.config import settings
-from nodes.brain.response_proposer import node as response_proposer
+from nodes.brain.response_proposer import node as response_proposer_node
+from dspy_modules.brain.response_generator import ResponseGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,12 @@ async def send_unclear(state: BookingState) -> BookingState:
     return result
 
 
+async def propose_response(state: BookingState) -> BookingState:
+    """Wrapper for response proposer brain node."""
+    proposer = ResponseGenerator()
+    return response_proposer_node(state, proposer)
+
+
 # Create resume router for entry point
 route_booking_entry = create_resume_router(
     awaiting_step="awaiting_booking_confirmation",
@@ -137,7 +144,7 @@ route_booking_entry = create_resume_router(
 def create_booking_group() -> StateGraph:
     """Create booking confirmation and creation workflow with brain response proposal."""
     workflow = StateGraph(BookingState)
-    workflow.add_node("propose_response", response_proposer)
+    workflow.add_node("propose_response", propose_response)
     workflow.add_node("entry", lambda s: s)
     workflow.add_node("calculate_price", calculate_price)
     workflow.add_node("send_confirmation", send_confirmation)
