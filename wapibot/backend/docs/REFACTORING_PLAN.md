@@ -611,9 +611,9 @@ git tag -a refactor-baseline-2025-12-27 -m "Baseline before SOLID/DRY refactorin
 
   Violation: Each node group has its own route_*_entry() function with identical logic
 
-# Found in: addon_group, address_group, booking_group, service_group
+### Found in: addon_group, address_group, booking_group, service_group
 
-# slot_group, slot_preference_group, utilities_group, vehicle_group
+#### slot_group, slot_preference_group, utilities_group, vehicle_group
 
   def route_*_entry(state: BookingState) -> str:
       current_step = state.get("current_step", "")
@@ -625,9 +625,9 @@ git tag -a refactor-baseline-2025-12-27 -m "Baseline before SOLID/DRY refactorin
 
   Violation: Each selection group has its own send_*_error() function
 
-# Found in: addon_group, address_group, service_group
+### Found in: addon_group, address_group, service_group
 
-# slot_group, vehicle_group
+#### slot_group, vehicle_group
 
   async def send_*_error(state: BookingState) -> BookingState:
       error_msg = state.get("selection_error", "...")
