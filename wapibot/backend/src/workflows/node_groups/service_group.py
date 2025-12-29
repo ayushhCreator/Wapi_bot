@@ -10,6 +10,7 @@ from nodes.message_builders.service_catalog import ServiceCatalogBuilder
 from nodes.routing.resume_router import create_resume_router
 from nodes.error_handling.selection_error_handler import handle_selection_error
 from clients.frappe_yawlit import get_yawlit_client
+from nodes.brain.intent_predictor import node as intent_predictor
 
 logger = logging.getLogger(__name__)
 
@@ -90,14 +91,16 @@ route_service_entry = create_resume_router(
 
 
 def create_service_group() -> StateGraph:
-    """Create service selection workflow."""
+    """Create service selection workflow with brain intent prediction."""
     workflow = StateGraph(BookingState)
+    workflow.add_node("predict_intent", intent_predictor)
     workflow.add_node("entry", lambda s: s)
     workflow.add_node("fetch_services", fetch_services)
     workflow.add_node("show_catalog", show_service_catalog)
     workflow.add_node("process_selection", process_service_selection)
     workflow.add_node("send_error", send_service_error)
-    workflow.set_entry_point("entry")
+    workflow.set_entry_point("predict_intent")
+    workflow.add_edge("predict_intent", "entry")
     workflow.add_conditional_edges("entry", route_service_entry,
         {"fetch_services": "fetch_services", "process_selection": "process_selection"})
     workflow.add_edge("fetch_services", "show_catalog")

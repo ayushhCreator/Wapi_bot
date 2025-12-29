@@ -23,6 +23,7 @@ from nodes.profile.validate_profile import route_after_profile_fetch
 from nodes.atomic.send_message import node as send_message_node
 from nodes.message_builders.greeting import GreetingBuilder
 from nodes.message_builders.vehicle_options import VehicleOptionsBuilder
+from nodes.brain.intent_predictor import node as intent_predictor
 
 
 async def send_greeting(state: BookingState) -> BookingState:
@@ -87,6 +88,9 @@ def create_profile_group() -> StateGraph:
     """
     workflow = StateGraph(BookingState)
 
+    # Brain observation
+    workflow.add_node("predict_intent", intent_predictor)
+
     # Core nodes
     workflow.add_node("fetch_profile", fetch_complete_profile)
     workflow.add_node("send_greeting", send_greeting)
@@ -96,7 +100,8 @@ def create_profile_group() -> StateGraph:
     workflow.add_node("send_no_vehicles", send_no_vehicles)
 
     # Entry point
-    workflow.set_entry_point("fetch_profile")
+    workflow.set_entry_point("predict_intent")
+    workflow.add_edge("predict_intent", "fetch_profile")
 
     # Routing after profile fetch
     workflow.add_conditional_edges(

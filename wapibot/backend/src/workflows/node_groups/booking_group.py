@@ -14,6 +14,7 @@ from nodes.domain import calculate_booking_price
 from nodes.transformers.extract_booking_params import ExtractBookingParams
 from clients.frappe_yawlit import get_yawlit_client
 from core.config import settings
+from nodes.brain.response_proposer import node as response_proposer
 
 logger = logging.getLogger(__name__)
 
@@ -134,8 +135,9 @@ route_booking_entry = create_resume_router(
 
 
 def create_booking_group() -> StateGraph:
-    """Create booking confirmation and creation workflow."""
+    """Create booking confirmation and creation workflow with brain response proposal."""
     workflow = StateGraph(BookingState)
+    workflow.add_node("propose_response", response_proposer)
     workflow.add_node("entry", lambda s: s)
     workflow.add_node("calculate_price", calculate_price)
     workflow.add_node("send_confirmation", send_confirmation)
@@ -147,7 +149,8 @@ def create_booking_group() -> StateGraph:
     workflow.add_node("send_success", send_success)
     workflow.add_node("send_cancelled", send_cancelled)
     workflow.add_node("send_unclear", send_unclear)
-    workflow.set_entry_point("entry")
+    workflow.set_entry_point("propose_response")
+    workflow.add_edge("propose_response", "entry")
     workflow.add_conditional_edges("entry", route_booking_entry,
         {"calculate_price": "calculate_price", "extract_confirmation": "extract_confirmation"})
     workflow.add_edge("calculate_price", "send_confirmation")
