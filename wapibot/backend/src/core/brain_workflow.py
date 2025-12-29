@@ -36,6 +36,9 @@ class BrainWorkflow:
     - Shadow mode: Execute workflow but don't send messages/call APIs
     - Telemetry: Record all brain decisions
     - Mode detection: Route to reflex vs conscious paths
+
+    CRITICAL: This wrapper must delegate ALL LangGraph methods to the underlying
+    workflow to preserve checkpointing, state management, and streaming functionality.
     """
 
     def __init__(self, compiled_workflow: CompiledStateGraph):
@@ -46,6 +49,22 @@ class BrainWorkflow:
         """
         self.workflow = compiled_workflow
         self.brain_settings = get_brain_settings()
+
+    async def aget_state(self, config: Optional[Dict[str, Any]] = None):
+        """Delegate to underlying workflow's aget_state for checkpoint loading.
+
+        CRITICAL: Without this, checkpoints cannot be loaded and conversations
+        restart from scratch every time!
+        """
+        return await self.workflow.aget_state(config)
+
+    async def aupdate_state(self, config: Dict[str, Any], values: Dict[str, Any], as_node: Optional[str] = None):
+        """Delegate to underlying workflow's aupdate_state."""
+        return await self.workflow.aupdate_state(config, values, as_node)
+
+    def get_state(self, config: Optional[Dict[str, Any]] = None):
+        """Delegate to underlying workflow's get_state."""
+        return self.workflow.get_state(config)
 
     async def ainvoke(
         self,
