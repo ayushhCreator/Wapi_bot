@@ -21,11 +21,14 @@ async def check_address_count(state: BookingState) -> BookingState:
     if address_count == 0:
         logger.error("No addresses found for customer")
         state["errors"] = state.get("errors", []) + ["No addresses available"]
+        state["should_proceed"] = False
     elif address_count == 1:
         # Auto-select single address
         address = addresses[0]
         state["selected_address_id"] = address.get("name")
         state["address_selected"] = True
+        state["should_proceed"] = True  # Continue to next step
+        state["current_step"] = ""  # Clear to allow next step
         logger.info(f"🏠 Auto-selected single address: {address.get('name')}")
 
     return state
@@ -69,6 +72,11 @@ async def validate_address_selection(state: BookingState) -> BookingState:
     """Validate that a valid address was selected."""
     if not state.get("address_selected"):
         logger.warning("Address selection validation failed")
+    else:
+        # Address successfully selected, continue to next step
+        state["should_proceed"] = True
+        state["current_step"] = ""  # Clear to allow next step
+        logger.info("✅ Address validation passed, continuing workflow")
 
     return state
 

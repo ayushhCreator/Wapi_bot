@@ -59,6 +59,9 @@ async def validate_utilities(state: BookingState) -> BookingState:
 
     if electricity is not None and water is not None:
         logger.info("✅ Utilities validated")
+        # Utilities complete, continue to next step
+        state["should_proceed"] = True
+        state["current_step"] = ""  # Clear to allow next step
     else:
         logger.warning("⚠️ Utilities validation failed")
 

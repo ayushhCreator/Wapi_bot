@@ -39,7 +39,15 @@ async def ask_preference(state: BookingState) -> BookingState:
 
 async def extract_preference(state: BookingState) -> BookingState:
     """Extract date/time preference (regex + DSPy fallback)."""
-    return await extract_slot_preference.node(state)
+    result = await extract_slot_preference.node(state)
+
+    # Check if both preferences extracted
+    if result.get("preferred_date") and result.get("preferred_time_range"):
+        result["should_proceed"] = True
+        result["current_step"] = ""
+        logger.info("✅ Both date and time preferences extracted, continuing workflow")
+
+    return result
 
 
 def route_after_extraction(state: BookingState) -> str:
@@ -66,6 +74,12 @@ async def process_time_mcq(state: BookingState) -> BookingState:
         state["preferred_time_range"] = time_range
         state["slot_preference_extraction_method"] = "menu"
         logger.info(f"✅ Time MCQ: {time_range}")
+
+        # Check if both preferences now complete
+        if state.get("preferred_date") and state.get("preferred_time_range"):
+            state["should_proceed"] = True
+            state["current_step"] = ""
+            logger.info("✅ Both preferences complete, continuing workflow")
     else:
         logger.warning(f"⚠️ Invalid time MCQ: {message}")
     return state
@@ -82,6 +96,12 @@ async def process_date_mcq(state: BookingState) -> BookingState:
         state["preferred_date"] = selected_date.isoformat()
         state["slot_preference_extraction_method"] = "menu"
         logger.info(f"✅ Date MCQ: {selected_date}")
+
+        # Check if both preferences now complete
+        if state.get("preferred_date") and state.get("preferred_time_range"):
+            state["should_proceed"] = True
+            state["current_step"] = ""
+            logger.info("✅ Both preferences complete, continuing workflow")
     else:
         logger.warning(f"⚠️ Invalid date MCQ: {message}")
     return state

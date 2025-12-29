@@ -29,6 +29,8 @@ async def fetch_addons(state: BookingState) -> BookingState:
         result["skipped_addons"] = True
         result["addon_selection_complete"] = True
         result["addon_ids"] = []
+        result["should_proceed"] = True  # Continue to next step
+        result["current_step"] = ""  # Clear to allow next step
     return result
 
 
@@ -80,6 +82,11 @@ async def validate_addon_selection(state: BookingState) -> BookingState:
     """Validate that addon selection is complete."""
     if not state.get("addon_selection_complete"):
         logger.warning("Addon selection validation failed")
+    else:
+        # Addon selection complete, continue to next step
+        state["should_proceed"] = True
+        state["current_step"] = ""  # Clear to allow next step
+        logger.info("✅ Addon selection validation passed, continuing workflow")
 
     return state
 
