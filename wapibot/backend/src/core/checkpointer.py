@@ -14,6 +14,7 @@ from typing import Optional
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+from core.dual_checkpointer import DualCheckpointer
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ class CheckpointerManager:
     def __init__(self):
         self._memory_checkpointer: Optional[MemorySaver] = None
         self._sqlite_checkpointer: Optional[AsyncSqliteSaver] = None
+        self._dual_checkpointer: Optional[DualCheckpointer] = None
         self._sqlite_context = None
 
     async def initialize(self, db_path: Optional[Path] = None):
@@ -53,6 +55,12 @@ class CheckpointerManager:
 
         logger.info(f"✅ AsyncSqliteSaver initialized (backup) at {db_path}")
 
+        # Initialize dual checkpointer (memory + SQLite)
+        self._dual_checkpointer = DualCheckpointer(
+            memory=self._memory_checkpointer,
+            sqlite=self._sqlite_checkpointer
+        )
+
     async def shutdown(self):
         """Cleanup checkpointers at application shutdown."""
         logger.info("🛑 Shutting down checkpointers...")
@@ -66,7 +74,8 @@ class CheckpointerManager:
 
         # MemorySaver doesn't need explicit cleanup
         self._memory_checkpointer = None
-        logger.info("✅ MemorySaver cleared")
+        self._dual_checkpointer = None
+        logger.info("✅ MemorySaver and DualCheckpointer cleared")
 
     @property
     def memory(self) -> MemorySaver:
@@ -81,6 +90,19 @@ class CheckpointerManager:
         if self._sqlite_checkpointer is None:
             raise RuntimeError("Checkpointer not initialized. Call initialize() first.")
         return self._sqlite_checkpointer
+
+    @property
+    def dual(self) -> DualCheckpointer:
+        """Get the dual checkpointer (memory + SQLite backup).
+
+        This is the recommended checkpointer for workflows:
+        - Fast access during runtime (memory)
+        - Survives server restarts/reloads (SQLite backup)
+        - Manual control via SQLite DB deletion
+        """
+        if self._dual_checkpointer is None:
+            raise RuntimeError("Checkpointer not initialized. Call initialize() first.")
+        return self._dual_checkpointer
 
 
 # Global checkpointer manager instance

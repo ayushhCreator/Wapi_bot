@@ -178,7 +178,7 @@ async def wapi_webhook(
                 "sentiment": None,
                 "intent": None,
                 "intent_confidence": 0.0,
-                "current_step": "entry_router",
+                "current_step": "",  # Empty = start fresh, "awaiting_X" = resume from checkpoint
                 "completeness": 0.0,
                 "errors": [],
                 "response": "",
@@ -224,16 +224,16 @@ async def wapi_webhook(
         result = await workflow.ainvoke(state, config=config)
 
         # Run brain workflow (observes conversation in parallel)
+        # CRITICAL: Shadow mode is READ ONLY - brain observes but does NOT modify real world
         brain_settings = get_brain_settings()
         if brain_settings.brain_enabled:
             try:
-                logger.info(f"🧠 Running brain in {brain_settings.brain_mode} mode")
+                logger.info(f"🧠 Running brain in {brain_settings.brain_mode} mode (READ ONLY)")
                 brain_workflow = create_brain_workflow()
                 # Brain observes the completed conversation (with response)
-                brain_result = await brain_workflow.ainvoke(result)
-                # Update state with brain observations
-                result.update(brain_result)
-                logger.info("🧠 Brain processing complete")
+                # Result is discarded - brain saves observations to RL Gym internally
+                await brain_workflow.ainvoke(result)
+                logger.info("🧠 Brain processing complete (observations saved to RL Gym)")
             except Exception as e:
                 logger.error(f"🧠 Brain processing failed: {e}", exc_info=True)
                 # Brain failure doesn't block main workflow

@@ -212,8 +212,12 @@ def create_existing_user_booking_workflow():
 
     workflow.add_edge("booking_confirmation", END)
 
-    # Compile with checkpointing (checkpointer initialized in main.py lifespan)
-    compiled_workflow = workflow.compile(checkpointer=checkpointer_manager.memory)
+    # Compile with dual checkpointing (memory + SQLite backup)
+    # - Fast: Uses in-memory checkpointer during runtime
+    # - Persistent: Backed up to SQLite, survives server restarts/reloads
+    # - Manual control: Delete SQLite DB to clear all checkpoints
+    # Note: SQLite errors are caught and logged as warnings (memory still works)
+    compiled_workflow = workflow.compile(checkpointer=checkpointer_manager.dual)
 
     # Wrap with brain observation for shadow mode and telemetry
     return BrainWorkflow(compiled_workflow)

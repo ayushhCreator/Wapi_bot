@@ -62,64 +62,13 @@ class BrainWorkflow:
             Final state after workflow execution
         """
 
-        # Check if brain disabled
-        if not self.brain_settings.brain_enabled:
-            logger.info("🧠 Brain disabled, executing workflow normally")
-            return await self.workflow.ainvoke(state, config)
-
-        # Shadow mode: Observe but don't act
-        if is_shadow_mode():
-            logger.info("👁️ Shadow mode: Observing workflow execution")
-            shadow_state = await self._execute_shadow_mode(state, config)
-            return shadow_state
-
-        # Normal execution with telemetry
-        logger.info(f"🧠 Brain mode: {self.brain_settings.brain_mode}")
+        # ALWAYS run the real workflow normally (shadow mode runs separately in wapi_webhook)
+        logger.info("🚀 Executing main booking workflow")
         final_state = await self.workflow.ainvoke(state, config)
 
-        # Record telemetry
-        await self._record_telemetry(final_state)
-
-        return final_state
-
-    async def _execute_shadow_mode(
-        self,
-        state: BookingState,
-        config: Optional[Dict[str, Any]] = None
-    ) -> BookingState:
-        """Execute workflow in shadow mode (observe only).
-
-        In shadow mode:
-        - Workflow executes normally
-        - Observations are recorded
-        - Messages are NOT sent
-        - APIs are NOT called
-        - State is updated only with observations
-
-        Args:
-            state: Initial state
-            config: Optional config
-
-        Returns:
-            State with observations but no actions
-        """
-
-        # Mark state as shadow mode
-        shadow_state = {**state, "shadow_mode": True}
-
-        # Execute workflow
-        result_state = await self.workflow.ainvoke(shadow_state, config)
-
-        # Extract observations (remove action results)
-        observations = get_nested_field(result_state, "brain_observations") or {}
-
-        logger.info(
-            f"👁️ Shadow mode complete: {len(observations)} observations recorded"
-        )
-
-        # Return original state + observations
-        final_state = {**state}
-        set_nested_field(final_state, "brain_observations", observations)
+        # Record telemetry if brain enabled
+        if self.brain_settings.brain_enabled and not is_shadow_mode():
+            await self._record_telemetry(final_state)
 
         return final_state
 
