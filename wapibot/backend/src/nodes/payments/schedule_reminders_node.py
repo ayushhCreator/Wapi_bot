@@ -20,9 +20,7 @@ logger = logging.getLogger(__name__)
 class ReminderScheduler(Protocol):
     """Protocol for reminder schedulers (extensibility point)."""
 
-    async def schedule_reminders(
-        self, session: PaymentSession, db_session
-    ) -> list:
+    async def schedule_reminders(self, session: PaymentSession, db_session) -> list:
         """Schedule all reminders for a payment session."""
         ...
 
@@ -59,9 +57,7 @@ async def node(
 
             # Fetch PaymentSession
             result = await db_session.execute(
-                select(PaymentSession).where(
-                    PaymentSession.session_id == session_id
-                )
+                select(PaymentSession).where(PaymentSession.session_id == session_id)
             )
             session = result.scalar_one_or_none()
 

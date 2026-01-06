@@ -28,7 +28,9 @@ async def check_cancellation_policy(state: BookingState) -> BookingState:
 
     try:
         # Parse appointment datetime
-        appointment_dt = datetime.fromisoformat(f"{appointment_date_str}T{appointment_time_str}")
+        appointment_dt = datetime.fromisoformat(
+            f"{appointment_date_str}T{appointment_time_str}"
+        )
         now = datetime.now()
         hours_until = (appointment_dt - now).total_seconds() / 3600
 
@@ -55,7 +57,9 @@ async def check_cancellation_policy(state: BookingState) -> BookingState:
     except Exception as e:
         logger.error(f"❌ Cancellation check failed: {e}")
         state["can_cancel_free"] = False
-        state["cancellation_message"] = "Unable to process cancellation. Please contact support."
+        state["cancellation_message"] = (
+            "Unable to process cancellation. Please contact support."
+        )
         return state
 
 

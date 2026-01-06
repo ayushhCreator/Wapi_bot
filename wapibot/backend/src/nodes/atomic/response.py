@@ -47,7 +47,7 @@ async def node(
     state: BookingState,
     generator: ResponseGenerator,
     allow_brain_personalization: bool = True,
-    fallback_message: str = "I'm processing your request..."
+    fallback_message: str = "I'm processing your request...",
 ) -> BookingState:
     """Atomic response generation node - with optional brain personalization.
 
@@ -87,12 +87,16 @@ async def node(
 
             if proposed_response and brain_confidence > 0.8:
                 # Use brain's proposed response if high confidence
-                logger.info(f"🧠 Using brain-proposed response (confidence: {brain_confidence:.2f})")
+                logger.info(
+                    f"🧠 Using brain-proposed response (confidence: {brain_confidence:.2f})"
+                )
                 message = proposed_response
             else:
                 # Apply brain personalization to template
                 # TODO: Integrate with personalize_message.node() in Phase 4 Step 32
-                logger.debug(f"🧠 Brain personalization enabled (mode: {brain_settings.brain_mode})")
+                logger.debug(
+                    f"🧠 Brain personalization enabled (mode: {brain_settings.brain_mode})"
+                )
 
         # Send response using atomic send_message node
         result = await send_message_node(state, lambda s: message)

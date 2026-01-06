@@ -22,7 +22,7 @@ class EmailExtractor(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Collecting email for booking confirmation"
+        context: str = "Collecting email for booking confirmation",
     ) -> Dict[str, Any]:
         """Extract email from user message.
 
@@ -42,7 +42,7 @@ class EmailExtractor(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         confidence_str = getattr(result, "confidence", "medium")
@@ -50,5 +50,5 @@ class EmailExtractor(dspy.Module):
 
         return {
             "email": getattr(result, "email", "").strip(),
-            "confidence": confidence_float
+            "confidence": confidence_float,
         }

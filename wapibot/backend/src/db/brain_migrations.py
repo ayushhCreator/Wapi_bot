@@ -4,7 +4,7 @@ import sqlite3
 from db.brain_tables import (
     BRAIN_DECISIONS_TABLE,
     BRAIN_MEMORIES_TABLE,
-    BRAIN_DREAMS_TABLE
+    BRAIN_DREAMS_TABLE,
 )
 
 

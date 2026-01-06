@@ -29,7 +29,7 @@ class CalculateCompletenessNode:
             return {
                 "completeness": 0.0,
                 "is_complete": False,
-                "missing_fields": list(self.service.REQUIRED_FIELDS)
+                "missing_fields": list(self.service.REQUIRED_FIELDS),
             }
 
         # Calculate completeness score
@@ -45,7 +45,7 @@ class CalculateCompletenessNode:
         return {
             "completeness": completeness,
             "is_complete": is_complete,
-            "missing_fields": missing_fields
+            "missing_fields": missing_fields,
         }
 
 

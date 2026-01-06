@@ -6,7 +6,7 @@ from models.brain_schemas import (
     DreamTriggerRequest,
     TrainTriggerRequest,
     BrainStatusResponse,
-    BrainMetricsResponse
+    BrainMetricsResponse,
 )
 from services.brain_service import get_brain_service
 
@@ -53,7 +53,9 @@ async def trigger_training(request: TrainTriggerRequest):
     """
     try:
         service = get_brain_service()
-        result = await service.trigger_training(request.optimizer, request.num_iterations)
+        result = await service.trigger_training(
+            request.optimizer, request.num_iterations
+        )
         return result
     except Exception as e:
         logger.error(f"Training trigger failed: {e}")

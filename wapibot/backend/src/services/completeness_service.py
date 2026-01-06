@@ -17,7 +17,7 @@ class CompletenessService:
         "vehicle.brand",
         "appointment.date.parsed_date",
         "appointment.time_slot",
-        "appointment.service_type"
+        "appointment.service_type",
     ]
 
     # Optional fields that increase completeness
@@ -25,7 +25,7 @@ class CompletenessService:
         "customer.last_name",
         "customer.email",
         "vehicle.model",
-        "vehicle.year"
+        "vehicle.year",
     ]
 
     def calculate_completeness(self, state: BookingState) -> float:

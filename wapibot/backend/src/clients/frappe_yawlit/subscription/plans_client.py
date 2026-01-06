@@ -84,7 +84,7 @@ class SubscriptionPlansClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.product_form.get_plan_details",
-                {"plan_id": plan_id}
+                {"plan_id": plan_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching plan details for {plan_id}: {e}")
@@ -112,13 +112,15 @@ class SubscriptionPlansClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_flow_api.get_plan_services",
-                {"plan_id": plan_id}
+                {"plan_id": plan_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching plan services for {plan_id}: {e}")
             raise
 
-    async def calculate_price(self, plan_id: str, vehicle_count: int, **kwargs) -> Dict[str, Any]:
+    async def calculate_price(
+        self, plan_id: str, vehicle_count: int, **kwargs
+    ) -> Dict[str, Any]:
         """Calculate subscription price based on plan and parameters.
 
         Args:
@@ -150,11 +152,7 @@ class SubscriptionPlansClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_pricing.calculate_subscription_price_v2",
-                {
-                    "plan_id": plan_id,
-                    "vehicle_count": vehicle_count,
-                    **kwargs
-                }
+                {"plan_id": plan_id, "vehicle_count": vehicle_count, **kwargs},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error calculating price for plan {plan_id}: {e}")

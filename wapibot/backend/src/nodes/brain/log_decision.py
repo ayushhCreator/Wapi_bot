@@ -19,10 +19,7 @@ class DecisionRepository(Protocol):
         ...
 
 
-def node(
-    state: BrainState,
-    repo: DecisionRepository
-) -> BrainState:
+def node(state: BrainState, repo: DecisionRepository) -> BrainState:
     """Atomic node: Log brain decision to RL Gym for learning.
 
     Records:
@@ -47,13 +44,15 @@ def node(
         conversation_history = json.dumps(history) if history else "[]"
 
         # Create state snapshot (key fields only)
-        state_snapshot = json.dumps({
-            "profile_complete": state.get("profile_complete", False),
-            "vehicle_selected": state.get("vehicle_selected", False),
-            "service_selected": state.get("service_selected", False),
-            "slot_selected": state.get("slot_selected", False),
-            "confirmed": state.get("confirmed")
-        })
+        state_snapshot = json.dumps(
+            {
+                "profile_complete": state.get("profile_complete", False),
+                "vehicle_selected": state.get("vehicle_selected", False),
+                "service_selected": state.get("service_selected", False),
+                "slot_selected": state.get("slot_selected", False),
+                "confirmed": state.get("confirmed"),
+            }
+        )
 
         # Create decision record
         decision = BrainDecision(
@@ -71,7 +70,7 @@ def node(
             action_taken=state.get("action_taken"),
             response_sent=state.get("response"),
             user_satisfaction=state.get("user_satisfaction"),
-            workflow_outcome=None  # Will be updated later
+            workflow_outcome=None,  # Will be updated later
         )
 
         # Save to RL Gym database

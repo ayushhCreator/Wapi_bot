@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         env_file=str(ENV_FILE_PATH),  # Absolute path to project root .env.txt
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore"
+        extra="ignore",
     )
 
     # Application
@@ -69,19 +69,19 @@ class Settings(BaseSettings):
     dspy_temperature: float = 0.7
 
     # Extraction Timeouts (seconds) - Hardware dependent, adjust for your GPU
-    extraction_timeout_normal: float = 90.0      # Normal extraction (10-90s typical)
-    extraction_timeout_complex: float = 180.0    # Complex modules or first load
-    extraction_timeout_warmup: float = 180.0     # Warmup queries (model loading time)
+    extraction_timeout_normal: float = 90.0  # Normal extraction (10-90s typical)
+    extraction_timeout_complex: float = 180.0  # Complex modules or first load
+    extraction_timeout_warmup: float = 180.0  # Warmup queries (model loading time)
 
     # Confidence Score Thresholds
-    confidence_low: float = 0.5                  # Low confidence extraction
-    confidence_medium: float = 0.7               # Medium confidence (regex fallback)
-    confidence_high: float = 0.9                 # High confidence (DSPy extraction)
+    confidence_low: float = 0.5  # Low confidence extraction
+    confidence_medium: float = 0.7  # Medium confidence (regex fallback)
+    confidence_high: float = 0.9  # High confidence (DSPy extraction)
 
     # Warmup Configuration
-    warmup_cooldown_seconds: int = 300           # Hot reload protection
-    warmup_idle_threshold_seconds: int = 300     # Trigger warmup after idle
-    warmup_idle_check_interval: int = 60         # Check idle status interval
+    warmup_cooldown_seconds: int = 300  # Hot reload protection
+    warmup_idle_threshold_seconds: int = 300  # Trigger warmup after idle
+    warmup_idle_check_interval: int = 60  # Check idle status interval
 
     # CORS
     cors_origins: str = "http://localhost:3000,http://localhost:3001"
@@ -153,35 +153,32 @@ class Settings(BaseSettings):
     redis_stream_name: str = "chat_messages"  # Stream name for chat messages
     redis_consumer_group: str = "websocket_workers"  # Consumer group for load balancing
 
-    @field_validator(
-        'payment_reminder_intervals',
-        mode='before'
-    )
+    @field_validator("payment_reminder_intervals", mode="before")
     @classmethod
     def parse_reminder_intervals(cls, v):
         """Parse reminder intervals from comma-separated string or list."""
         if isinstance(v, str):
-            return [int(x.strip()) for x in v.split(',')]
+            return [int(x.strip()) for x in v.split(",")]
         return v
 
     @field_validator(
-        'frappe_api_key',
-        'frappe_api_secret',
-        'wapi_webhook_secret',
-        'wapi_vendor_uid',
-        'wapi_bearer_token'
+        "frappe_api_key",
+        "frappe_api_secret",
+        "wapi_webhook_secret",
+        "wapi_vendor_uid",
+        "wapi_bearer_token",
     )
     @classmethod
     def validate_production_secrets(cls, v: str, info) -> str:
         """Validate that required secrets are set in production."""
         # Get environment value from the values being validated
-        environment = info.data.get('environment', 'development')
+        environment = info.data.get("environment", "development")
         field_name = info.field_name
 
-        if environment == 'production' and not v:
+        if environment == "production" and not v:
             raise ValueError(
-                f'{field_name} must be set in production environment. '
-                f'Add {field_name.upper()} to .env.txt'
+                f"{field_name} must be set in production environment. "
+                f"Add {field_name.upper()} to .env.txt"
             )
         return v
 

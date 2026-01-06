@@ -15,7 +15,7 @@ async def execute_request(
     client: httpx.AsyncClient,
     request_config: Dict[str, Any],
     timeout: float,
-    attempt: int
+    attempt: int,
 ) -> httpx.Response:
     """Execute a single HTTP request.
 
@@ -47,7 +47,7 @@ async def execute_request(
         params=params,
         json=json_body,
         data=form_data,
-        timeout=timeout
+        timeout=timeout,
     )
 
     response.raise_for_status()
@@ -63,9 +63,7 @@ def default_response_parser(response: httpx.Response) -> Any:
 
 
 def create_response_metadata(
-    response: httpx.Response,
-    request_config: Dict[str, Any],
-    attempt: int
+    response: httpx.Response, request_config: Dict[str, Any], attempt: int
 ) -> Dict[str, Any]:
     """Create response metadata dict.
 
@@ -81,5 +79,5 @@ def create_response_metadata(
         "status_code": response.status_code,
         "url": request_config.get("url"),
         "method": request_config.get("method", "GET"),
-        "attempt": attempt
+        "attempt": attempt,
     }

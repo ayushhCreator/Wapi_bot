@@ -26,6 +26,7 @@ def setup_middleware(app: FastAPI) -> None:
     Args:
         app: FastAPI application instance
     """
+
     # Security Headers Middleware
     @app.middleware("http")
     async def add_security_headers(request: Request, call_next):
@@ -49,16 +50,20 @@ def setup_middleware(app: FastAPI) -> None:
 
         validators = [
             JWTValidator(secret_key=security_settings.jwt_secret_key or "dev_secret"),
-            APIKeyValidator(valid_keys={
-                hashlib.sha256(admin_key.encode()).hexdigest(): {
-                    "name": "admin_key",
-                    "scopes": ["admin", "payments", "brain"]
-                },
-                hashlib.sha256(brain_key.encode()).hexdigest(): {
-                    "name": "brain_key",
-                    "scopes": ["brain"]
+            APIKeyValidator(
+                valid_keys={
+                    hashlib.sha256(admin_key.encode()).hexdigest(): {
+                        "name": "admin_key",
+                        "scopes": ["admin", "payments", "brain"],
+                    },
+                    hashlib.sha256(brain_key.encode()).hexdigest(): {
+                        "name": "brain_key",
+                        "scopes": ["brain"],
+                    },
                 }
-            } if admin_key and brain_key else {})
+                if admin_key and brain_key
+                else {}
+            ),
         ]
 
         app.add_middleware(AuthMiddleware, validators=validators)

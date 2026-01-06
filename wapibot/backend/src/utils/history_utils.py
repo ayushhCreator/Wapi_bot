@@ -23,10 +23,9 @@ def create_dspy_history(messages: List[Dict[str, str]]) -> dspy.History:
     formatted_messages = []
     for msg in messages:
         if isinstance(msg, dict) and "role" in msg and "content" in msg:
-            formatted_messages.append({
-                "role": msg["role"],
-                "content": str(msg["content"]).strip()
-            })
+            formatted_messages.append(
+                {"role": msg["role"], "content": str(msg["content"]).strip()}
+            )
 
     return dspy.History(messages=formatted_messages)
 

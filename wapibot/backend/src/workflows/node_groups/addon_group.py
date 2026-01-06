@@ -17,10 +17,17 @@ logger = logging.getLogger(__name__)
 async def fetch_addons(state: BookingState) -> BookingState:
     """Fetch available addons for selected service from Frappe API."""
     client = get_yawlit_client()
+
     def extract_service_id(s):
         return {"service_id": s.get("selected_service", {}).get("name")}
+
     logger.info("➕ Fetching optional addons from API...")
-    result = await call_frappe_node(state, client.service_catalog.get_optional_addons, "addons_response", state_extractor=extract_service_id)
+    result = await call_frappe_node(
+        state,
+        client.service_catalog.get_optional_addons,
+        "addons_response",
+        state_extractor=extract_service_id,
+    )
     addons_response = result.get("addons_response", {})
     addons = addons_response.get("message", {}).get("optional_addons", [])
     result["available_addons"] = addons
@@ -57,7 +64,7 @@ async def extract_addon_selection(state: BookingState) -> BookingState:
         return state
     selected_indices = []
     selected_addons = []
-    numbers = re.findall(r'\d+', user_message)
+    numbers = re.findall(r"\d+", user_message)
     for num in numbers:
         try:
             idx = int(num)
@@ -68,10 +75,19 @@ async def extract_addon_selection(state: BookingState) -> BookingState:
             continue
     if selected_indices:
         state["selected_addons"] = selected_addons
-        state["addon_ids"] = [{"addon": a.get("name"), "quantity": 1, "unit_price": a.get("unit_price", 0)} for a in selected_addons]
+        state["addon_ids"] = [
+            {
+                "addon": a.get("name"),
+                "quantity": 1,
+                "unit_price": a.get("unit_price", 0),
+            }
+            for a in selected_addons
+        ]
         state["addon_selection_complete"] = True
         state["skipped_addons"] = False
-        logger.info(f"➕ Addons selected: {[a.get('addon_name', a.get('name')) for a in selected_addons]} (options {selected_indices})")
+        logger.info(
+            f"➕ Addons selected: {[a.get('addon_name', a.get('name')) for a in selected_addons]} (options {selected_indices})"
+        )
     else:
         state["addon_selection_complete"] = False
         logger.warning(f"Could not parse addon selection: {user_message}")
@@ -93,9 +109,13 @@ async def validate_addon_selection(state: BookingState) -> BookingState:
 
 async def send_invalid_addon_selection(state: BookingState) -> BookingState:
     """Send message for invalid addon selection."""
+
     def error_msg(s):
         return f'Please reply with numbers (1-{len(s.get("available_addons", []))}) or "Skip".\nE.g., "1", "1 3", "Skip"'
-    return await handle_selection_error(state, awaiting_step="awaiting_addon_selection", error_message_builder=error_msg)
+
+    return await handle_selection_error(
+        state, awaiting_step="awaiting_addon_selection", error_message_builder=error_msg
+    )
 
 
 def route_addon_availability(state: BookingState) -> str:
@@ -121,7 +141,7 @@ route_addon_entry = create_resume_router(
     resume_node="extract_selection",
     fresh_node="fetch_addons",
     readiness_check=lambda s: not s.get("addon_selection_complete", False),
-    router_name="addon_entry"
+    router_name="addon_entry",
 )
 
 
@@ -135,13 +155,25 @@ def create_addon_group() -> StateGraph:
     workflow.add_node("validate_addon_selection", validate_addon_selection)
     workflow.add_node("send_invalid_addon_selection", send_invalid_addon_selection)
     workflow.set_entry_point("entry")
-    workflow.add_conditional_edges("entry", route_addon_entry,
-        {"fetch_addons": "fetch_addons", "extract_selection": "extract_addon_selection"})
-    workflow.add_conditional_edges("fetch_addons", route_addon_availability,
-        {"no_addons": END, "show_options": "show_addon_options"})
+    workflow.add_conditional_edges(
+        "entry",
+        route_addon_entry,
+        {
+            "fetch_addons": "fetch_addons",
+            "extract_selection": "extract_addon_selection",
+        },
+    )
+    workflow.add_conditional_edges(
+        "fetch_addons",
+        route_addon_availability,
+        {"no_addons": END, "show_options": "show_addon_options"},
+    )
     workflow.add_edge("show_addon_options", END)
     workflow.add_edge("extract_addon_selection", "validate_addon_selection")
-    workflow.add_conditional_edges("validate_addon_selection", route_addon_validation,
-        {"valid": END, "invalid": "send_invalid_addon_selection"})
+    workflow.add_conditional_edges(
+        "validate_addon_selection",
+        route_addon_validation,
+        {"valid": END, "invalid": "send_invalid_addon_selection"},
+    )
     workflow.add_edge("send_invalid_addon_selection", END)
     return workflow.compile()

@@ -12,9 +12,7 @@ class SentimentAnalysisSignature(dspy.Signature):
     conversation_history: str = dspy.InputField(
         desc="Previous conversation turns for context"
     )
-    user_message: str = dspy.InputField(
-        desc="Current user message to analyze"
-    )
+    user_message: str = dspy.InputField(desc="Current user message to analyze")
     context: str = dspy.InputField(
         desc="Analysis context (e.g., 'booking flow', 'complaint handling')"
     )
@@ -39,6 +37,4 @@ class SentimentAnalysisSignature(dspy.Signature):
     overall_sentiment: str = dspy.OutputField(
         desc="Overall sentiment: 'positive', 'neutral', 'negative'"
     )
-    reasoning: str = dspy.OutputField(
-        desc="Reasoning for sentiment analysis"
-    )
+    reasoning: str = dspy.OutputField(desc="Reasoning for sentiment analysis")

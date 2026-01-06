@@ -27,7 +27,7 @@ def node(
     state: BrainState,
     generator: DreamGenerator,
     model: str = "llama3.2",
-    hallucination_ratio: float = 0.2
+    hallucination_ratio: float = 0.2,
 ) -> BrainState:
     """Atomic node: Generate synthetic dream scenarios using Ollama.
 
@@ -73,9 +73,7 @@ Format: JSON array of scenarios."""
         dream_text = generator.generate(prompt=prompt, model=model)
 
         # Parse dreams (TODO: proper JSON parsing)
-        state["generated_dreams"] = [
-            {"scenario": dream_text, "type": "synthetic"}
-        ]
+        state["generated_dreams"] = [{"scenario": dream_text, "type": "synthetic"}]
 
         logger.info(f"Generated {len(state['generated_dreams'])} dream scenarios")
 

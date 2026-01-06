@@ -23,13 +23,13 @@ async def check_redis_health(diagnosis: Dict[str, Any]) -> None:
         diagnosis["checks"]["redis"] = {
             "status": "healthy",
             "latency_ms": round(latency_ms, 2),
-            "message": "Redis responding normally"
+            "message": "Redis responding normally",
         }
     except Exception as e:
         diagnosis["checks"]["redis"] = {
             "status": "unhealthy",
             "error": str(e),
-            "message": "Redis connection failed"
+            "message": "Redis connection failed",
         }
         diagnosis["overall_status"] = "unhealthy"
         diagnosis["recommendations"].append("Start Redis: sudo systemctl start redis")
@@ -40,8 +40,9 @@ async def check_celery_health(diagnosis: Dict[str, Any]) -> None:
     diagnosis["checks"]["celery"] = {
         "status": "healthy" if health_monitor.is_celery_available() else "degraded",
         "enabled": health_monitor.is_celery_available(),
-        "message": "Celery available" if health_monitor.is_celery_available()
-                   else "Celery disabled (Redis down)"
+        "message": "Celery available"
+        if health_monitor.is_celery_available()
+        else "Celery disabled (Redis down)",
     }
 
 
@@ -50,16 +51,18 @@ async def check_database_health(diagnosis: Dict[str, Any]) -> None:
     try:
         diagnosis["checks"]["database"] = {
             "status": "healthy",
-            "message": "Database connection OK"
+            "message": "Database connection OK",
         }
     except Exception as e:
         diagnosis["checks"]["database"] = {
             "status": "unhealthy",
             "error": str(e),
-            "message": "Database connection failed"
+            "message": "Database connection failed",
         }
         diagnosis["overall_status"] = "unhealthy"
-        diagnosis["recommendations"].append("Check database migrations: alembic upgrade head")
+        diagnosis["recommendations"].append(
+            "Check database migrations: alembic upgrade head"
+        )
 
 
 async def check_frappe_api_health(diagnosis: Dict[str, Any]) -> None:
@@ -70,15 +73,17 @@ async def check_frappe_api_health(diagnosis: Dict[str, Any]) -> None:
         get_yawlit_client()
         diagnosis["checks"]["frappe_api"] = {
             "status": "unknown",
-            "message": "Frappe client initialized (add live test if needed)"
+            "message": "Frappe client initialized (add live test if needed)",
         }
     except Exception as e:
         diagnosis["checks"]["frappe_api"] = {
             "status": "degraded",
             "error": str(e),
-            "message": "Frappe client initialization issue"
+            "message": "Frappe client initialization issue",
         }
-        diagnosis["recommendations"].append("Check FRAPPE_BASE_URL and API credentials in .env")
+        diagnosis["recommendations"].append(
+            "Check FRAPPE_BASE_URL and API credentials in .env"
+        )
 
 
 async def check_configuration_health(diagnosis: Dict[str, Any]) -> None:
@@ -96,11 +101,13 @@ async def check_configuration_health(diagnosis: Dict[str, Any]) -> None:
         diagnosis["checks"]["configuration"] = {
             "status": "degraded",
             "issues": config_issues,
-            "message": f"{len(config_issues)} configuration issue(s)"
+            "message": f"{len(config_issues)} configuration issue(s)",
         }
-        diagnosis["recommendations"].append("Review .env.txt file and add missing credentials")
+        diagnosis["recommendations"].append(
+            "Review .env.txt file and add missing credentials"
+        )
     else:
         diagnosis["checks"]["configuration"] = {
             "status": "healthy",
-            "message": "All required environment variables set"
+            "message": "All required environment variables set",
         }

@@ -19,7 +19,7 @@ class NameExtractor(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Collecting customer name for booking"
+        context: str = "Collecting customer name for booking",
     ) -> Dict[str, Any]:
         """
         Extract name from user message.
@@ -44,20 +44,22 @@ class NameExtractor(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         # Convert confidence string to float using config values (no magic numbers!)
         confidence_map = {
             "low": settings.confidence_low,
             "medium": settings.confidence_medium,
-            "high": settings.confidence_high
+            "high": settings.confidence_high,
         }
         confidence_str = getattr(result, "confidence", "medium").lower()
-        confidence_float = confidence_map.get(confidence_str, settings.confidence_medium)
+        confidence_float = confidence_map.get(
+            confidence_str, settings.confidence_medium
+        )
 
         return {
             "first_name": getattr(result, "first_name", "").strip(),
             "last_name": getattr(result, "last_name", "").strip(),
-            "confidence": confidence_float
+            "confidence": confidence_float,
         }

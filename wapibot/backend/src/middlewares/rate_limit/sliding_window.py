@@ -17,12 +17,7 @@ class SlidingWindowRateLimiter:
         self._windows: Dict[str, Deque[float]] = defaultdict(deque)
         self._lock = asyncio.Lock()
 
-    async def check_limit(
-        self,
-        key: str,
-        limit: int,
-        window_seconds: int = 1
-    ) -> bool:
+    async def check_limit(self, key: str, limit: int, window_seconds: int = 1) -> bool:
         """Check if request is within rate limit.
 
         Uses sliding window algorithm with automatic expiration.
@@ -51,12 +46,7 @@ class SlidingWindowRateLimiter:
             window.append(now)
             return True
 
-    async def get_remaining(
-        self,
-        key: str,
-        limit: int,
-        window_seconds: int = 1
-    ) -> int:
+    async def get_remaining(self, key: str, limit: int, window_seconds: int = 1) -> int:
         """Get remaining requests in current window.
 
         Args:

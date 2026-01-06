@@ -1,4 +1,5 @@
 """Unit test to prove customer lookup works with phone normalization."""
+
 import asyncio
 from unittest.mock import AsyncMock, patch
 
@@ -27,7 +28,7 @@ async def test_phone_normalization_and_customer_lookup():
         "should_confirm": False,
         "current_step": "lookup_customer",
         "completeness": 0.0,
-        "errors": []
+        "errors": [],
     }
 
     # Mock YawlitClient response for existing customer
@@ -37,12 +38,12 @@ async def test_phone_normalization_and_customer_lookup():
             "customer_uuid": "CUST-2025-001",
             "first_name": "Hrijul",
             "last_name": "Dey",
-            "enabled": 1
-        }
+            "enabled": 1,
+        },
     }
 
     # Mock the YawlitClient.customer_lookup.check_customer_exists method
-    with patch('workflows.existing_user_booking.get_yawlit_client') as mock_client:
+    with patch("workflows.existing_user_booking.get_yawlit_client") as mock_client:
         # Setup mock
         mock_lookup = AsyncMock(return_value=mock_customer_data)
         mock_client.return_value.customer_lookup.check_customer_exists = mock_lookup
@@ -61,9 +62,14 @@ async def test_phone_normalization_and_customer_lookup():
         print("✅ PROOF 2: Customer lookup found existing customer")
 
         # PROOF 3: Customer data extracted correctly
-        assert result_state["customer_lookup_response"]["data"]["first_name"] == "Hrijul"
+        assert (
+            result_state["customer_lookup_response"]["data"]["first_name"] == "Hrijul"
+        )
         assert result_state["customer_lookup_response"]["data"]["last_name"] == "Dey"
-        assert result_state["customer_lookup_response"]["data"]["customer_uuid"] == "CUST-2025-001"
+        assert (
+            result_state["customer_lookup_response"]["data"]["customer_uuid"]
+            == "CUST-2025-001"
+        )
         print("✅ PROOF 3: Customer data extracted: Hrijul Dey (CUST-2025-001)")
 
 
@@ -85,9 +91,9 @@ async def test_routing_existing_customer():
                 "customer_uuid": "CUST-2025-001",
                 "first_name": "Hrijul",
                 "last_name": "Dey",
-                "enabled": 1
-            }
-        }
+                "enabled": 1,
+            },
+        },
     }
 
     # Execute routing check
@@ -117,9 +123,7 @@ async def test_routing_new_customer():
         "current_step": "check_customer",
         "completeness": 0.0,
         "errors": [],
-        "customer_lookup_response": {
-            "exists": False
-        }
+        "customer_lookup_response": {"exists": False},
     }
 
     # Execute routing check
@@ -131,9 +135,9 @@ async def test_routing_new_customer():
 
 
 if __name__ == "__main__":
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("CUSTOMER LOOKUP PROOF - Unit Tests")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # Run tests
     asyncio.run(test_phone_normalization_and_customer_lookup())
@@ -142,9 +146,9 @@ if __name__ == "__main__":
     print()
     asyncio.run(test_routing_new_customer())
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ALL TESTS PASSED ✅")
-    print("="*60)
+    print("=" * 60)
     print("\nProof Summary:")
     print("1. Phone number normalization works (916290818033 → 6290818033)")
     print("2. YawlitClient.customer_lookup.check_customer_exists is called correctly")
@@ -152,4 +156,4 @@ if __name__ == "__main__":
     print("4. Existing customers route to 'existing_customer' flow")
     print("5. Customer data is stored in state for workflow")
     print("6. New customers route to 'new_customer' registration flow")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")

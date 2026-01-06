@@ -12,7 +12,7 @@ from pydantic import (
     field_validator,
     model_validator,
     computed_field,
-    ConfigDict
+    ConfigDict,
 )
 from models.core import ExtractionMetadata
 
@@ -20,37 +20,26 @@ from models.core import ExtractionMetadata
 class Date(BaseModel):
     """Validated date with reasonableness checks."""
 
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
 
     date_str: str = Field(
-        ...,
-        min_length=1,
-        max_length=20,
-        description="Original date string"
+        ..., min_length=1, max_length=20, description="Original date string"
     )
-    parsed_date: date = Field(
-        ...,
-        description="Parsed date object"
-    )
+    parsed_date: date = Field(..., description="Parsed date object")
     confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        default=1.0,
-        description="Parsing confidence"
+        ge=0.0, le=1.0, default=1.0, description="Parsing confidence"
     )
-    metadata: ExtractionMetadata = Field(
-        description="Extraction metadata"
-    )
+    metadata: ExtractionMetadata = Field(description="Extraction metadata")
 
-    @field_validator('date_str')
+    @field_validator("date_str")
     @classmethod
     def validate_date_string(cls, v: str) -> str:
         """Validate date string is not a placeholder."""
-        if v.lower().strip() in ['none', 'unknown', 'n/a', 'tbd', 'later']:
+        if v.lower().strip() in ["none", "unknown", "n/a", "tbd", "later"]:
             raise ValueError("Date string cannot be placeholder")
         return v.strip()
 
-    @field_validator('parsed_date')
+    @field_validator("parsed_date")
     @classmethod
     def validate_parsed_date(cls, v: date) -> date:
         """Validate appointment date is reasonable for booking.
@@ -80,17 +69,13 @@ class Date(BaseModel):
 
         return v
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_date_reasonableness(self):
         """Validate date is a real calendar date."""
 
         # Validate calendar date
         try:
-            date(
-                self.parsed_date.year,
-                self.parsed_date.month,
-                self.parsed_date.day
-            )
+            date(self.parsed_date.year, self.parsed_date.month, self.parsed_date.day)
         except ValueError as e:
             month = self.parsed_date.month
             day = self.parsed_date.day
@@ -122,28 +107,21 @@ class Date(BaseModel):
 class Appointment(BaseModel):
     """Complete appointment details with dynamic time slots from Yawlit API."""
 
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
 
     date: Date = Field(description="Appointment date")
     time_slot: Optional[str] = Field(
-        default=None,
-        description="Time slot (fetched from Yawlit API)"
+        default=None, description="Time slot (fetched from Yawlit API)"
     )
     time_slot_id: Optional[str] = Field(
-        default=None,
-        description="Time slot ID from Yawlit API"
+        default=None, description="Time slot ID from Yawlit API"
     )
     service_type: str = Field(
-        ...,
-        min_length=1,
-        max_length=100,
-        description="Type of service"
+        ..., min_length=1, max_length=100, description="Type of service"
     )
-    metadata: ExtractionMetadata = Field(
-        description="Extraction metadata"
-    )
+    metadata: ExtractionMetadata = Field(description="Extraction metadata")
 
-    @field_validator('time_slot')
+    @field_validator("time_slot")
     @classmethod
     def validate_time_slot(cls, v: Optional[str]) -> Optional[str]:
         """Validate time slot format if provided.
@@ -155,17 +133,17 @@ class Appointment(BaseModel):
             return v
 
         cleaned = v.strip()
-        if cleaned.lower() in ['none', 'unknown', 'n/a', 'tbd', '']:
+        if cleaned.lower() in ["none", "unknown", "n/a", "tbd", ""]:
             return None
 
         return cleaned
 
-    @field_validator('service_type')
+    @field_validator("service_type")
     @classmethod
     def validate_service_type(cls, v: str) -> str:
         """Validate service type is not placeholder."""
         cleaned = v.strip().lower()
-        if cleaned in ['none', 'unknown', 'n/a', 'tbd', '']:
+        if cleaned in ["none", "unknown", "n/a", "tbd", ""]:
             raise ValueError("Service type cannot be placeholder")
         if len(cleaned) < 3:
             raise ValueError("Service type too short")

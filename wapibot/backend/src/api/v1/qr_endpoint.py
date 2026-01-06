@@ -42,7 +42,5 @@ async def get_qr_image(session_id: str):
 
     logger.info(f"Serving QR image: {qr_path}")
     return FileResponse(
-        path=qr_path,
-        media_type="image/png",
-        filename=f"{session_id}.png"
+        path=qr_path, media_type="image/png", filename=f"{session_id}.png"
     )

@@ -8,19 +8,19 @@ from nodes.atomic import send_message
 @pytest.mark.asyncio
 async def test_send_message_with_static_builder():
     """Test send_message with simple static message builder."""
-    state = {
-        "conversation_id": "919876543210",
-        "history": []
-    }
+    state = {"conversation_id": "919876543210", "history": []}
 
     # Simple MessageBuilder
     def static_builder(s):
         return "Hello from Yawlit!"
 
     # Mock WAPI client and call_api
-    with patch('nodes.atomic.send_message.get_wapi_client') as mock_client, \
-         patch('nodes.atomic.send_message.call_api_node', new_callable=AsyncMock) as mock_call_api:
-
+    with (
+        patch("nodes.atomic.send_message.get_wapi_client") as mock_client,
+        patch(
+            "nodes.atomic.send_message.call_api_node", new_callable=AsyncMock
+        ) as mock_call_api,
+    ):
         # Configure mocks
         mock_wapi = MagicMock()
         mock_wapi.base_url = "https://wapi.in.net"
@@ -53,7 +53,7 @@ async def test_send_message_with_dynamic_builder():
     state = {
         "conversation_id": "919876543210",
         "customer": {"first_name": "Rahul", "last_name": "Sharma"},
-        "history": []
+        "history": [],
     }
 
     # Dynamic MessageBuilder using state
@@ -61,9 +61,12 @@ async def test_send_message_with_dynamic_builder():
         first_name = s.get("customer", {}).get("first_name", "there")
         return f"Hello {first_name}! Welcome to Yawlit."
 
-    with patch('nodes.atomic.send_message.get_wapi_client') as mock_client, \
-         patch('nodes.atomic.send_message.call_api_node', new_callable=AsyncMock) as mock_call_api:
-
+    with (
+        patch("nodes.atomic.send_message.get_wapi_client") as mock_client,
+        patch(
+            "nodes.atomic.send_message.call_api_node", new_callable=AsyncMock
+        ) as mock_call_api,
+    ):
         # Configure mocks
         mock_wapi = MagicMock()
         mock_wapi.base_url = "https://wapi.in.net"
@@ -86,10 +89,7 @@ async def test_send_message_with_dynamic_builder():
 @pytest.mark.asyncio
 async def test_send_message_builder_error():
     """Test error handling when message builder fails."""
-    state = {
-        "conversation_id": "919876543210",
-        "history": []
-    }
+    state = {"conversation_id": "919876543210", "history": []}
 
     # Failing MessageBuilder
     def failing_builder(s):
@@ -123,17 +123,17 @@ async def test_send_message_no_phone_number():
 @pytest.mark.asyncio
 async def test_send_message_no_history_storage():
     """Test that history storage can be disabled."""
-    state = {
-        "conversation_id": "919876543210",
-        "history": []
-    }
+    state = {"conversation_id": "919876543210", "history": []}
 
     def simple_builder(s):
         return "Test message"
 
-    with patch('nodes.atomic.send_message.get_wapi_client') as mock_client, \
-         patch('nodes.atomic.send_message.call_api_node', new_callable=AsyncMock) as mock_call_api:
-
+    with (
+        patch("nodes.atomic.send_message.get_wapi_client") as mock_client,
+        patch(
+            "nodes.atomic.send_message.call_api_node", new_callable=AsyncMock
+        ) as mock_call_api,
+    ):
         mock_wapi = MagicMock()
         mock_wapi.base_url = "https://wapi.in.net"
         mock_wapi.vendor_uid = "test_vendor"

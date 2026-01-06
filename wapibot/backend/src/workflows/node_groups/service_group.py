@@ -26,7 +26,9 @@ async def fetch_services(state: BookingState) -> BookingState:
         "services_response",
         state_extractor=lambda s: {
             "vehicle_type": s.get("vehicle", {}).get("vehicle_type")
-        } if s.get("vehicle") else {}
+        }
+        if s.get("vehicle")
+        else {},
     )
 
     # Extract services from response
@@ -63,7 +65,7 @@ async def process_service_selection(state: BookingState) -> BookingState:
         state,
         selection_type="service",
         options_key="service_options",
-        selected_key="selected_service"  # Must match BookingState field name!
+        selected_key="selected_service",  # Must match BookingState field name!
     )
     # Clear current_step to indicate we're moving to the next step (slot selection)
     # This allows slot_group to do a fresh fetch with the selected service
@@ -76,8 +78,7 @@ async def process_service_selection(state: BookingState) -> BookingState:
 async def send_service_error(state: BookingState) -> BookingState:
     """Send error message for invalid service selection."""
     return await handle_selection_error(
-        state,
-        awaiting_step="awaiting_service_selection"
+        state, awaiting_step="awaiting_service_selection"
     )
 
 
@@ -93,7 +94,7 @@ route_service_entry = create_resume_router(
     resume_node="process_selection",
     fresh_node="fetch_services",
     readiness_check=lambda s: bool(s.get("service_options")),
-    router_name="service_entry"
+    router_name="service_entry",
 )
 
 
@@ -108,11 +109,17 @@ def create_service_group() -> StateGraph:
     workflow.add_node("send_error", send_service_error)
     workflow.set_entry_point("predict_intent")
     workflow.add_edge("predict_intent", "entry")
-    workflow.add_conditional_edges("entry", route_service_entry,
-        {"fetch_services": "fetch_services", "process_selection": "process_selection"})
+    workflow.add_conditional_edges(
+        "entry",
+        route_service_entry,
+        {"fetch_services": "fetch_services", "process_selection": "process_selection"},
+    )
     workflow.add_edge("fetch_services", "show_catalog")
     workflow.add_edge("show_catalog", END)
-    workflow.add_conditional_edges("process_selection", route_after_selection,
-        {"selection_error": "send_error", "selection_success": END})
+    workflow.add_conditional_edges(
+        "process_selection",
+        route_after_selection,
+        {"selection_error": "send_error", "selection_success": END},
+    )
     workflow.add_edge("send_error", END)
     return workflow.compile()

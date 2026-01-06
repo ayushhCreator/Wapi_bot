@@ -18,7 +18,7 @@ from models.extraction_patterns import (
     DatePattern,
     TIME_RANGE_PATTERNS,
     DATE_PATTERNS,
-    WEEKDAY_PATTERNS
+    WEEKDAY_PATTERNS,
 )
 
 __all__ = [

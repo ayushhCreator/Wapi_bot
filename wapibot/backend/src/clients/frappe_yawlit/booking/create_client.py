@@ -58,16 +58,14 @@ class BookingCreateClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.create_booking",
-                booking_data
+                booking_data,
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error creating booking: {e}")
             raise
 
     async def create_booking_by_phone(
-        self,
-        phone_number: str,
-        booking_data: Dict[str, Any]
+        self, phone_number: str, booking_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Create booking by phone number (no session required).
 
@@ -135,7 +133,7 @@ class BookingCreateClient:
 
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.create_booking_by_phone",
-                data
+                data,
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error creating booking by phone {phone_number}: {e}")
@@ -175,7 +173,7 @@ class BookingCreateClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.calculate_booking_price",
-                price_data
+                price_data,
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error calculating booking price: {e}")

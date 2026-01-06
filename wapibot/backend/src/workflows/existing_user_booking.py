@@ -67,7 +67,11 @@ def route_entry(state: BookingState) -> str:
     elif current_step == "awaiting_booking_confirmation":
         logger.info("🔀 Resuming at booking_confirmation")
         return "booking_confirmation"
-    elif current_step in ["awaiting_preference", "awaiting_time_mcq", "awaiting_date_mcq"]:
+    elif current_step in [
+        "awaiting_preference",
+        "awaiting_time_mcq",
+        "awaiting_date_mcq",
+    ]:
         logger.info("🔀 Resuming at slot_preference")
         return "slot_preference"
     elif current_step == "awaiting_addon_selection":
@@ -157,57 +161,51 @@ def create_existing_user_booking_workflow():
             "slot_preference": "slot_preference",
             "slot_selection": "slot_selection",
             "utilities_collection": "utilities_collection",
-            "booking_confirmation": "booking_confirmation"
-        }
+            "booking_confirmation": "booking_confirmation",
+        },
     )
 
     # Chain groups with conditional routing (stop on error)
     workflow.add_conditional_edges(
-        "profile_check",
-        should_continue,
-        {"continue": "vehicle_selection", "end": END}
+        "profile_check", should_continue, {"continue": "vehicle_selection", "end": END}
     )
 
     workflow.add_conditional_edges(
         "vehicle_selection",
         should_continue,
-        {"continue": "address_selection", "end": END}
+        {"continue": "address_selection", "end": END},
     )
 
     workflow.add_conditional_edges(
         "address_selection",
         should_continue,
-        {"continue": "service_selection", "end": END}
+        {"continue": "service_selection", "end": END},
     )
 
     workflow.add_conditional_edges(
         "service_selection",
         should_continue,
-        {"continue": "addon_selection", "end": END}
+        {"continue": "addon_selection", "end": END},
     )
 
     workflow.add_conditional_edges(
-        "addon_selection",
-        should_continue,
-        {"continue": "slot_preference", "end": END}
+        "addon_selection", should_continue, {"continue": "slot_preference", "end": END}
     )
 
     workflow.add_conditional_edges(
-        "slot_preference",
-        should_continue,
-        {"continue": "slot_selection", "end": END}
+        "slot_preference", should_continue, {"continue": "slot_selection", "end": END}
     )
 
     workflow.add_conditional_edges(
         "slot_selection",
         should_continue,
-        {"continue": "utilities_collection", "end": END}
+        {"continue": "utilities_collection", "end": END},
     )
 
     workflow.add_conditional_edges(
         "utilities_collection",
         should_continue,
-        {"continue": "booking_confirmation", "end": END}
+        {"continue": "booking_confirmation", "end": END},
     )
 
     workflow.add_edge("booking_confirmation", END)

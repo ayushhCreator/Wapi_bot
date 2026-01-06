@@ -33,10 +33,7 @@ class Extractor(Protocol):
     """
 
     def __call__(
-        self,
-        conversation_history: list,
-        user_message: str,
-        **kwargs
+        self, conversation_history: list, user_message: str, **kwargs
     ) -> dict[str, Any]:
         """Extract data from conversation."""
         ...
@@ -49,7 +46,7 @@ async def node(
     fallback_fn: Optional[Callable[[str], dict]] = None,
     timeout: Optional[float] = None,
     metadata_path: Optional[str] = None,
-    extraction_priority: Optional[Literal["regex_first", "dspy_first"]] = None
+    extraction_priority: Optional[Literal["regex_first", "dspy_first"]] = None,
 ) -> BookingState:
     """Atomic extraction node - works with ANY extractor, ANY field.
 
@@ -95,15 +92,21 @@ async def node(
             extraction_priority="regex_first"  # Brain sets this based on mode
         )
     """
-    extraction_timeout = timeout if timeout is not None else settings.extraction_timeout_normal
+    extraction_timeout = (
+        timeout if timeout is not None else settings.extraction_timeout_normal
+    )
 
     # Determine extraction priority (brain-controlled configuration)
     if extraction_priority is None:
         brain_settings = get_brain_settings()
-        extraction_priority = "regex_first" if brain_settings.brain_mode == "reflex" else "dspy_first"
+        extraction_priority = (
+            "regex_first" if brain_settings.brain_mode == "reflex" else "dspy_first"
+        )
 
     # Determine method order based on priority
-    method_order = ["regex", "dspy"] if extraction_priority == "regex_first" else ["dspy", "regex"]
+    method_order = (
+        ["regex", "dspy"] if extraction_priority == "regex_first" else ["dspy", "regex"]
+    )
 
     field_name = field_path.split(".")[-1]
 
@@ -115,36 +118,49 @@ async def node(
                 continue
 
             if method_name == "dspy":
-                logger.info(f"🔍 Extracting {field_path} using {extractor.__class__.__name__}")
+                logger.info(
+                    f"🔍 Extracting {field_path} using {extractor.__class__.__name__}"
+                )
 
                 # Prepare extractor kwargs with conversation context
                 extractor_kwargs = {
                     "conversation_history": state.get("history", []),
-                    "user_message": state["user_message"]
+                    "user_message": state["user_message"],
                 }
 
                 # Add recalled memories as context if available (brain enhancement)
                 recalled_memories = state.get("recalled_memories", [])
                 if recalled_memories:
                     extractor_kwargs["recalled_memories"] = recalled_memories
-                    logger.info(f"🧠 Using {len(recalled_memories)} recalled memories for extraction")
+                    logger.info(
+                        f"🧠 Using {len(recalled_memories)} recalled memories for extraction"
+                    )
 
                 # Run extractor in thread pool (DSPy is sync)
                 loop = asyncio.get_event_loop()
                 result = await asyncio.wait_for(
-                    loop.run_in_executor(
-                        None,
-                        lambda: extractor(**extractor_kwargs)
-                    ),
-                    timeout=extraction_timeout
+                    loop.run_in_executor(None, lambda: extractor(**extractor_kwargs)),
+                    timeout=extraction_timeout,
                 )
 
                 # Extract value - handle both dict and object responses
                 if isinstance(result, dict):
-                    value = result.get(field_name) or result.get("value")
+                    # FIXED: Handle boolean falsy values properly - don't use 'or' operator
+                    if field_name in result:
+                        value = result[field_name]
+                    elif "value" in result:
+                        value = result["value"]
+                    else:
+                        value = None
                     confidence = result.get("confidence", 1.0)
                 else:
-                    value = getattr(result, field_name, None) or getattr(result, "value", None)
+                    # FIXED: Handle boolean falsy values properly - don't use 'or' operator
+                    value = (
+                        getattr(result, field_name, None)
+                        if hasattr(result, field_name)
+                        and getattr(result, field_name) is not None
+                        else getattr(result, "value", None)
+                    )
                     confidence = getattr(result, "confidence", 1.0)
 
             else:  # method_name == "regex"
@@ -154,7 +170,13 @@ async def node(
                 if not result:
                     raise ValueError("Fallback returned no result")
 
-                value = result.get(field_name) or result.get("value")
+                # FIXED: Handle boolean falsy values properly - don't use 'or' operator
+                if field_name in result:
+                    value = result[field_name]
+                elif "value" in result:
+                    value = result["value"]
+                else:
+                    value = None
                 confidence = result.get("confidence", settings.confidence_medium)
 
             # Store extracted value if found
@@ -165,13 +187,21 @@ async def node(
 
             # Store metadata if requested
             if metadata_path:
-                set_nested_field(state, metadata_path, {
-                    "extraction_method": method_name,
-                    "extractor": extractor.__class__.__name__ if method_name == "dspy" else "regex",
-                    "confidence": confidence
-                })
+                set_nested_field(
+                    state,
+                    metadata_path,
+                    {
+                        "extraction_method": method_name,
+                        "extractor": extractor.__class__.__name__
+                        if method_name == "dspy"
+                        else "regex",
+                        "confidence": confidence,
+                    },
+                )
 
-            logger.info(f"✅ Extracted {field_path} = {value} via {method_name} (confidence: {confidence})")
+            logger.info(
+                f"✅ Extracted {field_path} = {value} via {method_name} (confidence: {confidence})"
+            )
             return state
 
         except Exception as e:

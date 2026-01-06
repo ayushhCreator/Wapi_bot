@@ -14,9 +14,7 @@ async def log_escalation(state: BookingState) -> BookingState:
     reason = state.get("escalation_reason", "unknown")
     conversation_id = state.get("conversation_id", "unknown")
 
-    logger.warning(
-        f"🚨 ESCALATION: {reason} | Conversation: {conversation_id}"
-    )
+    logger.warning(f"🚨 ESCALATION: {reason} | Conversation: {conversation_id}")
 
     state["escalated_to_human"] = True
     state["escalation_timestamp"] = state.get("timestamp")

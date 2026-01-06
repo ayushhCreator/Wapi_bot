@@ -53,7 +53,7 @@ class APIKeyValidator:
                 return {
                     "user_id": metadata.get("name"),
                     "scopes": metadata.get("scopes", []),
-                    "auth_method": "api_key"
+                    "auth_method": "api_key",
                 }
 
         logger.warning("Invalid API key provided")

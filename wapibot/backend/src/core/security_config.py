@@ -36,19 +36,19 @@ class SecuritySettings(BaseSettings):
     master_key_path: str = "./master.key"
     request_encryption_enabled: bool = False
 
-    @field_validator('debug', mode='before')
+    @field_validator("debug", mode="before")
     @classmethod
     def auto_disable_debug_in_prod(cls, v, info) -> bool:
         """Auto-disable debug in production."""
-        if info.data.get('environment') == 'production':
+        if info.data.get("environment") == "production":
             return False
         return v
 
-    @field_validator('rate_limit_enabled', mode='before')
+    @field_validator("rate_limit_enabled", mode="before")
     @classmethod
     def auto_enable_rate_limit_in_prod(cls, v, info) -> bool:
         """Auto-enable rate limiting in production."""
-        if info.data.get('environment') == 'production':
+        if info.data.get("environment") == "production":
             return True
         return v
 
@@ -65,7 +65,7 @@ class SecuritySettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env.txt",
         case_sensitive=False,
-        extra="ignore"  # Ignore extra fields from .env.txt
+        extra="ignore",  # Ignore extra fields from .env.txt
     )
 
 

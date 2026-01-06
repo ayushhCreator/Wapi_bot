@@ -89,8 +89,11 @@ async def monitor_ngrok_webhooks(expected_phone: str, lookback_minutes: int = 2)
                         # Decode base64 body
                         try:
                             import base64
-                            body_bytes = base64.b64decode(raw_body.split('\r\n\r\n')[-1])
-                            body = body_bytes.decode('utf-8')
+
+                            body_bytes = base64.b64decode(
+                                raw_body.split("\r\n\r\n")[-1]
+                            )
+                            body = body_bytes.decode("utf-8")
 
                             payload = json.loads(body)
                             contact = payload.get("contact", {})
@@ -103,12 +106,14 @@ async def monitor_ngrok_webhooks(expected_phone: str, lookback_minutes: int = 2)
                                 response_data = req.get("response", {})
                                 status_code = response_data.get("status_code", "")
 
-                                webhooks_found.append({
-                                    "phone": phone,
-                                    "message": msg_body,
-                                    "status": status_code,
-                                    "time": start_time_str
-                                })
+                                webhooks_found.append(
+                                    {
+                                        "phone": phone,
+                                        "message": msg_body,
+                                        "status": status_code,
+                                        "time": start_time_str,
+                                    }
+                                )
                         except Exception:
                             # Failed to decode/parse this webhook
                             pass
@@ -178,7 +183,7 @@ async def main():
     print()
 
     response = input("Have you completed all prerequisites? (yes/no): ")
-    if response.lower() not in ['yes', 'y']:
+    if response.lower() not in ["yes", "y"]:
         print("\n❌ Please complete prerequisites first. Exiting...")
         return
 
@@ -211,8 +216,7 @@ async def main():
 
         try:
             result = await client.send_message(
-                phone_number=TEST_PHONE_NUMBER,
-                message_body=message_text
+                phone_number=TEST_PHONE_NUMBER, message_body=message_text
             )
 
             print("✅ Message sent successfully!")

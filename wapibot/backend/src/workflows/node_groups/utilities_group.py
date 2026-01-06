@@ -44,7 +44,9 @@ async def extract_utilities(state: BookingState) -> BookingState:
         # User provided only one answer - assume both are the same
         state["electricity_provided"] = yes_no_words[0]
         state["water_provided"] = yes_no_words[0]
-        logger.info(f"⚡💧 Both utilities: {yes_no_words[0]} (inferred from single answer)")
+        logger.info(
+            f"⚡💧 Both utilities: {yes_no_words[0]} (inferred from single answer)"
+        )
     else:
         # Could not parse
         logger.warning(f"Could not parse utilities response: {user_message}")
@@ -70,9 +72,13 @@ async def validate_utilities(state: BookingState) -> BookingState:
 
 async def send_invalid_utilities(state: BookingState) -> BookingState:
     """Send message for invalid utilities response."""
+
     def error_msg(s):
         return 'Please reply "Yes" or "No" for both.\nE.g., "Yes Yes", "Yes No", "No Yes", "No No"'
-    return await handle_selection_error(state, awaiting_step="awaiting_utilities", error_message_builder=error_msg)
+
+    return await handle_selection_error(
+        state, awaiting_step="awaiting_utilities", error_message_builder=error_msg
+    )
 
 
 def route_utilities_validation(state: BookingState) -> str:
@@ -91,8 +97,9 @@ route_utilities_entry = create_resume_router(
     awaiting_step="awaiting_utilities",
     resume_node="extract_utilities",
     fresh_node="ask_utilities",
-    readiness_check=lambda s: s.get("electricity_provided") is None or s.get("water_provided") is None,
-    router_name="utilities_entry"
+    readiness_check=lambda s: s.get("electricity_provided") is None
+    or s.get("water_provided") is None,
+    router_name="utilities_entry",
 )
 
 
@@ -105,11 +112,17 @@ def create_utilities_group() -> StateGraph:
     workflow.add_node("validate_utilities", validate_utilities)
     workflow.add_node("send_invalid_utilities", send_invalid_utilities)
     workflow.set_entry_point("entry")
-    workflow.add_conditional_edges("entry", route_utilities_entry,
-        {"ask_utilities": "ask_utilities", "extract_utilities": "extract_utilities"})
+    workflow.add_conditional_edges(
+        "entry",
+        route_utilities_entry,
+        {"ask_utilities": "ask_utilities", "extract_utilities": "extract_utilities"},
+    )
     workflow.add_edge("ask_utilities", END)
     workflow.add_edge("extract_utilities", "validate_utilities")
-    workflow.add_conditional_edges("validate_utilities", route_utilities_validation,
-        {"valid": END, "invalid": "send_invalid_utilities"})
+    workflow.add_conditional_edges(
+        "validate_utilities",
+        route_utilities_validation,
+        {"valid": END, "invalid": "send_invalid_utilities"},
+    )
     workflow.add_edge("send_invalid_utilities", END)
     return workflow.compile()

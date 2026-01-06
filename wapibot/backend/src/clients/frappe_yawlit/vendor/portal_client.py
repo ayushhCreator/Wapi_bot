@@ -23,7 +23,9 @@ class VendorPortalClient:
         """
         self.http = http_client
 
-    async def get_bookings(self, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def get_bookings(
+        self, filters: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Get vendor's assigned bookings with optional filters.
 
         Args:
@@ -58,7 +60,7 @@ class VendorPortalClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.vendor_portal.get_vendor_bookings",
-                filters or {}
+                filters or {},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching vendor bookings: {e}")
@@ -137,7 +139,7 @@ class VendorPortalClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.vendor_portal.complete_booking",
-                {"booking_id": booking_id}
+                {"booking_id": booking_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error completing booking {booking_id}: {e}")
@@ -198,7 +200,7 @@ class VendorPortalClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.vendor_profile_api.update_vendor_profile",
-                profile_data
+                profile_data,
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error updating vendor profile: {e}")

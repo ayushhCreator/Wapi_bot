@@ -73,13 +73,15 @@ class CustomerAddressClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.add_address",
-                {"address_data": address_data}
+                {"address_data": address_data},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error adding address: {e}")
             raise
 
-    async def update_address(self, address_name: str, address_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_address(
+        self, address_name: str, address_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update existing address.
 
         Args:
@@ -98,10 +100,7 @@ class CustomerAddressClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.update_address",
-                {
-                    "address_name": address_name,
-                    "address_data": address_data
-                }
+                {"address_name": address_name, "address_data": address_data},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error updating address {address_name}: {e}")
@@ -122,13 +121,15 @@ class CustomerAddressClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.delete_address",
-                {"address_name": address_name}
+                {"address_name": address_name},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error deleting address {address_name}: {e}")
             raise
 
-    async def reverse_geocode(self, latitude: float, longitude: float) -> Dict[str, Any]:
+    async def reverse_geocode(
+        self, latitude: float, longitude: float
+    ) -> Dict[str, Any]:
         """Get address from GPS coordinates using reverse geocoding.
 
         Args:
@@ -153,10 +154,7 @@ class CustomerAddressClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.reverse_geocode",
-                {
-                    "latitude": latitude,
-                    "longitude": longitude
-                }
+                {"latitude": latitude, "longitude": longitude},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error reverse geocoding ({latitude}, {longitude}): {e}")

@@ -30,7 +30,7 @@ def observe_brain_hook(
     observation_path: str,
     include_timing: bool = True,
     include_mode: bool = True,
-    custom_metadata: Optional[Dict[str, Any]] = None
+    custom_metadata: Optional[Dict[str, Any]] = None,
 ):
     """Decorator that automatically observes brain decisions before/after node execution.
 
@@ -80,14 +80,12 @@ def observe_brain_hook(
 
             # Record observation
             result_state = await observe_brain.node(
-                result_state,
-                observation_path,
-                observation_data
+                result_state, observation_path, observation_data
             )
 
             logger.debug(
                 f"📊 Brain observation: {observation_path} "
-                f"[{brain_settings.brain_mode}] {execution_time*1000:.1f}ms"
+                f"[{brain_settings.brain_mode}] {execution_time * 1000:.1f}ms"
             )
 
             return result_state

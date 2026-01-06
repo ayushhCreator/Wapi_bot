@@ -38,8 +38,8 @@ async def main():
         try:
             result = await client.service_catalog.get_vehicle_types()
             # Parse nested response: {'message': {'success': True, 'vehicle_types': [...]}}
-            message = result.get('message', {})
-            vehicle_types = message.get('vehicle_types', [])
+            message = result.get("message", {})
+            vehicle_types = message.get("vehicle_types", [])
             print(f"✅ Found {len(vehicle_types)} vehicle types:")
             for vtype in vehicle_types:
                 print(f"   - {vtype.get('vehicle_type', 'Unknown')}")
@@ -52,10 +52,12 @@ async def main():
         try:
             result = await client.service_catalog.get_categories()
             # Parse response: {'message': [...]}
-            categories = result.get('message', [])
+            categories = result.get("message", [])
             print(f"✅ Found {len(categories)} service categories:")
             for cat in categories:
-                print(f"   - {cat.get('category_name', 'Unknown')} ({cat.get('category_slug', 'N/A')})")
+                print(
+                    f"   - {cat.get('category_name', 'Unknown')} ({cat.get('category_slug', 'N/A')})"
+                )
         except Exception as e:
             print(f"❌ Failed: {e}")
         print()
@@ -65,13 +67,13 @@ async def main():
         try:
             result = await client.service_catalog.get_filtered_services()
             # Parse response: {'message': {'success': True, 'services': [...]}}
-            message = result.get('message', {})
-            services = message.get('services', [])
+            message = result.get("message", {})
+            services = message.get("services", [])
             print(f"✅ Found {len(services)} services:")
             for service in services[:5]:  # Show first 5
-                name = service.get('product_name', 'Unknown')
-                price = service.get('base_price', 'N/A')
-                vehicle_type = service.get('vehicle_type', 'N/A')
+                name = service.get("product_name", "Unknown")
+                price = service.get("base_price", "N/A")
+                vehicle_type = service.get("vehicle_type", "N/A")
                 print(f"   - {name} (₹{price}, {vehicle_type})")
             if len(services) > 5:
                 print(f"   ... and {len(services) - 5} more")
@@ -85,13 +87,13 @@ async def main():
             result = await client.service_catalog.get_filtered_services(
                 vehicle_type="Hatchback"
             )
-            message = result.get('message', {})
-            services = message.get('services', [])
+            message = result.get("message", {})
+            services = message.get("services", [])
             print(f"✅ Found {len(services)} Hatchback services:")
             for service in services[:3]:  # Show first 3
-                name = service.get('product_name', 'Unknown')
-                price = service.get('base_price', 'N/A')
-                freq_type = service.get('frequency_type', 'N/A')
+                name = service.get("product_name", "Unknown")
+                price = service.get("base_price", "N/A")
+                freq_type = service.get("frequency_type", "N/A")
                 print(f"   - {name} (₹{price}, {freq_type})")
             if len(services) > 3:
                 print(f"   ... and {len(services) - 3} more")

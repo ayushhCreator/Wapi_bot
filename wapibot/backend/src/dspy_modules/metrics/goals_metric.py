@@ -12,9 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def goals_metric(
-    example: dspy.Example,
-    pred: dspy.Prediction,
-    trace: Optional[str] = None
+    example: dspy.Example, pred: dspy.Prediction, trace: Optional[str] = None
 ) -> float:
     """Evaluate goal decomposition quality.
 
@@ -49,7 +47,9 @@ def goals_metric(
         for goal in pred_goals[:3]:
             goal_lower = goal.lower()
             action_verbs = ["extract", "validate", "schedule", "update", "check"]
-            if any(verb in goal_lower and verb in action_lower for verb in action_verbs):
+            if any(
+                verb in goal_lower and verb in action_lower for verb in action_verbs
+            ):
                 alignment += 0.2
 
         score += min(alignment, 0.5)
@@ -74,7 +74,9 @@ def goals_metric(
     # Component 3: Actionability (0.2 points)
     if pred_goals:
         action_verbs = ["extract", "collect", "validate", "confirm", "schedule"]
-        actionable = sum(1 for g in pred_goals if any(v in g.lower() for v in action_verbs))
+        actionable = sum(
+            1 for g in pred_goals if any(v in g.lower() for v in action_verbs)
+        )
         if actionable >= len(pred_goals) * 0.7:
             score += 0.2
 

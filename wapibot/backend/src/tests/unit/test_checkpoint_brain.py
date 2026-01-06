@@ -14,13 +14,13 @@ async def test_checkpoint_saves_to_brain_when_enabled():
         "user_message": "I want to book a car wash",
         "history": [
             {"role": "user", "content": "Hi"},
-            {"role": "assistant", "content": "Hello!"}
+            {"role": "assistant", "content": "Hello!"},
         ],
         "current_step": "customer_info",
         "completeness": 0.5,
         "errors": [],
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     # Mock brain settings (enabled)
@@ -32,14 +32,17 @@ async def test_checkpoint_saves_to_brain_when_enabled():
     # Mock repository
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.checkpoint.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings),
+        patch(
+            "nodes.atomic.checkpoint.BrainDecisionRepository", return_value=mock_repo
+        ),
+    ):
         result = await checkpoint.node(
             state,
             checkpoint_name="customer_confirmed",
             checkpoint_type="milestone",
-            save_to_brain=True
+            save_to_brain=True,
         )
 
         # Verify checkpoint added to state
@@ -69,7 +72,7 @@ async def test_checkpoint_skips_brain_when_disabled():
         "completeness": 0.0,
         "errors": [],
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     # Mock brain settings (disabled)
@@ -79,14 +82,17 @@ async def test_checkpoint_skips_brain_when_disabled():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.checkpoint.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings),
+        patch(
+            "nodes.atomic.checkpoint.BrainDecisionRepository", return_value=mock_repo
+        ),
+    ):
         result = await checkpoint.node(
             state,
             checkpoint_name="test_checkpoint",
             checkpoint_type="milestone",
-            save_to_brain=True
+            save_to_brain=True,
         )
 
         # Checkpoint still added to state
@@ -108,7 +114,7 @@ async def test_checkpoint_skips_brain_when_rl_gym_disabled():
         "completeness": 0.0,
         "errors": [],
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     # Mock brain settings (brain enabled but RL Gym disabled)
@@ -118,14 +124,17 @@ async def test_checkpoint_skips_brain_when_rl_gym_disabled():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.checkpoint.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings),
+        patch(
+            "nodes.atomic.checkpoint.BrainDecisionRepository", return_value=mock_repo
+        ),
+    ):
         result = await checkpoint.node(
             state,
             checkpoint_name="test_checkpoint",
             checkpoint_type="milestone",
-            save_to_brain=True
+            save_to_brain=True,
         )
 
         # Checkpoint added to state
@@ -146,7 +155,7 @@ async def test_checkpoint_skips_brain_when_save_to_brain_false():
         "completeness": 0.0,
         "errors": [],
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -155,14 +164,17 @@ async def test_checkpoint_skips_brain_when_save_to_brain_false():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.checkpoint.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings),
+        patch(
+            "nodes.atomic.checkpoint.BrainDecisionRepository", return_value=mock_repo
+        ),
+    ):
         result = await checkpoint.node(
             state,
             checkpoint_name="test_checkpoint",
             checkpoint_type="milestone",
-            save_to_brain=False  # Explicitly disabled
+            save_to_brain=False,  # Explicitly disabled
         )
 
         # Checkpoint added to state
@@ -183,7 +195,7 @@ async def test_checkpoint_handles_brain_save_error():
         "completeness": 0.0,
         "errors": [],
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -195,15 +207,18 @@ async def test_checkpoint_handles_brain_save_error():
     mock_repo = MagicMock()
     mock_repo.save.side_effect = Exception("Database connection failed")
 
-    with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.checkpoint.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings),
+        patch(
+            "nodes.atomic.checkpoint.BrainDecisionRepository", return_value=mock_repo
+        ),
+    ):
         # Should NOT raise exception
         result = await checkpoint.node(
             state,
             checkpoint_name="test_checkpoint",
             checkpoint_type="milestone",
-            save_to_brain=True
+            save_to_brain=True,
         )
 
         # Workflow continues normally
@@ -219,13 +234,13 @@ async def test_checkpoint_serializes_state_snapshot():
         "user_message": "Test",
         "history": [
             {"role": "user", "content": "Message 1"},
-            {"role": "assistant", "content": "Reply 1"}
+            {"role": "assistant", "content": "Reply 1"},
         ],
         "current_step": "slot_selection",
         "completeness": 0.75,
         "errors": ["validation_error"],
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -235,14 +250,17 @@ async def test_checkpoint_serializes_state_snapshot():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.checkpoint.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings),
+        patch(
+            "nodes.atomic.checkpoint.BrainDecisionRepository", return_value=mock_repo
+        ),
+    ):
         result = await checkpoint.node(
             state,
             checkpoint_name="slot_selected",
             checkpoint_type="decision_point",
-            save_to_brain=True
+            save_to_brain=True,
         )
 
         # Verify saved decision
@@ -251,6 +269,7 @@ async def test_checkpoint_serializes_state_snapshot():
 
         # Verify state snapshot is JSON serializable
         import json
+
         state_snapshot = json.loads(saved_decision.state_snapshot)
         assert state_snapshot["completeness"] == 0.75
         assert state_snapshot["current_step"] == "slot_selection"
@@ -275,7 +294,7 @@ async def test_checkpoint_limits_conversation_history():
         "completeness": 0.0,
         "errors": [],
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -285,19 +304,23 @@ async def test_checkpoint_limits_conversation_history():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.checkpoint.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings),
+        patch(
+            "nodes.atomic.checkpoint.BrainDecisionRepository", return_value=mock_repo
+        ),
+    ):
         await checkpoint.node(
             state,
             checkpoint_name="test",
             checkpoint_type="milestone",
-            save_to_brain=True
+            save_to_brain=True,
         )
 
         # Verify only last 5 messages saved
         saved_decision = mock_repo.save.call_args[0][0]
         import json
+
         conv_history = json.loads(saved_decision.conversation_history)
         assert len(conv_history) == 5
         assert conv_history[0]["content"] == "Message 5"  # Last 5 messages

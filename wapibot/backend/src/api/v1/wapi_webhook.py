@@ -33,15 +33,22 @@ def get_active_workflow():
     logger.info(f"Loading workflow: {workflow_name}")
 
     if workflow_name == "existing_user_booking":
-        from workflows.existing_user_booking import create_existing_user_booking_workflow
+        from workflows.existing_user_booking import (
+            create_existing_user_booking_workflow,
+        )
+
         return create_existing_user_booking_workflow()
 
     elif workflow_name == "marketing_to_registration":
-        from workflows.marketing_to_registration import create_marketing_to_registration_workflow
+        from workflows.marketing_to_registration import (
+            create_marketing_to_registration_workflow,
+        )
+
         return create_marketing_to_registration_workflow()
 
     elif workflow_name == "v2_full_workflow":
         from workflows.v2_full_workflow import v2_full_workflow
+
         return v2_full_workflow
 
     else:
@@ -62,7 +69,9 @@ def verify_webhook_signature(payload_body: bytes, signature: str) -> bool:
         True if signature is valid, False otherwise
     """
     if not settings.wapi_webhook_secret:
-        logger.warning("WAPI webhook secret not configured - skipping signature verification")
+        logger.warning(
+            "WAPI webhook secret not configured - skipping signature verification"
+        )
         return True  # Allow in development when secret not set
 
     if not signature:
@@ -70,9 +79,7 @@ def verify_webhook_signature(payload_body: bytes, signature: str) -> bool:
 
     # Compute HMAC-SHA256 signature
     expected_signature = hmac.new(
-        settings.wapi_webhook_secret.encode('utf-8'),
-        payload_body,
-        hashlib.sha256
+        settings.wapi_webhook_secret.encode("utf-8"), payload_body, hashlib.sha256
     ).hexdigest()
 
     # Constant-time comparison to prevent timing attacks
@@ -88,17 +95,13 @@ def verify_webhook_signature(payload_body: bytes, signature: str) -> bool:
         401: {
             "description": "Invalid webhook signature",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid webhook signature"}
-                }
+                "application/json": {"example": {"detail": "Invalid webhook signature"}}
             },
         },
         500: {
             "description": "Workflow execution failed",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Workflow execution failed"}
-                }
+                "application/json": {"example": {"detail": "Workflow execution failed"}}
             },
         },
     },
@@ -106,7 +109,7 @@ def verify_webhook_signature(payload_body: bytes, signature: str) -> bool:
 async def wapi_webhook(
     request: Request,
     payload: WAPIWebhookPayload,
-    x_wapi_signature: Optional[str] = Header(None, alias="X-WAPI-Signature")
+    x_wapi_signature: Optional[str] = Header(None, alias="X-WAPI-Signature"),
 ) -> WAPIResponse:
     """Handle incoming WhatsApp messages from WAPI with signature validation.
 
@@ -117,19 +120,16 @@ async def wapi_webhook(
         # Security: Verify webhook signature
         raw_body = await request.body()
         if not verify_webhook_signature(raw_body, x_wapi_signature or ""):
-            logger.warning(f"Invalid webhook signature from {request.client.host if request.client else 'unknown'}")
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid webhook signature"
+            logger.warning(
+                f"Invalid webhook signature from {request.client.host if request.client else 'unknown'}"
             )
+            raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
         phone = payload.contact.phone_number
         message_id = payload.message.whatsapp_message_id
         body = payload.message.body or ""
 
-        logger.info(
-            f"WAPI webhook: {phone} - {message_id} - {body[:50]}..."
-        )
+        logger.info(f"WAPI webhook: {phone} - {message_id} - {body[:50]}...")
 
         # Skip processing if not a new message
         if not payload.message.is_new_message:
@@ -142,7 +142,9 @@ async def wapi_webhook(
             return WAPIResponse(status="skipped", message_id=message_id)
 
         # Get workflow and config for state persistence
-        logger.info(f"Processing message through {settings.active_workflow} workflow: {phone}")
+        logger.info(
+            f"Processing message through {settings.active_workflow} workflow: {phone}"
+        )
         workflow = get_active_workflow()
         config = {"configurable": {"thread_id": phone}}
 
@@ -205,7 +207,7 @@ async def wapi_webhook(
                 "conversation_quality": 0.5,
                 "booking_completeness": 0.0,
                 "user_satisfaction": None,
-                "decomposed_goals": None,
+                "decomposed_goals": [],
                 "required_info": None,
                 "proposed_response": None,
                 "brain_mode": brain_settings.brain_mode,
@@ -228,12 +230,16 @@ async def wapi_webhook(
         brain_settings = get_brain_settings()
         if brain_settings.brain_enabled:
             try:
-                logger.info(f"🧠 Running brain in {brain_settings.brain_mode} mode (READ ONLY)")
+                logger.info(
+                    f"🧠 Running brain in {brain_settings.brain_mode} mode (READ ONLY)"
+                )
                 brain_workflow = create_brain_workflow()
                 # Brain observes the completed conversation (with response)
                 # Result is discarded - brain saves observations to RL Gym internally
                 await brain_workflow.ainvoke(result)
-                logger.info("🧠 Brain processing complete (observations saved to RL Gym)")
+                logger.info(
+                    "🧠 Brain processing complete (observations saved to RL Gym)"
+                )
             except Exception as e:
                 logger.error(f"🧠 Brain processing failed: {e}", exc_info=True)
                 # Brain failure doesn't block main workflow
@@ -243,17 +249,16 @@ async def wapi_webhook(
         response_message = result.get("response", "")
 
         if response_message:
-            logger.info(f"Workflow sent response to {phone}: {response_message[:50]}...")
+            logger.info(
+                f"Workflow sent response to {phone}: {response_message[:50]}..."
+            )
             logger.info("✅ Message already sent by workflow (via send_message_node)")
         else:
             logger.warning(f"Workflow produced no response for {phone}")
             logger.info("No message sent - workflow may have ended without response")
 
         # Acknowledge receipt
-        return WAPIResponse(
-            status="received",
-            message_id=message_id
-        )
+        return WAPIResponse(status="received", message_id=message_id)
 
     except HTTPException:
         # Re-raise HTTP exceptions (like 401 signature validation failure)
@@ -262,5 +267,5 @@ async def wapi_webhook(
         logger.error(f"WAPI webhook failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail="Internal server error occurred during webhook processing"
+            detail="Internal server error occurred during webhook processing",
         )

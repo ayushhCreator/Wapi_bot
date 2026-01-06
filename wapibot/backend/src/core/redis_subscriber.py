@@ -43,9 +43,7 @@ class RedisSubscriber:
         """Get Redis connection (lazy initialization)."""
         if self._redis is None:
             self._redis = await aioredis.from_url(
-                settings.celery_broker_url,
-                encoding="utf-8",
-                decode_responses=True
+                settings.celery_broker_url, encoding="utf-8", decode_responses=True
             )
             logger.info("✅ Redis subscriber connected")
         return self._redis
@@ -60,7 +58,7 @@ class RedisSubscriber:
                 name=settings.redis_stream_name,
                 groupname=settings.redis_consumer_group,
                 id="0",  # Start from beginning
-                mkstream=True  # Create stream if doesn't exist
+                mkstream=True,  # Create stream if doesn't exist
             )
             logger.info(
                 f"✅ Created consumer group: {settings.redis_consumer_group} "
@@ -75,9 +73,7 @@ class RedisSubscriber:
             else:
                 raise
 
-    async def _process_message(
-        self, message_id: str, message_data: dict
-    ) -> bool:
+    async def _process_message(self, message_id: str, message_data: dict) -> bool:
         """Process a single message from the stream.
 
         Args:
@@ -109,7 +105,7 @@ class RedisSubscriber:
                 "type": message_type,
                 "conversation_id": conversation_id,
                 "data": data,
-                "timestamp": message_data.get("timestamp")
+                "timestamp": message_data.get("timestamp"),
             }
 
             sent_count = await connection_manager.send_to_conversation(
@@ -149,7 +145,7 @@ class RedisSubscriber:
                     consumername=self._consumer_name,
                     streams={settings.redis_stream_name: ">"},
                     count=10,
-                    block=1000  # Block for 1 second
+                    block=1000,  # Block for 1 second
                 )
 
                 if not messages:
@@ -166,7 +162,7 @@ class RedisSubscriber:
                             await redis.xack(
                                 settings.redis_stream_name,
                                 settings.redis_consumer_group,
-                                message_id
+                                message_id,
                             )
                         else:
                             logger.warning(

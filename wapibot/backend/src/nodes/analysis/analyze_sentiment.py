@@ -21,7 +21,7 @@ class AnalyzeSentimentNode:
         state: BookingState,
         conversation_history: List[Dict[str, str]],
         user_message: str,
-        context: str = "Analyzing customer sentiment"
+        context: str = "Analyzing customer sentiment",
     ) -> Dict[str, Any]:
         """Analyze sentiment across 5 dimensions.
 
@@ -42,14 +42,14 @@ class AnalyzeSentimentNode:
                 "clarity": "clear",
                 "engagement": "neutral",
                 "overall_sentiment": "neutral",
-                "reasoning": "No message to analyze"
+                "reasoning": "No message to analyze",
             }
 
         # Call DSPy analyzer
         result = self.analyzer(
             conversation_history=conversation_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         return result

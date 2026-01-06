@@ -23,7 +23,9 @@ class BookingManageClient:
         """
         self.http = http_client
 
-    async def get_bookings(self, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def get_bookings(
+        self, filters: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Get customer bookings with optional filters.
 
         Args:
@@ -49,7 +51,7 @@ class BookingManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.get_customer_bookings",
-                filters or {}
+                filters or {},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching bookings: {e}")
@@ -79,13 +81,15 @@ class BookingManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.get_booking_details",
-                {"booking_id": booking_id}
+                {"booking_id": booking_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching booking details for {booking_id}: {e}")
             raise
 
-    async def reschedule_booking(self, booking_id: str, new_slot: Dict[str, Any]) -> Dict[str, Any]:
+    async def reschedule_booking(
+        self, booking_id: str, new_slot: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Reschedule existing booking to a new slot.
 
         Args:
@@ -110,16 +114,15 @@ class BookingManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking_management.reschedule_booking",
-                {
-                    "booking_id": booking_id,
-                    **new_slot
-                }
+                {"booking_id": booking_id, **new_slot},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error rescheduling booking {booking_id}: {e}")
             raise
 
-    async def cancel_booking(self, booking_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+    async def cancel_booking(
+        self, booking_id: str, reason: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Request cancellation of a booking.
 
         Args:
@@ -139,10 +142,7 @@ class BookingManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.cancellation.request_cancellation",
-                {
-                    "booking_id": booking_id,
-                    "reason": reason
-                }
+                {"booking_id": booking_id, "reason": reason},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error canceling booking {booking_id}: {e}")
@@ -172,8 +172,10 @@ class BookingManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.cancellation.check_cancellation_eligibility",
-                {"booking_id": booking_id}
+                {"booking_id": booking_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error checking cancellation eligibility for {booking_id}: {e}")
+            logger.error(
+                f"Error checking cancellation eligibility for {booking_id}: {e}"
+            )
             raise

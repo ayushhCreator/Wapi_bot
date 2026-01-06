@@ -28,7 +28,7 @@ async def node(
     state: BookingState,
     event_type: str,
     event_data: Optional[Dict[str, Any]] = None,
-    severity: str = "info"
+    severity: str = "info",
 ) -> BookingState:
     """Atomic structured logging node - logs events for brain learning.
 
@@ -75,8 +75,10 @@ async def node(
         "event_type": event_type,
         "conversation_id": state.get("conversation_id"),
         "current_step": state.get("current_step"),
-        "brain_mode": brain_settings.brain_mode if brain_settings.brain_enabled else "disabled",
-        "data": event_data or {}
+        "brain_mode": brain_settings.brain_mode
+        if brain_settings.brain_enabled
+        else "disabled",
+        "data": event_data or {},
     }
 
     # Log to standard logger
@@ -99,15 +101,19 @@ async def node(
                 decision_id=f"log_{uuid.uuid4().hex[:8]}",
                 conversation_id=state.get("conversation_id", "unknown"),
                 user_message=state.get("user_message", ""),
-                conversation_history=json.dumps(state.get("history", [])[-3:]),  # Last 3 messages
-                state_snapshot=json.dumps({
-                    "event_type": event_type,
-                    "severity": severity,
-                    "data": event_data or {}
-                }),
+                conversation_history=json.dumps(
+                    state.get("history", [])[-3:]
+                ),  # Last 3 messages
+                state_snapshot=json.dumps(
+                    {
+                        "event_type": event_type,
+                        "severity": severity,
+                        "data": event_data or {},
+                    }
+                ),
                 brain_mode=brain_settings.brain_mode,
                 action_taken=f"log:{event_type}",
-                workflow_outcome=severity  # Maps to success/warning/error
+                workflow_outcome=severity,  # Maps to success/warning/error
             )
 
             # Save to RL Gym database

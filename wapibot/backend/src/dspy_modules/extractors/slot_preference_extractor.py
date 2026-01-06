@@ -23,7 +23,7 @@ class SlotPreferenceExtractor(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Asking when to book appointment"
+        context: str = "Asking when to book appointment",
     ) -> Dict[str, Any]:
         """Extract slot preferences from user message.
 
@@ -43,7 +43,7 @@ class SlotPreferenceExtractor(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         confidence_str = getattr(result, "confidence", "medium")
@@ -52,5 +52,5 @@ class SlotPreferenceExtractor(dspy.Module):
         return {
             "preferred_date": getattr(result, "preferred_date", "").strip(),
             "preferred_time_range": getattr(result, "preferred_time_range", "").strip(),
-            "confidence": confidence_float
+            "confidence": confidence_float,
         }

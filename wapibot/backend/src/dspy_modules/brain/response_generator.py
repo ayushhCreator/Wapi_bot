@@ -55,7 +55,8 @@ class ResponseGenerator(dspy.Module):
 
         # Check sub-goal coverage (max 0.6)
         goals_addressed = sum(
-            1 for goal in sub_goals[:2]  # Check first 2 goals
+            1
+            for goal in sub_goals[:2]  # Check first 2 goals
             if any(keyword in response.lower() for keyword in goal.lower().split())
         )
         score += min(0.6, goals_addressed * 0.3)
@@ -69,7 +70,9 @@ class ResponseGenerator(dspy.Module):
             score += 0.1
 
         # Call-to-action (0.1)
-        if any(word in response.lower() for word in ["?", "please", "can you", "would you"]):
+        if any(
+            word in response.lower() for word in ["?", "please", "can you", "would you"]
+        ):
             score += 0.1
 
         return min(1.0, score)
@@ -79,7 +82,7 @@ class ResponseGenerator(dspy.Module):
         conversation_history: List[Dict[str, str]],
         user_message: str,
         sub_goals: List[str],
-        booking_state: Dict[str, Any]
+        current_state: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Generate optimal response using BestOfN + Refine.
 
@@ -87,22 +90,26 @@ class ResponseGenerator(dspy.Module):
             conversation_history: Previous messages
             user_message: Current user message
             sub_goals: Goals to achieve in response
-            booking_state: Current booking progress
+            current_state: Current booking progress
 
         Returns:
             Dict with proposed_response, confidence, reasoning
         """
         try:
             # Format inputs
-            history_str = "\n".join([
-                f"{msg['role']}: {msg['content']}"
-                for msg in conversation_history[-5:]
-            ])
+            history_str = "\n".join(
+                [
+                    f"{msg['role']}: {msg['content']}"
+                    for msg in conversation_history[-5:]
+                ]
+            )
 
-            sub_goals_str = ", ".join(sub_goals)
+            sub_goals_str = ", ".join(
+                sub_goals if isinstance(sub_goals, list) else ["continue_conversation"]
+            )
 
-            state_str = f"Profile: {booking_state.get('has_profile', False)}, "
-            state_str += f"Service: {booking_state.get('has_service', False)}"
+            state_str = f"Profile: {current_state.get('has_profile', False)}, "
+            state_str += f"Service: {current_state.get('has_service', False)}"
 
             # STEP 1: Generate N candidates
             candidates = []
@@ -111,13 +118,17 @@ class ResponseGenerator(dspy.Module):
                     conversation_history=history_str,
                     user_message=user_message,
                     sub_goals=sub_goals_str,
-                    booking_state=state_str
+                    current_state=state_str,
                 )
-                candidates.append({
-                    "response": result.proposed_response,
-                    "reasoning": result.reasoning,
-                    "score": self._evaluate_response(result.proposed_response, sub_goals)
-                })
+                candidates.append(
+                    {
+                        "response": result.proposed_response,
+                        "reasoning": result.reasoning,
+                        "score": self._evaluate_response(
+                            result.proposed_response, sub_goals
+                        ),
+                    }
+                )
 
             # STEP 2: Select best candidate
             best = max(candidates, key=lambda x: x["score"])
@@ -128,13 +139,13 @@ class ResponseGenerator(dspy.Module):
                 conversation_history=history_str,
                 user_message=user_message,
                 sub_goals=sub_goals_str,
-                feedback="Make it more concise and friendly. Ensure clarity."
+                feedback="Make it more concise and friendly. Ensure clarity.",
             )
 
             return {
                 "proposed_response": refined.refined_response,
                 "confidence": best["score"],
-                "reasoning": f"{best['reasoning']} | Refined: {refined.improvements_made}"
+                "reasoning": f"{best['reasoning']} | Refined: {refined.improvements_made}",
             }
 
         except Exception as e:
@@ -142,5 +153,5 @@ class ResponseGenerator(dspy.Module):
             return {
                 "proposed_response": "I apologize, could you please repeat that?",
                 "confidence": 0.0,
-                "reasoning": f"Error: {str(e)}"
+                "reasoning": f"Error: {str(e)}",
             }

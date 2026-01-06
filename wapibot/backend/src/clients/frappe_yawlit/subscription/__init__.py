@@ -7,5 +7,5 @@ from clients.frappe_yawlit.subscription.usage_client import SubscriptionUsageCli
 __all__ = [
     "SubscriptionPlansClient",
     "SubscriptionManageClient",
-    "SubscriptionUsageClient"
+    "SubscriptionUsageClient",
 ]

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class ServiceStatus(Enum):
     """Service health status."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -65,6 +66,7 @@ class HealthMonitor:
         """
         try:
             from core.redis_manager import get_redis_client
+
             redis_client = await get_redis_client()
 
             # Try to ping Redis
@@ -83,7 +85,9 @@ class HealthMonitor:
             # Redis is down
             if self.redis_healthy:
                 logger.error(f"❌ Redis connection lost: {e}")
-                logger.warning("⚠️  Entering degraded mode - disabling Celery-dependent features")
+                logger.warning(
+                    "⚠️  Entering degraded mode - disabling Celery-dependent features"
+                )
                 self.redis_healthy = False
                 self.celery_enabled = False
             else:
@@ -103,11 +107,17 @@ class HealthMonitor:
             "timestamp": datetime.now().isoformat(),
             "services": {
                 "redis": {
-                    "status": ServiceStatus.HEALTHY.value if self.redis_healthy else ServiceStatus.UNHEALTHY.value,
-                    "last_check": self.last_redis_check.isoformat() if self.last_redis_check else None,
+                    "status": ServiceStatus.HEALTHY.value
+                    if self.redis_healthy
+                    else ServiceStatus.UNHEALTHY.value,
+                    "last_check": self.last_redis_check.isoformat()
+                    if self.last_redis_check
+                    else None,
                 },
                 "celery": {
-                    "status": ServiceStatus.HEALTHY.value if self.celery_enabled else ServiceStatus.DEGRADED.value,
+                    "status": ServiceStatus.HEALTHY.value
+                    if self.celery_enabled
+                    else ServiceStatus.DEGRADED.value,
                     "enabled": self.celery_enabled,
                 },
             },

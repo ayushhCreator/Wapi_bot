@@ -23,10 +23,7 @@ class ShadowABTester:
     """
 
     def __init__(
-        self,
-        test_name: str,
-        variant_a: str = "v0.0",
-        variant_b: str = "v1.0"
+        self, test_name: str, variant_a: str = "v0.0", variant_b: str = "v1.0"
     ):
         """Initialize A/B test.
 
@@ -61,7 +58,7 @@ class ShadowABTester:
         module_a: Any,
         module_b: Any,
         inputs: Dict[str, Any],
-        metric_fn: Optional[callable] = None
+        metric_fn: Optional[callable] = None,
     ) -> ABTestResult:
         """Run BOTH variants and compare results.
 
@@ -91,6 +88,7 @@ class ShadowABTester:
             if metric_fn:
                 try:
                     import dspy
+
                     # Create example from inputs for metric
                     example = dspy.Example(**inputs)
                     pred_a = dspy.Prediction(**output_a)
@@ -128,7 +126,7 @@ class ShadowABTester:
                 difference=difference,
                 metric_score_a=score_a,
                 metric_score_b=score_b,
-                winner=winner
+                winner=winner,
             )
 
             self.results.append(result)
@@ -148,9 +146,7 @@ class ShadowABTester:
             raise
 
     def _calculate_difference(
-        self,
-        output_a: Dict[str, Any],
-        output_b: Dict[str, Any]
+        self, output_a: Dict[str, Any], output_b: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Calculate differences between variant outputs.
 
@@ -174,7 +170,7 @@ class ShadowABTester:
                 differences[key] = {
                     "variant_a": val_a,
                     "variant_b": val_b,
-                    "changed": True
+                    "changed": True,
                 }
 
         # Keys only in one variant
@@ -199,7 +195,8 @@ class ShadowABTester:
 
         # Filter results with scores
         scored_results = [
-            r for r in self.results
+            r
+            for r in self.results
             if r.metric_score_a is not None and r.metric_score_b is not None
         ]
 
@@ -233,7 +230,11 @@ class ShadowABTester:
             "wins_b": wins_b,
             "ties": ties,
             "is_significant": is_significant,
-            "recommended_winner": "B" if improvement_pct > 5 else "A" if improvement_pct < -5 else "tie"
+            "recommended_winner": "B"
+            if improvement_pct > 5
+            else "A"
+            if improvement_pct < -5
+            else "tie",
         }
 
     def declare_winner(self, min_sample_size: int = 30) -> Optional[str]:

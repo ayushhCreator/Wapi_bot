@@ -71,8 +71,8 @@ class CustomerLookupClient:
                 {
                     "doctype": "User",
                     "filters": {"email": email},
-                    "fieldname": ["name", "customer_uuid", "enabled"]
-                }
+                    "fieldname": ["name", "customer_uuid", "enabled"],
+                },
             )
             if result.get("message"):
                 return {"exists": True, "data": result["message"]}
@@ -108,9 +108,9 @@ class CustomerLookupClient:
                         "customer_uuid",
                         "customer_name",
                         "user",
-                        "customer_status"
-                    ]
-                }
+                        "customer_status",
+                    ],
+                },
             )
             if result.get("message"):
                 cp_data = result["message"]
@@ -127,8 +127,8 @@ class CustomerLookupClient:
                         "first_name": first_name,
                         "last_name": last_name,
                         "enabled": cp_data.get("customer_status") == "Active",
-                        "name": cp_data.get("user")
-                    }
+                        "name": cp_data.get("user"),
+                    },
                 }
             return {"exists": False}
 
@@ -152,10 +152,7 @@ class CustomerLookupClient:
         try:
             result = await self.http.post(
                 "/api/method/frappe.client.get",
-                {
-                    "doctype": "CustomerProfile",
-                    "name": uuid
-                }
+                {"doctype": "CustomerProfile", "name": uuid},
             )
             if result.get("message"):
                 return {"exists": True, "data": result["message"]}
@@ -192,7 +189,9 @@ class CustomerLookupClient:
             "/api/method/yawlit_automotive_services.api.customer_portal.get_customer_profile"
         )
 
-    async def get_customer_bookings(self, uuid: str | None = None, limit: int = 10) -> Dict[str, Any]:
+    async def get_customer_bookings(
+        self, uuid: str | None = None, limit: int = 10
+    ) -> Dict[str, Any]:
         """Get customer booking history.
 
         Args:
@@ -212,10 +211,12 @@ class CustomerLookupClient:
         # TODO: Add support for admin fetching specific customer bookings
         return await self.http.post(
             "/api/method/yawlit_automotive_services.api.booking.get_customer_bookings",
-            {"limit": limit}
+            {"limit": limit},
         )
 
-    async def get_customer_subscriptions(self, uuid: str | None = None) -> Dict[str, Any]:
+    async def get_customer_subscriptions(
+        self, uuid: str | None = None
+    ) -> Dict[str, Any]:
         """Get customer active subscriptions.
 
         Args:

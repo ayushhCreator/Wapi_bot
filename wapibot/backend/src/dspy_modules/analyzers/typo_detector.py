@@ -18,10 +18,7 @@ class TypoDetector(dspy.Module):
         self.predictor = dspy.ChainOfThought(TypoDetectionSignature)
 
     def __call__(
-        self,
-        user_message: str = "",
-        field_context: str = "",
-        extracted_value: str = ""
+        self, user_message: str = "", field_context: str = "", extracted_value: str = ""
     ) -> Dict[str, Any]:
         """Detect typos in extracted value.
 
@@ -37,22 +34,24 @@ class TypoDetector(dspy.Module):
             return {
                 "has_typo": False,
                 "suggested_correction": "",
-                "confidence": settings.confidence_high
+                "confidence": settings.confidence_high,
             }
 
         result = self.predictor(
             user_message=user_message,
             field_context=field_context,
-            extracted_value=extracted_value
+            extracted_value=extracted_value,
         )
 
         confidence_map = {
             "low": settings.confidence_low,
             "medium": settings.confidence_medium,
-            "high": settings.confidence_high
+            "high": settings.confidence_high,
         }
         confidence_str = getattr(result, "confidence", "medium").lower()
-        confidence_float = confidence_map.get(confidence_str, settings.confidence_medium)
+        confidence_float = confidence_map.get(
+            confidence_str, settings.confidence_medium
+        )
 
         has_typo_str = getattr(result, "has_typo", "no").lower()
         has_typo = has_typo_str in ["yes", "true", "1"]
@@ -61,5 +60,5 @@ class TypoDetector(dspy.Module):
             "has_typo": has_typo,
             "suggested_correction": getattr(result, "suggested_correction", "").strip(),
             "confidence": confidence_float,
-            "reasoning": getattr(result, "reasoning", "")
+            "reasoning": getattr(result, "reasoning", ""),
         }

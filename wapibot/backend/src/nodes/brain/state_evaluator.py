@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class QualityEvaluator(Protocol):
     """Protocol for quality evaluation modules."""
 
-    def forward(self, conversation_history: list, booking_state: dict) -> dict:
+    def forward(self, conversation_history: list, current_state: dict) -> dict:
         """Evaluate conversation quality.
 
         Returns:
@@ -19,10 +19,7 @@ class QualityEvaluator(Protocol):
         ...
 
 
-def node(
-    state: BrainState,
-    evaluator: QualityEvaluator
-) -> BrainState:
+def node(state: BrainState, evaluator: QualityEvaluator) -> BrainState:
     """Atomic node: Evaluate conversation quality and satisfaction.
 
     Uses OFC-like function to evaluate:
@@ -42,18 +39,15 @@ def node(
         history = state.get("history", [])
 
         # Build booking state summary
-        booking_state = {
+        current_state = {
             "has_profile": state.get("profile_complete", False),
             "has_vehicle": state.get("vehicle_complete", False),
             "has_service": state.get("service_selected", False),
-            "has_slot": state.get("slot_selected", False)
+            "has_slot": state.get("slot_selected", False),
         }
 
         # Run quality evaluation
-        result = evaluator(
-            conversation_history=history,
-            booking_state=booking_state
-        )
+        result = evaluator(conversation_history=history, current_state=current_state)
 
         # Update state
         state["conversation_quality"] = result.get("quality_score", 0.5)

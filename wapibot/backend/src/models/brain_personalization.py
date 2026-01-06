@@ -19,32 +19,26 @@ class PersonalizationSuggestion(BaseModel):
 
     # What changed
     modifications: List[str] = Field(
-        description="List of modifications made",
-        default_factory=list
+        description="List of modifications made", default_factory=list
     )
 
     # Confidence and reasoning
     confidence: float = Field(
-        description="Confidence in personalization (0.0-1.0)",
-        ge=0.0,
-        le=1.0
+        description="Confidence in personalization (0.0-1.0)", ge=0.0, le=1.0
     )
     reasoning: str = Field(description="Why this personalization was suggested")
 
     # Context
     customer_profile: Optional[dict] = Field(
-        description="Customer profile used for personalization",
-        default=None
+        description="Customer profile used for personalization", default=None
     )
 
     # Outcome (filled later)
     was_better: Optional[bool] = Field(
-        description="Whether personalization would have been better",
-        default=None
+        description="Whether personalization would have been better", default=None
     )
     user_satisfaction: Optional[float] = Field(
-        description="Actual user satisfaction with baseline",
-        default=None
+        description="Actual user satisfaction with baseline", default=None
     )
 
     class Config:
@@ -56,6 +50,6 @@ class PersonalizationSuggestion(BaseModel):
                 "personalized_message": "Great news! Your appointment is all set 👍",
                 "modifications": ["added_enthusiasm", "added_emoji"],
                 "confidence": 0.85,
-                "reasoning": "Customer prefers casual, friendly tone based on history"
+                "reasoning": "Customer prefers casual, friendly tone based on history",
             }
         }

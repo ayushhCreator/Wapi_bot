@@ -12,9 +12,7 @@ class IntentClassificationSignature(dspy.Signature):
     conversation_history: str = dspy.InputField(
         desc="Previous conversation turns for context"
     )
-    user_message: str = dspy.InputField(
-        desc="Current user message to classify"
-    )
+    user_message: str = dspy.InputField(desc="Current user message to classify")
     context: str = dspy.InputField(
         desc="Classification context (current conversation state)"
     )
@@ -39,6 +37,4 @@ class IntentClassificationSignature(dspy.Signature):
         desc="Classification confidence: 'low', 'medium', 'high'"
     )
 
-    reasoning: str = dspy.OutputField(
-        desc="Why this intent was classified"
-    )
+    reasoning: str = dspy.OutputField(desc="Why this intent was classified")

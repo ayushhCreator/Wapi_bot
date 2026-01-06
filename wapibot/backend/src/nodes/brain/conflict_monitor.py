@@ -19,10 +19,7 @@ class ConflictDetector(Protocol):
         ...
 
 
-def node(
-    state: BrainState,
-    detector: ConflictDetector
-) -> BrainState:
+def node(state: BrainState, detector: ConflictDetector) -> BrainState:
     """Atomic node: Detect conflicts in user message.
 
     Uses ACC-like function to detect:
@@ -47,10 +44,7 @@ def node(
             return state
 
         # Run conflict detection
-        result = detector(
-            conversation_history=history,
-            user_message=user_message
-        )
+        result = detector(conversation_history=history, user_message=user_message)
 
         # Update state
         conflict_type = result.get("conflict_type", "none")
@@ -62,7 +56,9 @@ def node(
         # Store confidence for logging
         state["brain_confidence"] = result.get("confidence", 0.0)
 
-        logger.info(f"Conflict detected: {conflict_type} (confidence: {result.get('confidence', 0.0)})")
+        logger.info(
+            f"Conflict detected: {conflict_type} (confidence: {result.get('confidence', 0.0)})"
+        )
 
         return state
 

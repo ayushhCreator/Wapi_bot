@@ -92,10 +92,7 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
         conversation_id = request.get_conversation_id()
         user_message = request.get_user_message()
 
-        logger.info(
-            f"Processing chat: {conversation_id} - "
-            f"{user_message[:50]}..."
-        )
+        logger.info(f"Processing chat: {conversation_id} - {user_message[:50]}...")
 
         # Log which format was used
         if request.contact:
@@ -121,7 +118,7 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
             "should_confirm": False,
             "should_proceed": True,
             "service_request_id": None,
-            "service_request": None
+            "service_request": None,
         }
 
         # Run V2 full workflow (atomic nodes composition)
@@ -135,9 +132,9 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
             extracted_data={
                 "customer": result.get("customer"),
                 "vehicle": result.get("vehicle"),
-                "appointment": result.get("appointment")
+                "appointment": result.get("appointment"),
             },
-            service_request_id=result.get("service_request_id")
+            service_request_id=result.get("service_request_id"),
         )
 
         logger.info(f"Response: {response.message[:50]}...")
@@ -149,5 +146,5 @@ async def process_chat(request: ChatRequest) -> ChatResponse:
         logger.error(f"Chat processing failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail="Internal server error occurred during chat processing"
+            detail="Internal server error occurred during chat processing",
         )

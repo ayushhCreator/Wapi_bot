@@ -27,36 +27,35 @@ class RegexDateExtractor:
         today = date.today()
 
         # Today
-        if re.search(r'\b(today|aaj)\b', message_lower):
-            return {
-                "date_str": "today",
-                "parsed_date": today.isoformat()
-            }
+        if re.search(r"\b(today|aaj)\b", message_lower):
+            return {"date_str": "today", "parsed_date": today.isoformat()}
 
         # Tomorrow
-        if re.search(r'\b(tomorrow|kal)\b', message_lower):
+        if re.search(r"\b(tomorrow|kal)\b", message_lower):
             tomorrow = today + timedelta(days=1)
-            return {
-                "date_str": "tomorrow",
-                "parsed_date": tomorrow.isoformat()
-            }
+            return {"date_str": "tomorrow", "parsed_date": tomorrow.isoformat()}
 
         # Day after tomorrow
-        if re.search(r'\bday after tomorrow\b', message_lower):
+        if re.search(r"\bday after tomorrow\b", message_lower):
             day_after = today + timedelta(days=2)
             return {
                 "date_str": "day after tomorrow",
-                "parsed_date": day_after.isoformat()
+                "parsed_date": day_after.isoformat(),
             }
 
         # Next Monday, Tuesday, etc.
         weekdays = {
-            "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
-            "friday": 4, "saturday": 5, "sunday": 6
+            "monday": 0,
+            "tuesday": 1,
+            "wednesday": 2,
+            "thursday": 3,
+            "friday": 4,
+            "saturday": 5,
+            "sunday": 6,
         }
 
         for day_name, day_num in weekdays.items():
-            if re.search(rf'\bnext {day_name}\b', message_lower):
+            if re.search(rf"\bnext {day_name}\b", message_lower):
                 # Calculate next occurrence of this weekday
                 days_ahead = day_num - today.weekday()
                 if days_ahead <= 0:  # Target day already passed this week
@@ -65,7 +64,7 @@ class RegexDateExtractor:
 
                 return {
                     "date_str": f"next {day_name}",
-                    "parsed_date": next_day.isoformat()
+                    "parsed_date": next_day.isoformat(),
                 }
 
         return None

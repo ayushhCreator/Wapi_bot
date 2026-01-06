@@ -22,7 +22,7 @@ class PhoneExtractor(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Collecting contact number for booking"
+        context: str = "Collecting contact number for booking",
     ) -> Dict[str, Any]:
         """Extract phone number from user message.
 
@@ -49,7 +49,7 @@ class PhoneExtractor(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         # Map confidence string to float
@@ -59,5 +59,5 @@ class PhoneExtractor(dspy.Module):
         return {
             "phone_number": getattr(result, "phone_number", "").strip(),
             "confidence": confidence_float,
-            "reasoning": getattr(result, "reasoning", "")
+            "reasoning": getattr(result, "reasoning", ""),
         }

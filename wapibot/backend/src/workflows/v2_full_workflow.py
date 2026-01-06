@@ -22,7 +22,7 @@ from nodes.atomic import (
     confidence_gate_node,
     get_gate_decision,
     scan_node,
-    merge_node
+    merge_node,
 )
 from dspy_modules.extractors.name_extractor import NameExtractor
 from fallbacks.name_fallback import RegexNameExtractor
@@ -41,7 +41,7 @@ async def extract_name(state: BookingState) -> BookingState:
         extractor=name_extractor,
         field_path="customer.first_name",
         fallback_fn=lambda msg: regex_fallback.extract(msg),
-        metadata_path="customer.extraction_metadata"
+        metadata_path="customer.extraction_metadata",
     )
 
 
@@ -55,7 +55,7 @@ async def check_name_confidence(state: BookingState) -> BookingState:
         state=state,
         confidence_path="customer.extraction_metadata.confidence",
         threshold=0.7,  # Require 70% confidence
-        gate_name="name_confidence_check"
+        gate_name="name_confidence_check",
     )
 
 
@@ -70,7 +70,7 @@ async def scan_history_for_name(state: BookingState) -> BookingState:
         extractor=name_extractor,
         field_path="customer.first_name",
         max_turns=5,  # Scan last 5 turns
-        skip_if_exists=False  # Always scan to find better data
+        skip_if_exists=False,  # Always scan to find better data
     )
 
 
@@ -88,17 +88,14 @@ async def merge_scanned_name(state: BookingState) -> BookingState:
         # Scanned data found, merge it
         scanned_name = state.get("customer", {}).get("first_name", "")
 
-        new_data = {
-            "first_name": scanned_name,
-            "extraction_method": "retroactive_scan"
-        }
+        new_data = {"first_name": scanned_name, "extraction_method": "retroactive_scan"}
 
         return await merge_node(
             state=state,
             new_data=new_data,
             data_path="customer",
             new_confidence=scanned_confidence,
-            confidence_field="confidence"
+            confidence_field="confidence",
         )
 
     # No scanned data found, return unchanged
@@ -172,8 +169,8 @@ def create_v2_full_workflow() -> StateGraph:
         get_gate_decision,
         {
             "high_confidence": "generate_response",  # Skip scanning
-            "low_confidence": "scan_history"  # Try retroactive scan
-        }
+            "low_confidence": "scan_history",  # Try retroactive scan
+        },
     )
 
     # After scanning, merge the data

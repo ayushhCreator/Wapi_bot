@@ -26,9 +26,7 @@ class ConflictDetector(dspy.Module):
         self.detector = dspy.ChainOfThought(ConflictSignature)
 
     def forward(
-        self,
-        conversation_history: List[Dict[str, str]],
-        user_message: str
+        self, conversation_history: List[Dict[str, str]], user_message: str
     ) -> Dict[str, Any]:
         """Detect conflict in user message.
 
@@ -41,21 +39,22 @@ class ConflictDetector(dspy.Module):
         """
         try:
             # Format history for signature
-            history_str = "\n".join([
-                f"{msg['role']}: {msg['content']}"
-                for msg in conversation_history[-5:]  # Last 5 messages
-            ])
+            history_str = "\n".join(
+                [
+                    f"{msg['role']}: {msg['content']}"
+                    for msg in conversation_history[-5:]  # Last 5 messages
+                ]
+            )
 
             # Run ChainOfThought reasoning
             result = self.detector(
-                conversation_history=history_str,
-                user_message=user_message
+                conversation_history=history_str, user_message=user_message
             )
 
             return {
                 "conflict_type": result.conflict_type.strip().lower(),
                 "confidence": result.confidence,
-                "reasoning": result.reasoning
+                "reasoning": result.reasoning,
             }
 
         except Exception as e:
@@ -63,5 +62,5 @@ class ConflictDetector(dspy.Module):
             return {
                 "conflict_type": "none",
                 "confidence": 0.0,
-                "reasoning": f"Error: {str(e)}"
+                "reasoning": f"Error: {str(e)}",
             }

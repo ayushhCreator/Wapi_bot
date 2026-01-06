@@ -53,10 +53,10 @@ def create_reflex_workflow() -> StateGraph:
     decision_repo = BrainDecisionRepository()
 
     # Add nodes
-    workflow.add_node("monitor_conflict",
-        lambda s: conflict_monitor(s, conflict_detector))
-    workflow.add_node("log_to_gym",
-        lambda s: log_decision(s, decision_repo))
+    workflow.add_node(
+        "monitor_conflict", lambda s: conflict_monitor(s, conflict_detector)
+    )
+    workflow.add_node("log_to_gym", lambda s: log_decision(s, decision_repo))
 
     # Simple reflex routing
     workflow.set_entry_point("monitor_conflict")
@@ -68,8 +68,8 @@ def create_reflex_workflow() -> StateGraph:
             "handle_cancellation": "log_to_gym",  # Delegates to cancellation_group
             "answer_qa": "log_to_gym",  # Delegates to qa_group
             "escalate_human": "log_to_gym",  # Delegates to escalation_group
-            "continue_workflow": "log_to_gym"  # Continue normal booking flow
-        }
+            "continue_workflow": "log_to_gym",  # Continue normal booking flow
+        },
     )
     workflow.set_finish_point("log_to_gym")
 

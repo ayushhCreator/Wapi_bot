@@ -24,31 +24,16 @@ class IntentClass(str):
 class Intent(BaseModel):
     """Validated intent classification with confidence."""
 
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
 
     intent_class: Literal[
-        "book",
-        "inquire",
-        "complaint",
-        "small_talk",
-        "cancel",
-        "reschedule",
-        "payment"
+        "book", "inquire", "complaint", "small_talk", "cancel", "reschedule", "payment"
     ] = Field(..., description="Classified intent")
-    confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Classification confidence"
-    )
+    confidence: float = Field(ge=0.0, le=1.0, description="Classification confidence")
     reasoning: str = Field(
-        ...,
-        min_length=10,
-        max_length=2000,
-        description="Classification reasoning"
+        ..., min_length=10, max_length=2000, description="Classification reasoning"
     )
-    metadata: ExtractionMetadata = Field(
-        description="Extraction metadata"
-    )
+    metadata: ExtractionMetadata = Field(description="Extraction metadata")
 
     @computed_field
     @property

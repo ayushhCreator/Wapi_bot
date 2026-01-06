@@ -46,7 +46,9 @@ class GroupedSlotsBuilder:
         preferred_time_range = state.get("preferred_time_range", "")
 
         # Fallback: If grouped_slots is empty, try filtered_slot_options
-        if not grouped_slots or not any(grouped_slots.get(k) for k in ["morning", "afternoon", "evening"]):
+        if not grouped_slots or not any(
+            grouped_slots.get(k) for k in ["morning", "afternoon", "evening"]
+        ):
             filtered_slots = state.get("filtered_slot_options", [])
             if filtered_slots:
                 # Group slots by time of day

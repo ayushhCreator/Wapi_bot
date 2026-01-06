@@ -43,7 +43,7 @@ async def node(
     confidence_path: str,
     threshold: Optional[float] = None,
     confidence_fn: Optional[Callable[[Any], bool]] = None,
-    gate_name: str = "confidence_check"
+    gate_name: str = "confidence_check",
 ) -> BookingState:
     """Atomic confidence gate - routes workflow based on confidence.
 
@@ -130,7 +130,9 @@ async def node(
             return state
 
         # Use threshold from parameter or config
-        threshold_value = threshold if threshold is not None else settings.confidence_high
+        threshold_value = (
+            threshold if threshold is not None else settings.confidence_high
+        )
 
         if confidence_value >= threshold_value:
             logger.info(

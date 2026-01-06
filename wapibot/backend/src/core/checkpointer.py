@@ -45,7 +45,11 @@ class CheckpointerManager:
 
         # Initialize SQLite checkpointer (backup)
         if db_path is None:
-            db_path = Path(__file__).parent.parent.parent / "data" / "langgraph_checkpoints.db"
+            db_path = (
+                Path(__file__).parent.parent.parent
+                / "data"
+                / "langgraph_checkpoints.db"
+            )
 
         db_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -57,8 +61,7 @@ class CheckpointerManager:
 
         # Initialize dual checkpointer (memory + SQLite)
         self._dual_checkpointer = DualCheckpointer(
-            memory=self._memory_checkpointer,
-            sqlite=self._sqlite_checkpointer
+            memory=self._memory_checkpointer, sqlite=self._sqlite_checkpointer
         )
 
     async def shutdown(self):

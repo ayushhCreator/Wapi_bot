@@ -29,7 +29,7 @@ async def node(
     model: Type[BaseModel],
     data_path: str,
     fields_to_validate: Optional[list[str]] = None,
-    on_failure: Optional[Literal["log", "clear", "raise"]] = None
+    on_failure: Optional[Literal["log", "clear", "raise"]] = None,
 ) -> BookingState:
     """Atomic validation node - works with ANY Pydantic model.
 
@@ -62,8 +62,7 @@ async def node(
     # If specific fields requested, extract only those
     if fields_to_validate:
         data_to_validate = {
-            field: data.get(field) for field in fields_to_validate
-            if field in data
+            field: data.get(field) for field in fields_to_validate if field in data
         }
     else:
         data_to_validate = data

@@ -46,10 +46,7 @@ class PaymentClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.payment_gateway_integration.create_payment_order",
-                {
-                    "booking_id": booking_id,
-                    "amount": amount
-                }
+                {"booking_id": booking_id, "amount": amount},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error creating payment order for booking {booking_id}: {e}")
@@ -84,7 +81,7 @@ class PaymentClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.payment_gateway_integration.verify_payment",
-                payment_data
+                payment_data,
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error verifying payment: {e}")
@@ -113,13 +110,17 @@ class PaymentClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.payment_api.create_subscription_payment_order",
-                {"quote_id": quote_id}
+                {"quote_id": quote_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error creating subscription payment order for quote {quote_id}: {e}")
+            logger.error(
+                f"Error creating subscription payment order for quote {quote_id}: {e}"
+            )
             raise
 
-    async def verify_subscription_payment(self, payment_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def verify_subscription_payment(
+        self, payment_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Verify subscription payment completion.
 
         Args:
@@ -149,13 +150,15 @@ class PaymentClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.payment_api.verify_subscription_payment",
-                payment_data
+                payment_data,
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error verifying subscription payment: {e}")
             raise
 
-    async def create_balance_payment(self, booking_id: str, amount: float) -> Dict[str, Any]:
+    async def create_balance_payment(
+        self, booking_id: str, amount: float
+    ) -> Dict[str, Any]:
         """Create balance payment for partial/remaining amount.
 
         Args:
@@ -179,11 +182,10 @@ class PaymentClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.payment_api.create_balance_payment",
-                {
-                    "booking_id": booking_id,
-                    "amount": amount
-                }
+                {"booking_id": booking_id, "amount": amount},
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error creating balance payment for booking {booking_id}: {e}")
+            logger.error(
+                f"Error creating balance payment for booking {booking_id}: {e}"
+            )
             raise

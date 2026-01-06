@@ -34,7 +34,9 @@ class RedisConnectionManager:
     def __init__(self):
         """Initialize connection manager."""
         self._redis: Optional[aioredis.Redis] = None
-        self._connections: dict[str, WebSocket] = {}  # Local cache: websocket_id -> WebSocket
+        self._connections: dict[
+            str, WebSocket
+        ] = {}  # Local cache: websocket_id -> WebSocket
 
     async def _get_redis(self) -> aioredis.Redis:
         """Get Redis connection (lazy initialization)."""
@@ -43,7 +45,7 @@ class RedisConnectionManager:
                 settings.celery_broker_url,
                 encoding="utf-8",
                 decode_responses=True,
-                max_connections=250  # Support 200+ concurrent + overhead
+                max_connections=250,  # Support 200+ concurrent + overhead
             )
             logger.info("✅ Redis connection pool initialized (max 250 connections)")
         return self._redis
@@ -53,7 +55,7 @@ class RedisConnectionManager:
         conversation_id: str,
         websocket_id: str,
         websocket: WebSocket,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> None:
         """Register WebSocket connection in Redis + SQLite.
 
@@ -77,7 +79,7 @@ class RedisConnectionManager:
             "user_id": user_id or "",
             "connected_at": datetime.utcnow().isoformat(),
             "messages_sent": "0",
-            "messages_received": "0"
+            "messages_received": "0",
         }
         await redis.hset(f"connection:{websocket_id}", mapping=metadata)
 
@@ -121,7 +123,7 @@ class RedisConnectionManager:
             conversation_id,
             metadata.get("user_id"),
             "disconnected",
-            metadata
+            metadata,
         )
 
         logger.info(
@@ -129,9 +131,7 @@ class RedisConnectionManager:
             f"(conversation={conversation_id})"
         )
 
-    async def send_to_conversation(
-        self, conversation_id: str, message: dict
-    ) -> int:
+    async def send_to_conversation(self, conversation_id: str, message: dict) -> int:
         """Send message to all WebSockets in a conversation.
 
         Args:
@@ -159,13 +159,13 @@ class RedisConnectionManager:
                     await websocket.send_json(message)
 
                     # Increment message counter
-                    await redis.hincrby(f"connection:{websocket_id}", "messages_sent", 1)
+                    await redis.hincrby(
+                        f"connection:{websocket_id}", "messages_sent", 1
+                    )
                     sent_count += 1
 
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to send to {websocket_id[:8]}...: {e}"
-                    )
+                    logger.warning(f"Failed to send to {websocket_id[:8]}...: {e}")
                     # Connection broken, will be cleaned up on next heartbeat
 
         logger.debug(
@@ -215,7 +215,7 @@ class RedisConnectionManager:
         conversation_id: str,
         user_id: Optional[str],
         event: str,
-        metadata: Optional[dict] = None
+        metadata: Optional[dict] = None,
     ) -> None:
         """Log connection event to SQLite (placeholder for now).
 

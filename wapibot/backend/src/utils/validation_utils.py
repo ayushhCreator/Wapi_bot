@@ -52,14 +52,14 @@ def is_valid_indian_phone(phone: str) -> bool:
         return False
 
     # Clean phone number
-    cleaned = re.sub(r'[^\d]', '', phone)
+    cleaned = re.sub(r"[^\d]", "", phone)
 
     # Remove +91 prefix if present
-    if cleaned.startswith('91') and len(cleaned) == 12:
+    if cleaned.startswith("91") and len(cleaned) == 12:
         cleaned = cleaned[2:]
 
     # Indian: 10 digits starting with 6-9
-    if len(cleaned) == 10 and cleaned[0] in '6789':
+    if len(cleaned) == 10 and cleaned[0] in "6789":
         return True
 
     return False
@@ -82,7 +82,7 @@ def is_valid_email(email: str) -> bool:
         return False
 
     # Basic email regex
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email.strip()))
 
 
@@ -103,8 +103,8 @@ def normalize_phone(phone: str) -> Optional[str]:
         return None
 
     # Clean and remove +91
-    cleaned = re.sub(r'[^\d]', '', phone)
-    if cleaned.startswith('91') and len(cleaned) == 12:
+    cleaned = re.sub(r"[^\d]", "", phone)
+    if cleaned.startswith("91") and len(cleaned) == 12:
         cleaned = cleaned[2:]
 
     # Validate
@@ -132,6 +132,6 @@ def map_confidence_to_float(confidence_str: str) -> float:
     confidence_map = {
         "low": settings.confidence_low,
         "medium": settings.confidence_medium,
-        "high": settings.confidence_high
+        "high": settings.confidence_high,
     }
     return confidence_map.get(confidence_str.lower(), settings.confidence_medium)

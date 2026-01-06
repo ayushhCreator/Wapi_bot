@@ -22,7 +22,7 @@ def configure_dspy():
         model="ollama/gemma3:4b",
         api_base="http://localhost:11434",
         max_tokens=5000,
-        temperature=0.3
+        temperature=0.3,
     )
     dspy.settings.configure(lm=lm)
 
@@ -60,7 +60,7 @@ class TestNameExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="My name is Ravi",
-            context="Collecting customer name"
+            context="Collecting customer name",
         )
 
         assert result is not None
@@ -74,7 +74,7 @@ class TestNameExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I'm Ravi Kumar",
-            context="Collecting customer name"
+            context="Collecting customer name",
         )
 
         assert result is not None
@@ -88,7 +88,7 @@ class TestNameExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I want to book a service",
-            context="Collecting customer name"
+            context="Collecting customer name",
         )
 
         # May return None, low confidence, or "None" as placeholder
@@ -112,7 +112,7 @@ class TestEmailExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="My email is ravi.kumar@example.com",
-            context="Collecting contact information"
+            context="Collecting contact information",
         )
 
         assert result is not None
@@ -125,7 +125,7 @@ class TestEmailExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="Sure, you can reach me at john.doe@gmail.com anytime",
-            context="Collecting contact information"
+            context="Collecting contact information",
         )
 
         assert result is not None
@@ -137,7 +137,7 @@ class TestEmailExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I don't have an email",
-            context="Collecting contact information"
+            context="Collecting contact information",
         )
 
         # May return None or low confidence
@@ -160,7 +160,7 @@ class TestPhoneExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="My phone number is 9876543210",
-            context="Collecting contact information"
+            context="Collecting contact information",
         )
 
         assert result is not None
@@ -173,7 +173,7 @@ class TestPhoneExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="Call me at +91 9876543210",
-            context="Collecting contact information"
+            context="Collecting contact information",
         )
 
         assert result is not None
@@ -185,7 +185,7 @@ class TestPhoneExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I'll give you my number later",
-            context="Collecting contact information"
+            context="Collecting contact information",
         )
 
         # May return None or low confidence
@@ -208,7 +208,7 @@ class TestVehicleExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I have a Tata Nexon",
-            context="Collecting vehicle details for car wash"
+            context="Collecting vehicle details for car wash",
         )
 
         assert result is not None
@@ -222,7 +222,7 @@ class TestVehicleExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="My car is a Honda City, plate number MH12AB1234",
-            context="Collecting vehicle details for car wash"
+            context="Collecting vehicle details for car wash",
         )
 
         assert result is not None
@@ -238,7 +238,7 @@ class TestVehicleExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I need a wash",
-            context="Collecting vehicle details"
+            context="Collecting vehicle details",
         )
 
         # May return None or low confidence
@@ -261,11 +261,15 @@ class TestAppointmentExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I want to book for tomorrow",
-            context="Scheduling service appointment"
+            context="Scheduling service appointment",
         )
 
         assert result is not None
-        assert "date_str" in result or "time_preference" in result or "service_type" in result
+        assert (
+            "date_str" in result
+            or "time_preference" in result
+            or "service_type" in result
+        )
         # LLM extraction may be imperfect - just verify we got some result
         assert "confidence" in result
 
@@ -274,7 +278,7 @@ class TestAppointmentExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="Can I book for December 25th?",
-            context="Scheduling service appointment"
+            context="Scheduling service appointment",
         )
 
         assert result is not None
@@ -286,18 +290,22 @@ class TestAppointmentExtractor:
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="Tomorrow morning at 10 AM would be great",
-            context="Scheduling service appointment"
+            context="Scheduling service appointment",
         )
 
         assert result is not None
-        assert "date_str" in result or "service_type" in result or "time_preference" in result
+        assert (
+            "date_str" in result
+            or "service_type" in result
+            or "time_preference" in result
+        )
 
     def test_no_date_in_message(self, sample_conversation):
         """Test when no date is mentioned."""
         result = self.extractor(
             conversation_history=sample_conversation,
             user_message="I need a car wash",
-            context="Scheduling service appointment"
+            context="Scheduling service appointment",
         )
 
         # May return None or low confidence
@@ -328,7 +336,7 @@ class TestExtractorChain:
         name_result = self.name_extractor(
             conversation_history=conversation,
             user_message="Hi, I'm Ravi Kumar",
-            context="Collecting customer information"
+            context="Collecting customer information",
         )
         assert name_result is not None
         assert "ravi" in name_result.get("first_name", "").lower()
@@ -338,7 +346,7 @@ class TestExtractorChain:
         phone_result = self.phone_extractor(
             conversation_history=conversation,
             user_message="My number is 9876543210",
-            context="Collecting contact information"
+            context="Collecting contact information",
         )
         assert phone_result is not None
         assert "9876543210" in phone_result.get("phone_number", "")
@@ -348,7 +356,7 @@ class TestExtractorChain:
         vehicle_result = self.vehicle_extractor(
             conversation_history=conversation,
             user_message="I have a Tata Nexon",
-            context="Collecting vehicle details"
+            context="Collecting vehicle details",
         )
         assert vehicle_result is not None
         assert "tata" in vehicle_result.get("brand", "").lower()
@@ -358,8 +366,12 @@ class TestExtractorChain:
         appt_result = self.appointment_extractor(
             conversation_history=conversation,
             user_message="Book for tomorrow morning",
-            context="Scheduling appointment"
+            context="Scheduling appointment",
         )
         assert appt_result is not None
         # Verify we got some extraction result (LLM may not perfectly extract all fields)
-        assert appt_result.get("date_str") or appt_result.get("time_preference") or appt_result.get("service_type")
+        assert (
+            appt_result.get("date_str")
+            or appt_result.get("time_preference")
+            or appt_result.get("service_type")
+        )

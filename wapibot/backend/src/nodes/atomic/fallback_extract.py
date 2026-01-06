@@ -26,7 +26,7 @@ async def node(
     patterns: List[Any],
     field_path: str,
     extractor_fn: Callable[[str, List[Any]], Optional[Dict[str, Any]]],
-    metadata_path: Optional[str] = None
+    metadata_path: Optional[str] = None,
 ) -> BookingState:
     """Atomic fallback extraction node - works with ANY pattern configuration.
 
@@ -63,7 +63,9 @@ async def node(
         return state
 
     try:
-        logger.info(f"🔍 Fallback extracting {field_path} using pattern-based extraction")
+        logger.info(
+            f"🔍 Fallback extracting {field_path} using pattern-based extraction"
+        )
 
         # Call the extractor function with message and patterns
         result = extractor_fn(message, patterns)
@@ -78,10 +80,14 @@ async def node(
 
                 # Store metadata if requested
                 if metadata_path:
-                    set_nested_field(state, metadata_path, {
-                        "extraction_method": "regex",
-                        "confidence": result.get("confidence", 0.9)
-                    })
+                    set_nested_field(
+                        state,
+                        metadata_path,
+                        {
+                            "extraction_method": "regex",
+                            "confidence": result.get("confidence", 0.9),
+                        },
+                    )
 
                 logger.info(f"✅ Fallback extracted {field_path} = {value}")
                 return state

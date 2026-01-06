@@ -24,7 +24,7 @@ from langgraph.graph.state import CompiledStateGraph
 from workflows.shared.state import BookingState
 from core.brain_config import get_brain_settings
 from core.brain_toggles import is_shadow_mode
-from utils.field_utils import get_nested_field, set_nested_field
+from utils.field_utils import get_nested_field
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,12 @@ class BrainWorkflow:
         """
         return await self.workflow.aget_state(config)
 
-    async def aupdate_state(self, config: Dict[str, Any], values: Dict[str, Any], as_node: Optional[str] = None):
+    async def aupdate_state(
+        self,
+        config: Dict[str, Any],
+        values: Dict[str, Any],
+        as_node: Optional[str] = None,
+    ):
         """Delegate to underlying workflow's aupdate_state."""
         return await self.workflow.aupdate_state(config, values, as_node)
 
@@ -67,9 +72,7 @@ class BrainWorkflow:
         return self.workflow.get_state(config)
 
     async def ainvoke(
-        self,
-        state: BookingState,
-        config: Optional[Dict[str, Any]] = None
+        self, state: BookingState, config: Optional[Dict[str, Any]] = None
     ) -> BookingState:
         """Execute workflow with brain awareness.
 
@@ -105,8 +108,6 @@ class BrainWorkflow:
         # Extract telemetry data
         observations = get_nested_field(state, "brain_observations") or {}
 
-        logger.debug(
-            f"📊 Telemetry: {len(observations)} brain observations recorded"
-        )
+        logger.debug(f"📊 Telemetry: {len(observations)} brain observations recorded")
 
         # TODO: Write to brain_gym.db when RL system implemented

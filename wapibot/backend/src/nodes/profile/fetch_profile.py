@@ -37,10 +37,8 @@ async def fetch_complete_profile(state: BookingState) -> BookingState:
     phone_model = Phone(
         phone_number=raw_phone,
         metadata=ExtractionMetadata(
-            confidence=1.0,
-            extraction_method="direct",
-            extraction_source="wapi_webhook"
-        )
+            confidence=1.0, extraction_method="direct", extraction_source="wapi_webhook"
+        ),
     )
     normalized_phone = phone_model.phone_number
 
@@ -66,21 +64,36 @@ async def fetch_complete_profile(state: BookingState) -> BookingState:
         # Populate customer bundle
         state["customer"] = {
             "customer_uuid": profile.get("customer_uuid"),
-            "first_name": profile.get("full_name", "").split()[0] if profile.get("full_name") else "",
-            "last_name": " ".join(profile.get("full_name", "").split()[1:]) if profile.get("full_name") and len(profile.get("full_name", "").split()) > 1 else "",
+            "first_name": profile.get("full_name", "").split()[0]
+            if profile.get("full_name")
+            else "",
+            "last_name": " ".join(profile.get("full_name", "").split()[1:])
+            if profile.get("full_name")
+            and len(profile.get("full_name", "").split()) > 1
+            else "",
             "phone": profile.get("mobile_no"),
             "email": profile.get("email"),
             "customer_status": "Active",
-            "confidence": 1.0
+            "confidence": 1.0,
         }
 
         # Validate profile completeness
-        required_fields = ["customer_uuid", "full_name", "email", "mobile_no", "city", "state", "pincode"]
+        required_fields = [
+            "customer_uuid",
+            "full_name",
+            "email",
+            "mobile_no",
+            "city",
+            "state",
+            "pincode",
+        ]
         missing_fields = [f for f in required_fields if not profile.get(f)]
         state["profile_complete"] = len(missing_fields) == 0
 
         # Debug: Log what we found
-        logger.info(f"🔍 Profile fields check: {[(f, profile.get(f)) for f in required_fields]}")
+        logger.info(
+            f"🔍 Profile fields check: {[(f, profile.get(f)) for f in required_fields]}"
+        )
         logger.info(f"🔍 Missing fields: {missing_fields}")
         logger.info(f"🔍 Profile complete: {state['profile_complete']}")
 
@@ -103,7 +116,7 @@ async def fetch_complete_profile(state: BookingState) -> BookingState:
                 "vehicle_make": v.get("vehicle_make"),
                 "vehicle_model": v.get("vehicle_model"),
                 "vehicle_type": v.get("vehicle_type"),
-                "is_primary": v.get("is_primary", 1)
+                "is_primary": v.get("is_primary", 1),
             }
             state["vehicle_selected"] = True
             logger.info(f"✅ Auto-selected vehicle: {v.get('vehicle_number')}")
@@ -117,12 +130,14 @@ async def fetch_complete_profile(state: BookingState) -> BookingState:
                     "vehicle_make": v.get("vehicle_make"),
                     "vehicle_model": v.get("vehicle_model"),
                     "vehicle_type": v.get("vehicle_type"),
-                    "is_primary": v.get("is_primary", 0)
+                    "is_primary": v.get("is_primary", 0),
                 }
                 for v in vehicles
             ]
             state["vehicle_selected"] = False
-            logger.info(f"Multiple vehicles - user selects from {len(vehicles)} options")
+            logger.info(
+                f"Multiple vehicles - user selects from {len(vehicles)} options"
+            )
         else:
             # No vehicles
             state["vehicle"] = None

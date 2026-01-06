@@ -11,7 +11,14 @@ from celery import shared_task
 from sqlmodel import select
 
 from db.connection import db_connection
-from models import PaymentSession, PaymentStatus, PaymentTransaction, TransactionType, PaymentReminder, ReminderStatus
+from models import (
+    PaymentSession,
+    PaymentStatus,
+    PaymentTransaction,
+    TransactionType,
+    PaymentReminder,
+    ReminderStatus,
+)
 from clients.wapi.wapi_client import get_wapi_client
 
 logger = logging.getLogger(__name__)
@@ -55,9 +62,7 @@ async def _send_reminder_async(session_id: str, task_id: str) -> dict:
     async with await db_connection.get_session() as db_session:
         # Fetch PaymentSession
         result = await db_session.execute(
-            select(PaymentSession).where(
-                PaymentSession.session_id == session_id
-            )
+            select(PaymentSession).where(PaymentSession.session_id == session_id)
         )
         session = result.scalar_one_or_none()
 
@@ -67,9 +72,7 @@ async def _send_reminder_async(session_id: str, task_id: str) -> dict:
 
         # Skip if payment already confirmed or expired
         if session.status != PaymentStatus.PENDING:
-            logger.info(
-                f"⏭️ Skipping reminder - payment {session.status.value}"
-            )
+            logger.info(f"⏭️ Skipping reminder - payment {session.status.value}")
             return {"status": "skipped", "reason": f"payment_{session.status.value}"}
 
         # Build reminder message
@@ -107,9 +110,7 @@ async def _send_reminder_async(session_id: str, task_id: str) -> dict:
 
         # Update reminder record status
         result = await db_session.execute(
-            select(PaymentReminder).where(
-                PaymentReminder.celery_task_id == task_id
-            )
+            select(PaymentReminder).where(PaymentReminder.celery_task_id == task_id)
         )
         reminder = result.scalar_one_or_none()
         if reminder:

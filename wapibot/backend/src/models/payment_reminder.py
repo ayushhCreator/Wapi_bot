@@ -32,9 +32,7 @@ class PaymentReminder(SQLModel, table=True):
     reminder_id: Optional[int] = Field(default=None, primary_key=True)
 
     # Foreign key to payment session
-    session_id: str = Field(
-        foreign_key="payment_sessions.session_id", index=True
-    )
+    session_id: str = Field(foreign_key="payment_sessions.session_id", index=True)
 
     # Reminder sequence number
     reminder_number: int = Field(

@@ -19,7 +19,7 @@ class TestBrainObservationIntegration:
     @pytest.fixture
     def temp_brain_db(self):
         """Create temporary brain database for testing."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as f:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as f:
             db_path = f.name
 
         # Create tables
@@ -39,7 +39,7 @@ class TestBrainObservationIntegration:
             "history": [
                 {"role": "user", "content": "Hi"},
                 {"role": "assistant", "content": "Hello! How can I help?"},
-                {"role": "user", "content": "I want to book a car wash"}
+                {"role": "user", "content": "I want to book a car wash"},
             ],
             "current_step": "customer_info",
             "completeness": 0.3,
@@ -49,7 +49,7 @@ class TestBrainObservationIntegration:
             "customer": {"first_name": "Riju", "phone": "1234567890"},
             "vehicle": None,
             "selected_service": None,
-            "slot": None
+            "slot": None,
         }
 
     @pytest.mark.asyncio
@@ -63,16 +63,18 @@ class TestBrainObservationIntegration:
             brain_enabled=True,
             brain_mode="shadow",
             rl_gym_enabled=True,
-            rl_gym_db_path=temp_brain_db
+            rl_gym_db_path=temp_brain_db,
         )
 
-        with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings):
+        with patch(
+            "nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings
+        ):
             # Call checkpoint node
             result = await checkpoint.node(
                 test_state,
                 checkpoint_name="customer_confirmed",
                 checkpoint_type="milestone",
-                save_to_brain=True
+                save_to_brain=True,
             )
 
         # Verify state updated
@@ -109,22 +111,22 @@ class TestBrainObservationIntegration:
             brain_enabled=True,
             brain_mode="shadow",
             rl_gym_enabled=True,
-            rl_gym_db_path=temp_brain_db
+            rl_gym_db_path=temp_brain_db,
         )
 
         event_data = {
             "field": "customer.first_name",
             "method": "dspy",
-            "confidence": 0.95
+            "confidence": 0.95,
         }
 
-        with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings):
+        with patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings):
             # Call log node
             result = await log.node(
                 test_state,
                 event_type="extraction_success",
                 event_data=event_data,
-                severity="info"
+                severity="info",
             )
 
         # Verify state unchanged (logging is side-effect)
@@ -159,39 +161,42 @@ class TestBrainObservationIntegration:
             brain_enabled=True,
             brain_mode="reflex",
             rl_gym_enabled=True,
-            rl_gym_db_path=temp_brain_db
+            rl_gym_db_path=temp_brain_db,
         )
 
-        with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-             patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings):
-
+        with (
+            patch(
+                "nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings
+            ),
+            patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        ):
             # Create multiple observations
             result = await checkpoint.node(
                 test_state,
                 checkpoint_name="customer_confirmed",
                 checkpoint_type="milestone",
-                save_to_brain=True
+                save_to_brain=True,
             )
 
             result = await log.node(
                 result,
                 event_type="extraction_success",
                 event_data={"field": "customer.name"},
-                severity="info"
+                severity="info",
             )
 
             result = await checkpoint.node(
                 result,
                 checkpoint_name="slot_selected",
                 checkpoint_type="milestone",
-                save_to_brain=True
+                save_to_brain=True,
             )
 
             result = await log.node(
                 result,
                 event_type="api_call",
                 event_data={"endpoint": "get_slots", "latency_ms": 150},
-                severity="info"
+                severity="info",
             )
 
         # Verify all 4 records in database
@@ -212,7 +217,9 @@ class TestBrainObservationIntegration:
             assert decision.brain_mode == "reflex"
 
     @pytest.mark.asyncio
-    async def test_brain_observation_workflow_resilience(self, temp_brain_db, test_state):
+    async def test_brain_observation_workflow_resilience(
+        self, temp_brain_db, test_state
+    ):
         """Test workflow continues even if brain database unavailable."""
         from unittest.mock import patch
         from core.brain_config import BrainSettings
@@ -224,18 +231,21 @@ class TestBrainObservationIntegration:
             brain_enabled=True,
             brain_mode="shadow",
             rl_gym_enabled=True,
-            rl_gym_db_path=invalid_db_path
+            rl_gym_db_path=invalid_db_path,
         )
 
-        with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-             patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings):
-
+        with (
+            patch(
+                "nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings
+            ),
+            patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        ):
             # Checkpoint should not crash
             result = await checkpoint.node(
                 test_state,
                 checkpoint_name="test",
                 checkpoint_type="milestone",
-                save_to_brain=True
+                save_to_brain=True,
             )
 
             # State should still be updated
@@ -244,10 +254,7 @@ class TestBrainObservationIntegration:
 
             # Log should not crash
             result = await log.node(
-                result,
-                event_type="test",
-                event_data={"test": "data"},
-                severity="info"
+                result, event_type="test", event_data={"test": "data"}, severity="info"
             )
 
             # State should be unchanged
@@ -266,15 +273,17 @@ class TestBrainObservationIntegration:
                 brain_enabled=True,
                 brain_mode=mode,
                 rl_gym_enabled=True,
-                rl_gym_db_path=temp_brain_db
+                rl_gym_db_path=temp_brain_db,
             )
 
-            with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings):
+            with patch(
+                "nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings
+            ):
                 await checkpoint.node(
                     test_state,
                     checkpoint_name=f"{mode}_checkpoint",
                     checkpoint_type="milestone",
-                    save_to_brain=True
+                    save_to_brain=True,
                 )
 
         # Verify all 3 modes recorded
@@ -294,41 +303,42 @@ class TestBrainObservationIntegration:
 
         # Add many messages to history
         test_state["history"] = [
-            {"role": "user", "content": f"Message {i}"}
-            for i in range(20)
+            {"role": "user", "content": f"Message {i}"} for i in range(20)
         ]
 
         mock_settings = BrainSettings(
             brain_enabled=True,
             brain_mode="shadow",
             rl_gym_enabled=True,
-            rl_gym_db_path=temp_brain_db
+            rl_gym_db_path=temp_brain_db,
         )
 
-        with patch('nodes.atomic.checkpoint.get_brain_settings', return_value=mock_settings), \
-             patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings):
-
+        with (
+            patch(
+                "nodes.atomic.checkpoint.get_brain_settings", return_value=mock_settings
+            ),
+            patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        ):
             # Checkpoint saves last 5 messages
             await checkpoint.node(
                 test_state,
                 checkpoint_name="test_checkpoint",
                 checkpoint_type="milestone",
-                save_to_brain=True
+                save_to_brain=True,
             )
 
             # Log saves last 3 messages
             await log.node(
-                test_state,
-                event_type="test_event",
-                event_data={},
-                severity="info"
+                test_state, event_type="test_event", event_data={}, severity="info"
             )
 
         repo = BrainDecisionRepository(temp_brain_db)
         decisions = repo.get_recent(limit=10)
 
         # Verify checkpoint has 5 messages
-        checkpoint_decision = [d for d in decisions if d.action_taken.startswith("checkpoint")][0]
+        checkpoint_decision = [
+            d for d in decisions if d.action_taken.startswith("checkpoint")
+        ][0]
         checkpoint_history = json.loads(checkpoint_decision.conversation_history)
         assert len(checkpoint_history) == 5
 

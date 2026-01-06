@@ -26,7 +26,7 @@ def create_resume_router(
     resume_node: str,
     fresh_node: str,
     readiness_check: Optional[Callable[[BookingState], bool]] = None,
-    router_name: str = "resume_router"
+    router_name: str = "resume_router",
 ) -> Callable[[BookingState], str]:
     """Factory: Create a resume/fresh routing function for node group entry.
 
@@ -60,6 +60,7 @@ def create_resume_router(
             readiness_check=lambda s: not s.get("addon_selection_complete", False)
         )
     """
+
     def route_entry(state: BookingState) -> str:
         """Route based on whether we're resuming or starting fresh."""
         current_step = state.get("current_step", "")
@@ -76,7 +77,9 @@ def create_resume_router(
                 return fresh_node
 
         if is_resuming:
-            logger.info(f"🔀 {router_name}: Resuming from {awaiting_step} → {resume_node}")
+            logger.info(
+                f"🔀 {router_name}: Resuming from {awaiting_step} → {resume_node}"
+            )
             return resume_node
         else:
             logger.info(f"🔀 {router_name}: Starting fresh → {fresh_node}")

@@ -24,7 +24,7 @@ class TestShadowMode:
             brain_enabled=True,
             brain_mode="shadow",
             rl_gym_enabled=True,
-            dream_enabled=False
+            dream_enabled=False,
         )
 
     @pytest.fixture
@@ -42,13 +42,17 @@ class TestShadowMode:
             "customer": None,
             "vehicle": None,
             "selected_service": None,
-            "slot": None
+            "slot": None,
         }
 
     @pytest.mark.asyncio
-    async def test_shadow_mode_proposes_but_never_acts(self, shadow_settings, test_state):
+    async def test_shadow_mode_proposes_but_never_acts(
+        self, shadow_settings, test_state
+    ):
         """Shadow mode should propose actions but never execute them."""
-        with patch('core.brain_config.get_brain_settings', return_value=shadow_settings):
+        with patch(
+            "core.brain_config.get_brain_settings", return_value=shadow_settings
+        ):
             from nodes.brain.response_proposer import node as response_proposer
 
             # Shadow mode proposes response
@@ -72,7 +76,7 @@ class TestReflexMode:
             brain_enabled=True,
             brain_mode="reflex",
             rl_gym_enabled=True,
-            dream_enabled=False
+            dream_enabled=False,
         )
 
     @pytest.fixture
@@ -90,16 +94,20 @@ class TestReflexMode:
             "customer": None,
             "vehicle": None,
             "selected_service": None,
-            "slot": None
+            "slot": None,
         }
 
     @pytest.mark.asyncio
     async def test_reflex_mode_uses_regex_first(self, reflex_settings, test_state):
         """Reflex mode should try regex extraction before DSPy."""
-        with patch('core.brain_config.get_brain_settings', return_value=reflex_settings):
+        with patch(
+            "core.brain_config.get_brain_settings", return_value=reflex_settings
+        ):
             # Mock extractors
             mock_dspy_extractor = AsyncMock()
-            mock_regex_fallback = MagicMock(return_value={"phone": "9876543210", "confidence": 0.8})
+            mock_regex_fallback = MagicMock(
+                return_value={"phone": "9876543210", "confidence": 0.8}
+            )
 
             # Call extract with reflex priority
             result = await extract.node(
@@ -107,7 +115,7 @@ class TestReflexMode:
                 mock_dspy_extractor,
                 "customer.phone",
                 fallback_fn=mock_regex_fallback,
-                extraction_priority="regex_first"
+                extraction_priority="regex_first",
             )
 
             # Regex should be called (reflex mode prioritizes regex)
@@ -122,7 +130,9 @@ class TestReflexMode:
     @pytest.mark.asyncio
     async def test_reflex_mode_template_only_responses(self, reflex_settings):
         """Reflex mode should use template-only responses (no customization)."""
-        with patch('core.brain_config.get_brain_settings', return_value=reflex_settings):
+        with patch(
+            "core.brain_config.get_brain_settings", return_value=reflex_settings
+        ):
             # In reflex mode, template customization should be disabled
             assert can_customize_template() == False
 
@@ -137,7 +147,7 @@ class TestConsciousMode:
             brain_enabled=True,
             brain_mode="conscious",
             rl_gym_enabled=True,
-            dream_enabled=True
+            dream_enabled=True,
         )
 
     @pytest.fixture
@@ -155,21 +165,28 @@ class TestConsciousMode:
             "customer": None,
             "vehicle": None,
             "selected_service": None,
-            "slot": None
+            "slot": None,
         }
 
     @pytest.mark.asyncio
     async def test_conscious_mode_uses_dspy_first(self, conscious_settings, test_state):
         """Conscious mode should try DSPy extraction before regex."""
-        with patch('core.brain_config.get_brain_settings', return_value=conscious_settings):
+        with patch(
+            "core.brain_config.get_brain_settings", return_value=conscious_settings
+        ):
             # Mock extractors
-            mock_dspy_extractor = MagicMock(return_value={"brand": "Honda", "confidence": 0.95})
-            mock_regex_fallback = MagicMock(return_value={"brand": "Honda", "confidence": 0.6})
+            mock_dspy_extractor = MagicMock(
+                return_value={"brand": "Honda", "confidence": 0.95}
+            )
+            mock_regex_fallback = MagicMock(
+                return_value={"brand": "Honda", "confidence": 0.6}
+            )
 
             # Mock asyncio for executor
-            with patch('asyncio.get_event_loop') as mock_loop, \
-                 patch('asyncio.wait_for', new_callable=AsyncMock) as mock_wait_for:
-
+            with (
+                patch("asyncio.get_event_loop") as mock_loop,
+                patch("asyncio.wait_for", new_callable=AsyncMock) as mock_wait_for,
+            ):
                 mock_wait_for.return_value = {"brand": "Honda", "confidence": 0.95}
 
                 # Call extract with conscious priority
@@ -178,7 +195,7 @@ class TestConsciousMode:
                     mock_dspy_extractor,
                     "vehicle.brand",
                     fallback_fn=mock_regex_fallback,
-                    extraction_priority="dspy_first"
+                    extraction_priority="dspy_first",
                 )
 
             # DSPy should be called first (conscious mode prioritizes DSPy)
@@ -193,7 +210,9 @@ class TestConsciousMode:
     @pytest.mark.asyncio
     async def test_conscious_mode_can_customize_templates(self, conscious_settings):
         """Conscious mode should allow template customization."""
-        with patch('core.brain_config.get_brain_settings', return_value=conscious_settings):
+        with patch(
+            "core.brain_config.get_brain_settings", return_value=conscious_settings
+        ):
             # In conscious mode, template customization should be enabled
             assert can_customize_template() == True
 
@@ -206,20 +225,20 @@ class TestToggleEnforcement:
         """Test that can_customize_template() enforces toggle."""
         # Reflex mode - customization disabled
         reflex_settings = BrainSettings(
-            brain_enabled=True,
-            brain_mode="reflex",
-            rl_gym_enabled=True
+            brain_enabled=True, brain_mode="reflex", rl_gym_enabled=True
         )
 
-        with patch('core.brain_config.get_brain_settings', return_value=reflex_settings):
+        with patch(
+            "core.brain_config.get_brain_settings", return_value=reflex_settings
+        ):
             assert can_customize_template() == False
 
         # Conscious mode - customization enabled
         conscious_settings = BrainSettings(
-            brain_enabled=True,
-            brain_mode="conscious",
-            rl_gym_enabled=True
+            brain_enabled=True, brain_mode="conscious", rl_gym_enabled=True
         )
 
-        with patch('core.brain_config.get_brain_settings', return_value=conscious_settings):
+        with patch(
+            "core.brain_config.get_brain_settings", return_value=conscious_settings
+        ):
             assert can_customize_template() == True

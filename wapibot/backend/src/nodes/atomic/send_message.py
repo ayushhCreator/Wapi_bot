@@ -48,7 +48,7 @@ async def node(
     state: BookingState,
     message_builder: MessageBuilder,
     store_in_history: bool = True,
-    on_failure: str = "log"
+    on_failure: str = "log",
 ) -> BookingState:
     """Send WhatsApp message using WAPIClient directly.
 
@@ -106,8 +106,7 @@ async def node(
         logger.info(f"📤 Sending WhatsApp message ({len(message_text)} chars)")
 
         result = await wapi_client.send_message(
-            phone_number=phone_number,
-            message_body=message_text
+            phone_number=phone_number, message_body=message_text
         )
 
         # Store WAPI response
@@ -145,10 +144,7 @@ async def node(
             if "history" not in state:
                 state["history"] = []
 
-            state["history"].append({
-                "role": "assistant",
-                "content": message_text
-            })
+            state["history"].append({"role": "assistant", "content": message_text})
 
             # Also set response field for webhook to use
             state["response"] = message_text

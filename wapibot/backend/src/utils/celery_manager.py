@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def start_celery_worker(
-    working_directory: Optional[Path] = None,
-    log_prefix: str = "[Celery]"
+    working_directory: Optional[Path] = None, log_prefix: str = "[Celery]"
 ) -> Optional[subprocess.Popen]:
     """Start Celery worker as subprocess with log streaming.
 
@@ -40,7 +39,7 @@ def start_celery_worker(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
-            bufsize=1  # Line buffered
+            bufsize=1,  # Line buffered
         )
 
         logger.info(f"🔄 Celery worker started (PID: {process.pid})")
@@ -61,10 +60,7 @@ def start_celery_worker(
         return None
 
 
-def stop_celery_worker(
-    process: Optional[subprocess.Popen],
-    timeout: int = 5
-) -> bool:
+def stop_celery_worker(process: Optional[subprocess.Popen], timeout: int = 5) -> bool:
     """Stop Celery worker gracefully.
 
     Args:

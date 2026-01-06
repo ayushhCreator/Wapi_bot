@@ -6,21 +6,20 @@ from dspy_modules.metrics import (
     intent_metric,
     quality_metric,
     goals_metric,
-    response_metric
+    response_metric,
 )
 
 
 def test_conflict_metric_detects_conflict():
     """Test conflict metric when conflict is detected."""
     example = dspy.Example(
-        conflict_detected="user_disagreement",
-        workflow_outcome="failure"
+        conflict_detected="user_disagreement", workflow_outcome="failure"
     )
 
     pred = dspy.Prediction(
         conflict_type="user_disagreement",
         confidence=0.85,
-        reasoning="User said 'no that's wrong'"
+        reasoning="User said 'no that's wrong'",
     )
 
     score = conflict_metric(example, pred)
@@ -29,15 +28,10 @@ def test_conflict_metric_detects_conflict():
 
 def test_conflict_metric_no_conflict():
     """Test conflict metric when no conflict exists."""
-    example = dspy.Example(
-        conflict_detected=None,
-        workflow_outcome="success"
-    )
+    example = dspy.Example(conflict_detected=None, workflow_outcome="success")
 
     pred = dspy.Prediction(
-        conflict_type="no",
-        confidence=0.9,
-        reasoning="Conversation flowing smoothly"
+        conflict_type="no", confidence=0.9, reasoning="Conversation flowing smoothly"
     )
 
     score = conflict_metric(example, pred)
@@ -49,13 +43,11 @@ def test_intent_metric_correct_prediction():
     example = dspy.Example(
         predicted_intent="booking",
         action_taken="schedule_appointment",
-        workflow_outcome="success"
+        workflow_outcome="success",
     )
 
     pred = dspy.Prediction(
-        intent="booking",
-        confidence=0.9,
-        next_step="schedule appointment"
+        intent="booking", confidence=0.9, next_step="schedule appointment"
     )
 
     score = intent_metric(example, pred)
@@ -65,16 +57,11 @@ def test_intent_metric_correct_prediction():
 def test_quality_metric_high_satisfaction():
     """Test quality metric with high user satisfaction."""
     example = dspy.Example(
-        user_satisfaction=0.9,
-        workflow_outcome="success",
-        conflict_detected=None
+        user_satisfaction=0.9, workflow_outcome="success", conflict_detected=None
     )
 
     pred = dspy.Prediction(
-        quality_score=0.85,
-        confidence=0.8,
-        issues="no issues detected",
-        suggestions=""
+        quality_score=0.85, confidence=0.8, issues="no issues detected", suggestions=""
     )
 
     score = quality_metric(example, pred)
@@ -87,16 +74,15 @@ def test_goals_metric_aligned_goals():
 
     example = dspy.Example(
         action_taken="extract_customer_info",
-        state_snapshot=json.dumps({
-            "profile_complete": False,
-            "vehicle_selected": False
-        }),
-        workflow_outcome="success"
+        state_snapshot=json.dumps(
+            {"profile_complete": False, "vehicle_selected": False}
+        ),
+        workflow_outcome="success",
     )
 
     pred = dspy.Prediction(
         sub_goals=["extract customer name", "collect phone number"],
-        required_info=["profile", "contact details"]
+        required_info=["profile", "contact details"],
     )
 
     score = goals_metric(example, pred)
@@ -108,12 +94,12 @@ def test_response_metric_good_response():
     example = dspy.Example(
         user_satisfaction=0.85,
         workflow_outcome="success",
-        response_sent="I can help you schedule an appointment"
+        response_sent="I can help you schedule an appointment",
     )
 
     pred = dspy.Prediction(
         proposed_response="I'd be happy to help you book an appointment. What date works for you?",
-        confidence=0.8
+        confidence=0.8,
     )
 
     score = response_metric(example, pred)
@@ -131,7 +117,7 @@ def test_all_metrics_return_valid_range():
         user_satisfaction=0.7,
         workflow_outcome="success",
         state_snapshot=json.dumps({"profile_complete": True}),
-        response_sent="Test response"
+        response_sent="Test response",
     )
 
     pred = dspy.Prediction(
@@ -145,7 +131,7 @@ def test_all_metrics_return_valid_range():
         reasoning="Test reasoning",
         issues="none",
         suggestions="",
-        next_step="extract"
+        next_step="extract",
     )
 
     scores = [
@@ -153,7 +139,7 @@ def test_all_metrics_return_valid_range():
         intent_metric(example, pred),
         quality_metric(example, pred),
         goals_metric(example, pred),
-        response_metric(example, pred)
+        response_metric(example, pred),
     ]
 
     for i, score in enumerate(scores):

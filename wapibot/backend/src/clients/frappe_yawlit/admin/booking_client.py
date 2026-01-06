@@ -23,7 +23,9 @@ class AdminBookingClient:
         """
         self.http = http_client
 
-    async def get_all_bookings(self, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def get_all_bookings(
+        self, filters: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Get all bookings across all customers with filters.
 
         Args:
@@ -63,7 +65,7 @@ class AdminBookingClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.admin_booking_api.get_all_bookings",
-                filters or {}
+                filters or {},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching all bookings: {e}")
@@ -98,7 +100,7 @@ class AdminBookingClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.admin_booking_api.get_booking_details",
-                {"booking_id": booking_id}
+                {"booking_id": booking_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching booking details for {booking_id}: {e}")
@@ -130,13 +132,12 @@ class AdminBookingClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.admin_booking_api.assign_vendor_to_booking",
-                {
-                    "booking_id": booking_id,
-                    "vendor_id": vendor_id
-                }
+                {"booking_id": booking_id, "vendor_id": vendor_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error assigning vendor {vendor_id} to booking {booking_id}: {e}")
+            logger.error(
+                f"Error assigning vendor {vendor_id} to booking {booking_id}: {e}"
+            )
             raise
 
     async def update_status(self, booking_id: str, status: str) -> Dict[str, Any]:
@@ -165,16 +166,15 @@ class AdminBookingClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.admin_booking_api.update_booking_status",
-                {
-                    "booking_id": booking_id,
-                    "status": status
-                }
+                {"booking_id": booking_id, "status": status},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error updating status for booking {booking_id}: {e}")
             raise
 
-    async def bulk_assign_vendors(self, assignments: List[Dict[str, str]]) -> Dict[str, Any]:
+    async def bulk_assign_vendors(
+        self, assignments: List[Dict[str, str]]
+    ) -> Dict[str, Any]:
         """Assign multiple vendors to multiple bookings in bulk.
 
         Args:
@@ -205,7 +205,7 @@ class AdminBookingClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.admin_booking_api.assign_vendor_bulk",
-                {"assignments": assignments}
+                {"assignments": assignments},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error performing bulk vendor assignment: {e}")

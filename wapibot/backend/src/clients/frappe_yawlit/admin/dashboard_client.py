@@ -131,7 +131,7 @@ class AdminDashboardClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.admin_dashboard.get_recent_bookings",
-                {"limit": limit}
+                {"limit": limit},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching recent bookings: {e}")

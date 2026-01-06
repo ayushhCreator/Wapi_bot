@@ -27,7 +27,10 @@ from core.shutdown_handler import shutdown_manager
 from core.middleware_setup import setup_middleware
 
 # Setup logging
-logging.basicConfig(level=settings.log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=settings.log_level,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 
@@ -67,7 +70,9 @@ async def lifespan(app: FastAPI):
         shutdown_manager.should_exit = not settings.reload
         shutdown_manager.register_signal_handlers()
         if settings.reload:
-            logger.info("⚠️  Reload mode enabled - Celery/ngrok will cleanup but won't exit process")
+            logger.info(
+                "⚠️  Reload mode enabled - Celery/ngrok will cleanup but won't exit process"
+            )
         else:
             logger.info("✅ Shutdown handlers registered (will exit on Ctrl+C)")
 
@@ -103,7 +108,9 @@ async def lifespan(app: FastAPI):
         logger.info("✅ All services started!")
         logger.info(f"   • FastAPI:  http://localhost:{settings.port}")
         logger.info(f"   • ngrok:    {tunnel_url or 'Not running'}")
-        logger.info(f"   • Celery:   PID {worker_process.pid if worker_process else 'N/A'}")
+        logger.info(
+            f"   • Celery:   PID {worker_process.pid if worker_process else 'N/A'}"
+        )
         logger.info("   • Redis:    localhost:6379")
         logger.info("=" * 70)
         logger.info("💡 Ctrl+C to stop all services")
@@ -151,7 +158,12 @@ async def lifespan(app: FastAPI):
 # ============================================================================
 
 # Create app
-app = FastAPI(title=settings.app_name, version=settings.app_version, debug=settings.debug, lifespan=lifespan)
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    debug=settings.debug,
+    lifespan=lifespan,
+)
 
 # Setup middleware (security, CORS, rate limiting, activity tracking)
 setup_middleware(app)
@@ -168,6 +180,10 @@ if __name__ == "__main__":
         host=settings.host,
         port=settings.port,
         reload=settings.reload,
-        reload_excludes=["*/tests/*", "*/tests/**/*", "**/test_*.py"],  # Exclude tests from watchfiles
-        log_level=settings.log_level.lower()
+        reload_excludes=[
+            "*/tests/*",
+            "*/tests/**/*",
+            "**/test_*.py",
+        ],  # Exclude tests from watchfiles
+        log_level=settings.log_level.lower(),
     )

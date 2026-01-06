@@ -19,7 +19,7 @@ class FrappeClientConfig:
         base_url: str | None = None,
         api_key: str | None = None,
         api_secret: str | None = None,
-        timeout: float = 30.0
+        timeout: float = 30.0,
     ):
         """Initialize Frappe client configuration.
 
@@ -46,10 +46,7 @@ class FrappeClientConfig:
         Returns:
             Dict of headers with authentication
         """
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
         # Use session token if available (after login)
         if self.session_token:

@@ -52,7 +52,7 @@ async def node(
     transformer: Transformer,
     source_path: str,
     target_path: str,
-    on_empty: str = "skip"
+    on_empty: str = "skip",
 ) -> BookingState:
     """Transform data from source to target using ANY transformer.
 
@@ -99,7 +99,9 @@ async def node(
         # Brain observation: track transformation patterns
         brain_settings = get_brain_settings()
         if brain_settings.brain_enabled:
-            logger.debug(f"🧠 Brain observing transformation: {source_path}→{target_path} (mode: {brain_settings.brain_mode})")
+            logger.debug(
+                f"🧠 Brain observing transformation: {source_path}→{target_path} (mode: {brain_settings.brain_mode})"
+            )
             # TODO: In Phase 4, brain will learn which transformations are most effective
             # e.g., "FilterSlots with morning preference → 80% booking success rate"
 
@@ -111,7 +113,9 @@ async def node(
 
         # Brain feedback: successful transformation
         if brain_settings.brain_enabled:
-            logger.debug(f"🧠 Transformation successful: {transformer.__class__.__name__}")
+            logger.debug(
+                f"🧠 Transformation successful: {transformer.__class__.__name__}"
+            )
 
         return state
 
@@ -121,7 +125,9 @@ async def node(
         # Brain observation: track transformation failures for learning
         brain_settings = get_brain_settings()
         if brain_settings.brain_enabled:
-            logger.debug(f"🧠 Brain observing transformation failure: {source_path}→{target_path}")
+            logger.debug(
+                f"🧠 Brain observing transformation failure: {source_path}→{target_path}"
+            )
             # TODO: Brain can suggest alternative transformation strategies
 
         # Log error in state

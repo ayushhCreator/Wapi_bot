@@ -13,13 +13,13 @@ class RegexPhoneExtractor:
     # Indian phone patterns
     PATTERNS = [
         # +91 9876543210
-        r'\+91[\s-]?([6789]\d{9})',
+        r"\+91[\s-]?([6789]\d{9})",
         # 91-9876543210 or 919876543210
-        r'91[\s-]?([6789]\d{9})',
+        r"91[\s-]?([6789]\d{9})",
         # 9876543210 (plain 10-digit)
-        r'\b([6789]\d{9})\b',
+        r"\b([6789]\d{9})\b",
         # 98765 43210 (with space)
-        r'\b([6789]\d{4})[\s-]?(\d{5})\b',
+        r"\b([6789]\d{4})[\s-]?(\d{5})\b",
     ]
 
     def extract(self, message: str) -> Optional[Dict[str, str]]:
@@ -48,12 +48,10 @@ class RegexPhoneExtractor:
                     phone = match.group(1)
 
                 # Clean
-                phone = re.sub(r'[^\d]', '', phone)
+                phone = re.sub(r"[^\d]", "", phone)
 
                 # Validate length
-                if len(phone) == 10 and phone[0] in '6789':
-                    return {
-                        "phone_number": phone
-                    }
+                if len(phone) == 10 and phone[0] in "6789":
+                    return {"phone_number": phone}
 
         return None

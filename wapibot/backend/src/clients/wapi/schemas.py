@@ -13,13 +13,10 @@ class ContactCreate(BaseModel):
     country: Optional[str] = Field(None, examples=["india"])
     language_code: Optional[str] = Field(None, examples=["en"])
     groups: Optional[str] = Field(
-        None,
-        description="Comma-separated group names",
-        examples=["group1,group2"]
+        None, description="Comma-separated group names", examples=["group1,group2"]
     )
     custom_fields: Optional[Dict[str, str]] = Field(
-        None,
-        examples=[{"BDay": "2025-09-04"}]
+        None, examples=[{"BDay": "2025-09-04"}]
     )
 
 
@@ -29,12 +26,10 @@ class SendMessageRequest(BaseModel):
     phone_number: str = Field(..., examples=["919876543210"])
     message_body: str = Field(..., examples=["Hello from WapiBot!"])
     from_phone_number_id: Optional[str] = Field(
-        None,
-        description="Optional phone number ID, uses default if not provided"
+        None, description="Optional phone number ID, uses default if not provided"
     )
     contact: Optional[ContactCreate] = Field(
-        None,
-        description="Auto-create contact if it doesn't exist"
+        None, description="Auto-create contact if it doesn't exist"
     )
 
 
@@ -42,21 +37,13 @@ class SendMediaRequest(BaseModel):
     """Request to send media message via WAPI."""
 
     phone_number: str = Field(..., examples=["919876543210"])
-    media_type: Literal["image", "video", "document"] = Field(
-        ...,
-        examples=["image"]
-    )
-    media_url: str = Field(
-        ...,
-        examples=["https://example.com/image.jpg"]
-    )
+    media_type: Literal["image", "video", "document"] = Field(..., examples=["image"])
+    media_url: str = Field(..., examples=["https://example.com/image.jpg"])
     caption: Optional[str] = Field(
-        None,
-        description="Caption for image/video media types"
+        None, description="Caption for image/video media types"
     )
     file_name: Optional[str] = Field(
-        None,
-        description="File name for document media type"
+        None, description="File name for document media type"
     )
     from_phone_number_id: Optional[str] = Field(None)
     contact: Optional[ContactCreate] = Field(None)

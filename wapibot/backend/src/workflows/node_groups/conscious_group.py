@@ -9,14 +9,14 @@ from nodes.brain import (
     state_evaluator,
     goal_decomposer,
     response_proposer,
-    log_decision
+    log_decision,
 )
 from dspy_modules.brain import (
     ConflictDetector,
     IntentPredictor,
     QualityEvaluator,
     GoalDecomposer,
-    ResponseGenerator
+    ResponseGenerator,
 )
 from repositories.brain_decision_repo import BrainDecisionRepository
 from core.brain_toggles import (
@@ -24,7 +24,7 @@ from core.brain_toggles import (
     can_answer_qa,
     can_handle_bargaining,
     can_escalate_human,
-    can_cancel_booking
+    can_cancel_booking,
 )
 
 logger = logging.getLogger(__name__)
@@ -79,18 +79,14 @@ def create_conscious_workflow() -> StateGraph:
     decision_repo = BrainDecisionRepository()
 
     # Add all processing nodes
-    workflow.add_node("monitor_conflict",
-        lambda s: conflict_monitor(s, conflict_detector))
-    workflow.add_node("predict_intent",
-        lambda s: intent_predictor(s, intent_pred))
-    workflow.add_node("evaluate_quality",
-        lambda s: state_evaluator(s, quality_eval))
-    workflow.add_node("decompose_goals",
-        lambda s: goal_decomposer(s, goal_decomp))
-    workflow.add_node("propose_response",
-        lambda s: response_proposer(s, response_gen))
-    workflow.add_node("log_to_gym",
-        lambda s: log_decision(s, decision_repo))
+    workflow.add_node(
+        "monitor_conflict", lambda s: conflict_monitor(s, conflict_detector)
+    )
+    workflow.add_node("predict_intent", lambda s: intent_predictor(s, intent_pred))
+    workflow.add_node("evaluate_quality", lambda s: state_evaluator(s, quality_eval))
+    workflow.add_node("decompose_goals", lambda s: goal_decomposer(s, goal_decomp))
+    workflow.add_node("propose_response", lambda s: response_proposer(s, response_gen))
+    workflow.add_node("log_to_gym", lambda s: log_decision(s, decision_repo))
 
     # Full brain pipeline with conscious routing
     workflow.set_entry_point("monitor_conflict")
@@ -106,8 +102,8 @@ def create_conscious_workflow() -> StateGraph:
             "handle_cancellation": "log_to_gym",
             "answer_qa": "log_to_gym",
             "escalate_human": "log_to_gym",
-            "continue_workflow": "log_to_gym"
-        }
+            "continue_workflow": "log_to_gym",
+        },
     )
     workflow.add_edge("propose_response", "log_to_gym")
     workflow.set_finish_point("log_to_gym")

@@ -52,6 +52,7 @@ def list_signatures(base_path: Optional[str] = None) -> List[Dict[str, str]]:
     if base_path is None:
         # Default to dspy_signatures directory
         from pathlib import Path
+
         base_path = Path(__file__).parent.parent / "dspy_signatures"
 
     signatures = []
@@ -73,10 +74,11 @@ def list_signatures(base_path: Optional[str] = None) -> List[Dict[str, str]]:
                 # Find all Signature classes
                 for name, obj in inspect.getmembers(module, inspect.isclass):
                     # Check if it's a dspy.Signature subclass
-                    if (issubclass(obj, dspy.Signature) and
-                        obj is not dspy.Signature and
-                        name.endswith("Signature")):
-
+                    if (
+                        issubclass(obj, dspy.Signature)
+                        and obj is not dspy.Signature
+                        and name.endswith("Signature")
+                    ):
                         # Get signature fields
                         fields = []
                         if hasattr(obj, "__annotations__"):
@@ -85,13 +87,15 @@ def list_signatures(base_path: Optional[str] = None) -> List[Dict[str, str]]:
                         # Get docstring as description
                         description = obj.__doc__.strip() if obj.__doc__ else ""
 
-                        signatures.append({
-                            "name": name,
-                            "module": module_name,
-                            "description": description,
-                            "fields": fields,
-                            "file_path": str(py_file)
-                        })
+                        signatures.append(
+                            {
+                                "name": name,
+                                "module": module_name,
+                                "description": description,
+                                "fields": fields,
+                                "file_path": str(py_file),
+                            }
+                        )
 
             except Exception as e:
                 logger.debug(f"Error importing {module_name}: {e}")
@@ -176,5 +180,6 @@ def list_signatures_json() -> str:
             return list_signatures_json()
     """
     import json
+
     signatures = list_signatures()
     return json.dumps(signatures, indent=2)

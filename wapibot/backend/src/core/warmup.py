@@ -30,7 +30,7 @@ class WarmupService:
         "I have a Honda City",
         "My number is 9876543210",
         "Book for tomorrow",
-        "Thanks!"
+        "Thanks!",
     ]
 
     IDLE_PROMPT_TEMPLATE = "My name is Warmup Check"
@@ -51,7 +51,9 @@ class WarmupService:
 
     def __init__(self):
         self.last_activity = datetime.now()
-        self.last_warmup = self._load_last_warmup()  # Load from file (survives hot reload)
+        self.last_warmup = (
+            self._load_last_warmup()
+        )  # Load from file (survives hot reload)
         self.warmup_in_progress = False
 
         # Load config values (no magic numbers!)
@@ -110,6 +112,7 @@ class WarmupService:
         try:
             # Import here to avoid circular dependency
             from dspy_modules.extractors.name_extractor import NameExtractor
+
             extractor = NameExtractor()
 
             # Run warmup questions sequentially
@@ -117,7 +120,9 @@ class WarmupService:
                 try:
                     # Randomize prompt to bypass DSPy cache
                     prompt = self._randomize_prompt(prompt_template)
-                    logger.info(f"🔥 Warmup {i}/{len(self.STARTUP_PROMPT_TEMPLATES)}: {prompt_template[:30]}...")
+                    logger.info(
+                        f"🔥 Warmup {i}/{len(self.STARTUP_PROMPT_TEMPLATES)}: {prompt_template[:30]}..."
+                    )
 
                     # Run in executor (DSPy is sync)
                     loop = asyncio.get_event_loop()
@@ -127,12 +132,12 @@ class WarmupService:
                             lambda p=prompt: extractor(
                                 conversation_history=[],
                                 user_message=p,
-                                context="Warmup query"
-                            )
+                                context="Warmup query",
+                            ),
                         ),
-                        timeout=self.warmup_timeout  # From config (hardware dependent)
+                        timeout=self.warmup_timeout,  # From config (hardware dependent)
                     )
-                    #logger.info(f"✅ Warmup {i} complete")
+                    # logger.info(f"✅ Warmup {i} complete")
 
                 except asyncio.TimeoutError:
                     logger.warning(f"⏱️  Warmup {i} timed out (model still loading?)")
@@ -168,6 +173,7 @@ class WarmupService:
 
         try:
             from dspy_modules.extractors.name_extractor import NameExtractor
+
             extractor = NameExtractor()
 
             # Randomize prompt to bypass DSPy cache
@@ -180,10 +186,10 @@ class WarmupService:
                     lambda: extractor(
                         conversation_history=[],
                         user_message=prompt,
-                        context="Idle warmup"
-                    )
+                        context="Idle warmup",
+                    ),
                 ),
-                timeout=self.idle_timeout  # From config
+                timeout=self.idle_timeout,  # From config
             )
             logger.info("✅ Idle warmup complete")
             now = datetime.now()
@@ -213,7 +219,9 @@ class WarmupService:
             idle_threshold: Seconds of idle time before warmup (default: from config)
         """
         # Use parameter or fall back to config
-        threshold = idle_threshold if idle_threshold is not None else self.idle_threshold
+        threshold = (
+            idle_threshold if idle_threshold is not None else self.idle_threshold
+        )
 
         logger.info(f"🔍 Starting idle monitor (threshold: {threshold}s)")
 

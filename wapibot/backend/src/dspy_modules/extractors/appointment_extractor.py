@@ -6,7 +6,9 @@ Extracts date, time, and service type from conversation.
 import dspy
 from typing import List, Dict, Any
 
-from dspy_signatures.extraction.appointment_signature import AppointmentExtractionSignature
+from dspy_signatures.extraction.appointment_signature import (
+    AppointmentExtractionSignature,
+)
 from utils.history_utils import create_dspy_history
 from utils.validation_utils import map_confidence_to_float
 
@@ -22,7 +24,7 @@ class AppointmentExtractor(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Scheduling service appointment"
+        context: str = "Scheduling service appointment",
     ) -> Dict[str, Any]:
         """Extract appointment details from user message.
 
@@ -42,7 +44,7 @@ class AppointmentExtractor(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         confidence_str = getattr(result, "confidence", "medium")
@@ -52,5 +54,5 @@ class AppointmentExtractor(dspy.Module):
             "date_str": getattr(result, "date_str", "").strip(),
             "time_preference": getattr(result, "time_preference", "").strip(),
             "service_type": getattr(result, "service_type", "").strip(),
-            "confidence": confidence_float
+            "confidence": confidence_float,
         }

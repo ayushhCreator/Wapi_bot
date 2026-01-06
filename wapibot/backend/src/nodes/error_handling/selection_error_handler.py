@@ -29,7 +29,7 @@ async def handle_selection_error(
     state: BookingState,
     awaiting_step: str,
     error_message_builder: Optional[ErrorMessageBuilder] = None,
-    default_error: str = "Invalid selection. Please try again."
+    default_error: str = "Invalid selection. Please try again.",
 ) -> BookingState:
     """Generic selection error handler for node groups.
 

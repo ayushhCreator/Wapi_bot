@@ -72,9 +72,7 @@ async def node(
         phone_number = f"91{phone_number}"
         logger.info(f"📱 Added country code: 91{phone_number[-10:]}")
 
-    logger.info(
-        f"📸 Sending {media_type} to {phone_number}: {media_url[:50]}..."
-    )
+    logger.info(f"📸 Sending {media_type} to {phone_number}: {media_url[:50]}...")
 
     try:
         result = await client.send_media(

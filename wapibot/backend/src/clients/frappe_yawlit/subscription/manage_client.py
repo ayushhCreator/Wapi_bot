@@ -78,10 +78,12 @@ class SubscriptionManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_api.get_subscription_details",
-                {"subscription_id": subscription_id}
+                {"subscription_id": subscription_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error fetching subscription details for {subscription_id}: {e}")
+            logger.error(
+                f"Error fetching subscription details for {subscription_id}: {e}"
+            )
             raise
 
     async def submit_request(self, subscription_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -115,13 +117,15 @@ class SubscriptionManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.submit_subscription_request",
-                {"subscription_data": subscription_data}
+                {"subscription_data": subscription_data},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error submitting subscription request: {e}")
             raise
 
-    async def cancel_subscription(self, subscription_id: str, reason: Optional[str] = None) -> Dict[str, Any]:
+    async def cancel_subscription(
+        self, subscription_id: str, reason: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Cancel active subscription.
 
         Args:
@@ -147,10 +151,7 @@ class SubscriptionManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_api.cancel_my_subscription",
-                {
-                    "subscription_id": subscription_id,
-                    "reason": reason
-                }
+                {"subscription_id": subscription_id, "reason": reason},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error canceling subscription {subscription_id}: {e}")
@@ -177,7 +178,7 @@ class SubscriptionManageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.admin_subscription_lifecycle.pause_subscription",
-                {"subscription_id": subscription_id}
+                {"subscription_id": subscription_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error pausing subscription {subscription_id}: {e}")

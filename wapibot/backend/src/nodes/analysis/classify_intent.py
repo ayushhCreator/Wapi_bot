@@ -21,7 +21,7 @@ class ClassifyIntentNode:
         state: BookingState,
         conversation_history: List[Dict[str, str]],
         user_message: str,
-        context: str = "Classifying user intent"
+        context: str = "Classifying user intent",
     ) -> Dict[str, Any]:
         """Classify user intent.
 
@@ -38,7 +38,7 @@ class ClassifyIntentNode:
             return {
                 "intent": "general_question",
                 "confidence": 0.5,
-                "reasoning": "No message to classify"
+                "reasoning": "No message to classify",
             }
 
         # Build context from current state
@@ -49,7 +49,7 @@ class ClassifyIntentNode:
         result = self.classifier(
             conversation_history=conversation_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         return result

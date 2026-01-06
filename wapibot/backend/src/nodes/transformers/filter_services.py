@@ -25,7 +25,9 @@ class FilterServicesByVehicle:
         )
     """
 
-    def __call__(self, services: List[Dict[str, Any]], state: BookingState) -> List[Dict[str, Any]]:
+    def __call__(
+        self, services: List[Dict[str, Any]], state: BookingState
+    ) -> List[Dict[str, Any]]:
         """Filter services by vehicle type from state.
 
         Args:
@@ -56,7 +58,8 @@ class FilterServicesByVehicle:
 
         # Filter services by vehicle type
         filtered = [
-            service for service in services
+            service
+            for service in services
             if service.get("vehicle_type", "").lower() == vehicle_type.lower()
         ]
 

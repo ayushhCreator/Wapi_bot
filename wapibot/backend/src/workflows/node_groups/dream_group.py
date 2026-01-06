@@ -43,10 +43,10 @@ class OllamaDreamGenerator:
                     "options": {
                         "temperature": 0.9,  # High for creativity
                         "top_p": 0.95,
-                        "num_predict": 500
-                    }
+                        "num_predict": 500,
+                    },
                 },
-                timeout=60
+                timeout=60,
             )
             response.raise_for_status()
 
@@ -96,20 +96,22 @@ def create_dream_workflow() -> StateGraph:
     dream_gen = OllamaDreamGenerator()
 
     # Add nodes
-    workflow.add_node("recall",
+    workflow.add_node(
+        "recall",
         lambda s: recall_memories(
-            s,
-            memory_repo,
-            min_memories=settings.dream_min_conversations
-        ))
+            s, memory_repo, min_memories=settings.dream_min_conversations
+        ),
+    )
 
-    workflow.add_node("generate",
+    workflow.add_node(
+        "generate",
         lambda s: generate_dreams(
             s,
             dream_gen,
             model=settings.dream_ollama_model,
-            hallucination_ratio=settings.dream_hallucination_ratio
-        ))
+            hallucination_ratio=settings.dream_hallucination_ratio,
+        ),
+    )
 
     def skip_dream(state: BrainState) -> BrainState:
         """Skip dream generation if not enough memories."""
@@ -122,12 +124,7 @@ def create_dream_workflow() -> StateGraph:
     # Dream flow: recall → check → generate (or skip)
     workflow.set_entry_point("recall")
     workflow.add_conditional_edges(
-        "recall",
-        route_dream_action,
-        {
-            "generate": "generate",
-            "skip": "skip"
-        }
+        "recall", route_dream_action, {"generate": "generate", "skip": "skip"}
     )
     workflow.add_edge("generate", "__end__")
     workflow.add_edge("skip", "__end__")

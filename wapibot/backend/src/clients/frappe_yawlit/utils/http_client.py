@@ -15,16 +15,28 @@ from clients.frappe_yawlit.utils.exceptions import (
     ServerError,
     TimeoutError,
     ValidationError,
-    FrappeAPIError
+    FrappeAPIError,
 )
 
 logger = logging.getLogger(__name__)
 
 # Sensitive fields that should never be logged
 SENSITIVE_FIELDS: Set[str] = {
-    "password", "api_key", "api_secret", "token", "secret",
-    "authorization", "cookie", "session", "sid", "otp",
-    "credit_card", "cvv", "ssn", "phone_number", "email"
+    "password",
+    "api_key",
+    "api_secret",
+    "token",
+    "secret",
+    "authorization",
+    "cookie",
+    "session",
+    "sid",
+    "otp",
+    "credit_card",
+    "cvv",
+    "ssn",
+    "phone_number",
+    "email",
 }
 
 
@@ -72,7 +84,7 @@ class AsyncHTTPClient:
         self.client = httpx.AsyncClient(
             timeout=config.timeout,
             follow_redirects=False,  # Security: Prevent open redirect attacks
-            verify=True  # Security: Explicitly verify SSL certificates
+            verify=True,  # Security: Explicitly verify SSL certificates
         )
 
     async def close(self) -> None:
@@ -101,7 +113,9 @@ class AsyncHTTPClient:
         # Try to parse error message from response
         try:
             error_data = response.json()
-            message = error_data.get("message") or error_data.get("error") or response.text
+            message = (
+                error_data.get("message") or error_data.get("error") or response.text
+            )
         except Exception:
             error_data = {}
             message = response.text or f"HTTP {status_code} error"
@@ -126,7 +140,7 @@ class AsyncHTTPClient:
         method: str,
         endpoint: str,
         data: Dict[str, Any] | None = None,
-        params: Dict[str, Any] | None = None
+        params: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
         """Make HTTP request with retry logic.
 
@@ -159,11 +173,7 @@ class AsyncHTTPClient:
         while retries < self.max_retries:
             try:
                 response = await self.client.request(
-                    method=method,
-                    url=url,
-                    json=data,
-                    params=params,
-                    headers=headers
+                    method=method, url=url, json=data, params=params, headers=headers
                 )
 
                 # Check for HTTP errors
@@ -180,16 +190,24 @@ class AsyncHTTPClient:
             except httpx.TimeoutException as e:
                 retries += 1
                 last_exception = e
-                logger.warning(f"Request timeout (attempt {retries}/{self.max_retries}): {url}")
+                logger.warning(
+                    f"Request timeout (attempt {retries}/{self.max_retries}): {url}"
+                )
                 if retries >= self.max_retries:
-                    raise TimeoutError(f"Request timed out after {self.max_retries} attempts") from e
+                    raise TimeoutError(
+                        f"Request timed out after {self.max_retries} attempts"
+                    ) from e
 
             except httpx.NetworkError as e:
                 retries += 1
                 last_exception = e
-                logger.warning(f"Network error (attempt {retries}/{self.max_retries}): {url}")
+                logger.warning(
+                    f"Network error (attempt {retries}/{self.max_retries}): {url}"
+                )
                 if retries >= self.max_retries:
-                    raise NetworkError(f"Network error after {self.max_retries} attempts: {str(e)}") from e
+                    raise NetworkError(
+                        f"Network error after {self.max_retries} attempts: {str(e)}"
+                    ) from e
 
             except FrappeAPIError:
                 # Don't retry API errors (4xx, 5xx)
@@ -201,9 +219,13 @@ class AsyncHTTPClient:
 
         # Should never reach here
         if last_exception:
-            raise NetworkError(f"Request failed after {self.max_retries} retries") from last_exception
+            raise NetworkError(
+                f"Request failed after {self.max_retries} retries"
+            ) from last_exception
 
-    async def get(self, endpoint: str, params: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    async def get(
+        self, endpoint: str, params: Dict[str, Any] | None = None
+    ) -> Dict[str, Any]:
         """Make GET request.
 
         Args:
@@ -215,7 +237,9 @@ class AsyncHTTPClient:
         """
         return await self._request("GET", endpoint, params=params)
 
-    async def post(self, endpoint: str, data: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    async def post(
+        self, endpoint: str, data: Dict[str, Any] | None = None
+    ) -> Dict[str, Any]:
         """Make POST request.
 
         Args:
@@ -227,7 +251,9 @@ class AsyncHTTPClient:
         """
         return await self._request("POST", endpoint, data=data)
 
-    async def put(self, endpoint: str, data: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    async def put(
+        self, endpoint: str, data: Dict[str, Any] | None = None
+    ) -> Dict[str, Any]:
         """Make PUT request.
 
         Args:

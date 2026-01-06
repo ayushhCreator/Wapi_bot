@@ -27,7 +27,7 @@ async def process_vehicle_selection(state: BookingState) -> BookingState:
         state,
         selection_type="vehicle",
         options_key="vehicle_options",
-        selected_key="vehicle"
+        selected_key="vehicle",
     )
     # Clear current_step to indicate we're moving to the next step (service selection)
     if result.get("vehicle"):
@@ -39,8 +39,7 @@ async def process_vehicle_selection(state: BookingState) -> BookingState:
 async def send_vehicle_error(state: BookingState) -> BookingState:
     """Send error message for invalid vehicle selection."""
     return await handle_selection_error(
-        state,
-        awaiting_step="awaiting_vehicle_selection"
+        state, awaiting_step="awaiting_vehicle_selection"
     )
 
 
@@ -85,11 +84,21 @@ def create_vehicle_group() -> StateGraph:
     workflow.add_node("process_selection", process_vehicle_selection)
     workflow.add_node("send_error", send_vehicle_error)
     workflow.set_entry_point("entry")
-    workflow.add_conditional_edges("entry", route_vehicle_entry,
-        {"skip": "skip_selection", "show_options": "show_options", "process_selection": "process_selection"})
+    workflow.add_conditional_edges(
+        "entry",
+        route_vehicle_entry,
+        {
+            "skip": "skip_selection",
+            "show_options": "show_options",
+            "process_selection": "process_selection",
+        },
+    )
     workflow.add_edge("skip_selection", END)
     workflow.add_edge("show_options", END)
-    workflow.add_conditional_edges("process_selection", route_after_selection,
-        {"selection_error": "send_error", "selection_success": END})
+    workflow.add_conditional_edges(
+        "process_selection",
+        route_after_selection,
+        {"selection_error": "send_error", "selection_success": END},
+    )
     workflow.add_edge("send_error", END)
     return workflow.compile()

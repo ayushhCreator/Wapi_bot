@@ -9,5 +9,5 @@ __all__ = [
     "BookingCreateClient",
     "BookingManageClient",
     "ServiceCatalogClient",
-    "SlotAvailabilityClient"
+    "SlotAvailabilityClient",
 ]

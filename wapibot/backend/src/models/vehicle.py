@@ -13,17 +13,70 @@ from models.core import ExtractionMetadata
 
 # Valid Indian state RTO codes
 INDIAN_STATE_CODES = {
-    'AN', 'AP', 'AR', 'AS', 'BR', 'CG', 'CH', 'DD', 'DL', 'DN',
-    'GA', 'GJ', 'HP', 'HR', 'JH', 'JK', 'KA', 'KL', 'LA', 'LD',
-    'MH', 'ML', 'MN', 'MP', 'MZ', 'NL', 'OD', 'OR', 'PB', 'PY',
-    'RJ', 'SK', 'TN', 'TR', 'TS', 'UK', 'UP', 'WB'
+    "AN",
+    "AP",
+    "AR",
+    "AS",
+    "BR",
+    "CG",
+    "CH",
+    "DD",
+    "DL",
+    "DN",
+    "GA",
+    "GJ",
+    "HP",
+    "HR",
+    "JH",
+    "JK",
+    "KA",
+    "KL",
+    "LA",
+    "LD",
+    "MH",
+    "ML",
+    "MN",
+    "MP",
+    "MZ",
+    "NL",
+    "OD",
+    "OR",
+    "PB",
+    "PY",
+    "RJ",
+    "SK",
+    "TN",
+    "TR",
+    "TS",
+    "UK",
+    "UP",
+    "WB",
 }
 
 # Known vehicle brands for regex matching (lowercase)
 VEHICLE_BRANDS = [
-    "tata", "mahindra", "maruti", "suzuki", "honda", "toyota", "hyundai",
-    "ford", "chevrolet", "nissan", "volkswagen", "bmw", "mercedes", "audi",
-    "kia", "mg", "renault", "skoda", "jeep", "fiat", "volvo", "jaguar"
+    "tata",
+    "mahindra",
+    "maruti",
+    "suzuki",
+    "honda",
+    "toyota",
+    "hyundai",
+    "ford",
+    "chevrolet",
+    "nissan",
+    "volkswagen",
+    "bmw",
+    "mercedes",
+    "audi",
+    "kia",
+    "mg",
+    "renault",
+    "skoda",
+    "jeep",
+    "fiat",
+    "volvo",
+    "jaguar",
 ]
 
 
@@ -70,27 +123,20 @@ class VehicleBrand(str, Enum):
 class VehicleDetails(BaseModel):
     """Validated vehicle information."""
 
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra="forbid")
 
     brand: Union[VehicleBrand, str, None] = Field(
-        default=None,
-        description="Vehicle brand (enum or custom string)"
+        default=None, description="Vehicle brand (enum or custom string)"
     )
     model: Optional[str] = Field(
-        default=None,
-        max_length=50,
-        description="Vehicle model name"
+        default=None, max_length=50, description="Vehicle model name"
     )
     number_plate: Optional[str] = Field(
-        default=None,
-        max_length=20,
-        description="License plate (standardized format)"
+        default=None, max_length=20, description="License plate (standardized format)"
     )
-    metadata: ExtractionMetadata = Field(
-        description="Extraction metadata"
-    )
+    metadata: ExtractionMetadata = Field(description="Extraction metadata")
 
-    @field_validator('number_plate')
+    @field_validator("number_plate")
     @classmethod
     def validate_indian_license_plate(cls, v: Optional[str]) -> Optional[str]:
         """Validate and normalize Indian license plate format.
@@ -112,21 +158,21 @@ class VehicleDetails(BaseModel):
             return None
 
         # Reject placeholder values
-        if v.strip().lower() in ['none', 'unknown', 'n/a', 'tbd', '']:
+        if v.strip().lower() in ["none", "unknown", "n/a", "tbd", ""]:
             return None
 
         # Normalize: remove spaces, hyphens, dots, convert to uppercase
-        plate = v.replace(' ', '').replace('-', '').replace('.', '').upper()
+        plate = v.replace(" ", "").replace("-", "").replace(".", "").upper()
 
         # BH series format: 00BH0000XX (e.g., 22BH1234AB)
         # Pattern: 2 digits + BH + 4 digits + 2 letters
-        bh_pattern = r'^\d{2}BH\d{4}[A-Z]{2}$'
+        bh_pattern = r"^\d{2}BH\d{4}[A-Z]{2}$"
         if re.match(bh_pattern, plate):
             return plate
 
         # Indian standard format: XX00XX0000 (e.g., WB06AF1234)
         # Pattern: 2 letters (state code) + 2 digits + 1-2 letters + 4 digits
-        standard_pattern = r'^([A-Z]{2})(\d{2})([A-Z]{1,2})(\d{4})$'
+        standard_pattern = r"^([A-Z]{2})(\d{2})([A-Z]{1,2})(\d{4})$"
         match = re.match(standard_pattern, plate)
         if match:
             state_code = match.group(1)
@@ -145,7 +191,7 @@ class VehicleDetails(BaseModel):
             f"Expected formats: 'WB06AF1234' (standard) or '22BH1234AB' (BH series)"
         )
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_vehicle_details(self):
         """Validate vehicle details consistency."""
         # Model name validation (if present)
@@ -159,11 +205,10 @@ class VehicleDetails(BaseModel):
 
         return self
 
-    @field_validator('brand', 'model')
+    @field_validator("brand", "model")
     @classmethod
     def normalize_vehicle_fields(
-        cls,
-        v: Optional[Union[str, VehicleBrand]]
+        cls, v: Optional[Union[str, VehicleBrand]]
     ) -> Optional[Union[str, VehicleBrand]]:
         """Normalize brand and model fields (None allowed)."""
         if v is None:
@@ -178,9 +223,9 @@ class VehicleDetails(BaseModel):
             return None
 
         # Reject placeholder values
-        if v.strip().lower() in ['none', 'unknown', 'n/a', '']:
+        if v.strip().lower() in ["none", "unknown", "n/a", ""]:
             return None
 
         # Normalize whitespace
-        normalized = re.sub(r'\s+', ' ', v.strip())
+        normalized = re.sub(r"\s+", " ", v.strip())
         return normalized

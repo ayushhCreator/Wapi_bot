@@ -43,7 +43,7 @@ async def node(
     state: BookingState,
     predicate: Predicate,
     condition_name: str = "unnamed_condition",
-    respect_brain_mode: bool = True
+    respect_brain_mode: bool = True,
 ) -> BookingState:
     """Atomic condition evaluation node - works with ANY predicate function.
 

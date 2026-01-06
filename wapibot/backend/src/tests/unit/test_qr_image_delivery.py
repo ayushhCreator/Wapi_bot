@@ -12,12 +12,15 @@ import os
 import asyncio
 import httpx
 import time
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from core.config import settings
 from services.qr_service import qr_service
 from clients.wapi import get_wapi_client
-from nodes.message_builders.payment_instructions import build_payment_instructions_caption
+from nodes.message_builders.payment_instructions import (
+    build_payment_instructions_caption,
+)
 import uuid
 
 
@@ -42,18 +45,15 @@ async def test_qr_image_delivery():
     # Step 1: Generate QR
     print("\n⏳ Step 1: Generating QR code...")
     upi_string = qr_service.generate_upi_string(
-        amount=amount,
-        transaction_note=f"Test Booking {session_id[:8]}"
+        amount=amount, transaction_note=f"Test Booking {session_id[:8]}"
     )
     qr_bytes, qr_path = qr_service.generate_qr_image(
-        upi_string=upi_string,
-        session_id=session_id,
-        save_to_disk=True
+        upi_string=upi_string, session_id=session_id, save_to_disk=True
     )
     print(f"   ✅ QR generated: {qr_path}")
     print(f"   📦 Size: {len(qr_bytes)} bytes")
     time.sleep(5)
-    
+
     # Step 2: Verify endpoint
     print("\n⏳ Step 2: Testing QR endpoint...")
     endpoint_url = f"{settings.public_base_url}/api/v1/qr/{session_id}.png"
@@ -86,7 +86,7 @@ async def test_qr_image_delivery():
             phone_number=phone,
             media_type="image",
             media_url=endpoint_url,
-            caption=caption
+            caption=caption,
         )
 
         wamid = result.get("data", {}).get("wamid", "N/A")
@@ -99,6 +99,7 @@ async def test_qr_image_delivery():
     except Exception as e:
         print(f"   ❌ Failed to send: {e}")
         import traceback
+
         traceback.print_exc()
         return
 

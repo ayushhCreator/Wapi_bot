@@ -18,16 +18,24 @@ from models.websocket_session import WebSocketSessionTable
 logger = logging.getLogger(__name__)
 
 # Explicitly reference table to avoid "unused import" warnings
-__all__ = ['WebSocketDatabaseConnection', 'websocket_db_connection', 'WebSocketSessionTable']
+__all__ = [
+    "WebSocketDatabaseConnection",
+    "websocket_db_connection",
+    "WebSocketSessionTable",
+]
 
 # Database configuration
-WEBSOCKET_DB_PATH = Path(__file__).parent.parent.parent / "data" / "websocket_sessions.db"
+WEBSOCKET_DB_PATH = (
+    Path(__file__).parent.parent.parent / "data" / "websocket_sessions.db"
+)
 WEBSOCKET_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # Security: Set restrictive permissions on database directory
 try:
     os.chmod(WEBSOCKET_DB_PATH.parent, 0o700)  # Only owner can read/write/execute
-    logger.debug(f"WebSocket DB directory permissions set to 0o700: {WEBSOCKET_DB_PATH.parent}")
+    logger.debug(
+        f"WebSocket DB directory permissions set to 0o700: {WEBSOCKET_DB_PATH.parent}"
+    )
 except Exception as e:
     logger.warning(f"Could not set WebSocket DB directory permissions: {e}")
 
@@ -38,7 +46,7 @@ WEBSOCKET_DATABASE_URL = f"sqlite+aiosqlite:///{WEBSOCKET_DB_PATH}"
 class WebSocketDatabaseConnection:
     """Async SQLite database connection manager for WebSocket sessions."""
 
-    _instance: Optional['WebSocketDatabaseConnection'] = None
+    _instance: Optional["WebSocketDatabaseConnection"] = None
     _engine: Optional[AsyncEngine] = None
     _session_factory: Optional[sessionmaker] = None
 
@@ -79,9 +87,7 @@ class WebSocketDatabaseConnection:
         if self._session_factory is None:
             engine = await self.get_engine()
             self._session_factory = sessionmaker(
-                bind=engine,
-                class_=AsyncSession,
-                expire_on_commit=False
+                bind=engine, class_=AsyncSession, expire_on_commit=False
             )
 
         return self._session_factory()
@@ -101,7 +107,9 @@ class WebSocketDatabaseConnection:
         if WEBSOCKET_DB_PATH.exists():
             try:
                 os.chmod(WEBSOCKET_DB_PATH, 0o600)  # Only owner can read/write
-                logger.debug(f"WebSocket DB file permissions set to 0o600: {WEBSOCKET_DB_PATH}")
+                logger.debug(
+                    f"WebSocket DB file permissions set to 0o600: {WEBSOCKET_DB_PATH}"
+                )
             except Exception as e:
                 logger.warning(f"Could not set WebSocket DB file permissions: {e}")
 

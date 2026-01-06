@@ -61,9 +61,7 @@ class TestCreateDSpyHistory:
 
     def test_single_turn_history(self):
         """Test with single conversation turn."""
-        history = [
-            {"role": "user", "content": "Hello"}
-        ]
+        history = [{"role": "user", "content": "Hello"}]
         result = create_dspy_history(history)
 
         assert len(result.messages) == 1
@@ -100,18 +98,14 @@ class TestCreateDSpyHistory:
 
     def test_role_preservation(self):
         """Test that roles are preserved correctly."""
-        history = [
-            {"role": "user", "content": "Test"}
-        ]
+        history = [{"role": "user", "content": "Test"}]
         result = create_dspy_history(history)
 
         assert result.messages[0]["role"] == "user"
 
     def test_multiline_content(self):
         """Test handling of multiline content."""
-        history = [
-            {"role": "user", "content": "Line 1\nLine 2\nLine 3"}
-        ]
+        history = [{"role": "user", "content": "Line 1\nLine 2\nLine 3"}]
         result = create_dspy_history(history)
 
         assert "Line 1\nLine 2\nLine 3" in result.messages[0]["content"]

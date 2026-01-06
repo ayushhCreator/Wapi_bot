@@ -96,10 +96,12 @@ class CustomerProfileClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.get_profile_by_phone",
-                {"phone_number": phone_number}
+                {"phone_number": phone_number},
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error fetching customer profile by phone {phone_number}: {e}")
+            logger.error(
+                f"Error fetching customer profile by phone {phone_number}: {e}"
+            )
             raise
 
     async def complete_profile(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -133,7 +135,7 @@ class CustomerProfileClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.complete_profile",
-                {"data": data}
+                {"data": data},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error completing profile: {e}")
@@ -157,7 +159,7 @@ class CustomerProfileClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.update_profile",
-                {"data": data}
+                {"data": data},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error updating profile: {e}")
@@ -207,13 +209,15 @@ class CustomerProfileClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.add_vehicle",
-                {"vehicle_data": vehicle_data}
+                {"vehicle_data": vehicle_data},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error adding vehicle: {e}")
             raise
 
-    async def update_vehicle(self, vehicle_name: str, vehicle_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_vehicle(
+        self, vehicle_name: str, vehicle_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update vehicle information.
 
         Args:
@@ -232,10 +236,7 @@ class CustomerProfileClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.update_vehicle",
-                {
-                    "vehicle_name": vehicle_name,
-                    "vehicle_data": vehicle_data
-                }
+                {"vehicle_name": vehicle_name, "vehicle_data": vehicle_data},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error updating vehicle {vehicle_name}: {e}")
@@ -256,7 +257,7 @@ class CustomerProfileClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.customer_portal.delete_vehicle",
-                {"vehicle_name": vehicle_name}
+                {"vehicle_name": vehicle_name},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error deleting vehicle {vehicle_name}: {e}")

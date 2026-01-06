@@ -21,7 +21,7 @@ class DetectTyposNode:
         state: BookingState,
         user_message: str,
         field_name: str,
-        extracted_value: str
+        extracted_value: str,
     ) -> Dict[str, Any]:
         """Detect typos in extracted value.
 
@@ -39,14 +39,14 @@ class DetectTyposNode:
                 "has_typo": False,
                 "suggested_correction": "",
                 "confidence": 0.9,
-                "reasoning": "No value to check"
+                "reasoning": "No value to check",
             }
 
         # Call DSPy typo detector
         result = self.detector(
             user_message=user_message,
             field_context=field_name,
-            extracted_value=extracted_value
+            extracted_value=extracted_value,
         )
 
         return result

@@ -12,7 +12,7 @@ from core.brain_toggles import (
     can_escalate_human,
     can_cancel_booking,
     can_reset_flow,
-    can_create_dynamic_graph
+    can_create_dynamic_graph,
 )
 from repositories.brain_decision_repo import BrainDecisionRepository
 from tasks.dream_task import run_dream_cycle
@@ -29,13 +29,17 @@ class BrainService:
         self.settings = get_brain_settings()
         self.decision_repo = BrainDecisionRepository()
 
-    async def trigger_dream(self, force: bool = False, min_conversations: int | None = None) -> Dict[str, Any]:
+    async def trigger_dream(
+        self, force: bool = False, min_conversations: int | None = None
+    ) -> Dict[str, Any]:
         """Trigger dream cycle."""
         logger.info("🌙 Triggering dream cycle...")
         result = run_dream_cycle.delay()
         return {"task_id": result.id, "status": "queued"}
 
-    async def trigger_training(self, optimizer: str = "gepa", num_iterations: int = 100) -> Dict[str, Any]:
+    async def trigger_training(
+        self, optimizer: str = "gepa", num_iterations: int = 100
+    ) -> Dict[str, Any]:
         """Trigger GEPA optimization."""
         logger.info(f"🧠 Triggering {optimizer} optimization...")
         result = run_gepa_optimization.delay(num_iterations)
@@ -49,8 +53,8 @@ class BrainService:
             "features": self.get_feature_toggles(),
             "metrics": {
                 "dream_enabled": self.settings.dream_enabled,
-                "rl_gym_enabled": self.settings.rl_gym_enabled
-            }
+                "rl_gym_enabled": self.settings.rl_gym_enabled,
+            },
         }
 
     def get_feature_toggles(self) -> Dict[str, bool]:
@@ -64,7 +68,7 @@ class BrainService:
             "escalate_human": can_escalate_human(),
             "cancel_booking": can_cancel_booking(),
             "flow_reset": can_reset_flow(),
-            "dynamic_graph": can_create_dynamic_graph()
+            "dynamic_graph": can_create_dynamic_graph(),
         }
 
     async def get_recent_decisions(self, limit: int = 100) -> List[Dict[str, Any]]:

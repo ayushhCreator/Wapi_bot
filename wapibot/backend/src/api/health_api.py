@@ -21,7 +21,7 @@ from api.health_checks import (
     check_celery_health,
     check_database_health,
     check_frappe_api_health,
-    check_configuration_health
+    check_configuration_health,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ async def root():
     return {
         "status": "healthy",
         "service": settings.app_name,
-        "version": settings.app_version
+        "version": settings.app_version,
     }
 
 
@@ -56,13 +56,19 @@ async def health_check():
             capture_output=True,
             text=True,
             timeout=60,
-            cwd="."
+            cwd=".",
         )
 
         # Parse pytest output for summary
-        output_lines = result.stdout.strip().split('\n')
-        summary_line = next((line for line in reversed(output_lines)
-                           if 'passed' in line or 'failed' in line), "")
+        output_lines = result.stdout.strip().split("\n")
+        summary_line = next(
+            (
+                line
+                for line in reversed(output_lines)
+                if "passed" in line or "failed" in line
+            ),
+            "",
+        )
 
         test_passed = result.returncode == 0
         elapsed = (datetime.now() - start_time).total_seconds()
@@ -74,7 +80,7 @@ async def health_check():
             "test_summary": summary_line.strip(),
             "exit_code": result.returncode,
             "service": settings.app_name,
-            "version": settings.app_version
+            "version": settings.app_version,
         }
 
     except subprocess.TimeoutExpired:
@@ -83,7 +89,7 @@ async def health_check():
             "timestamp": datetime.now().isoformat(),
             "error": "Test suite timed out after 60 seconds",
             "service": settings.app_name,
-            "version": settings.app_version
+            "version": settings.app_version,
         }
     except Exception as e:
         return {
@@ -91,7 +97,7 @@ async def health_check():
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "service": settings.app_name,
-            "version": settings.app_version
+            "version": settings.app_version,
         }
 
 
@@ -114,8 +120,7 @@ async def readiness_probe():
         return health_status
     else:
         return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content=health_status
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=health_status
         )
 
 
@@ -139,7 +144,7 @@ async def api_doctor():
         "timestamp": datetime.now().isoformat(),
         "overall_status": "healthy",
         "checks": {},
-        "recommendations": []
+        "recommendations": [],
     }
 
     # Run all diagnostic checks

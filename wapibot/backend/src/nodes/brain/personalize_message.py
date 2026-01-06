@@ -15,10 +15,7 @@ class Personalizer(Protocol):
     """Protocol for message personalization modules."""
 
     def __call__(
-        self,
-        base_message: str,
-        customer_profile: dict,
-        conversation_history: list
+        self, base_message: str, customer_profile: dict, conversation_history: list
     ) -> dict:
         """Generate personalized message suggestion.
 
@@ -28,10 +25,7 @@ class Personalizer(Protocol):
         ...
 
 
-def node(
-    state: BrainState,
-    personalizer: Personalizer
-) -> BrainState:
+def node(state: BrainState, personalizer: Personalizer) -> BrainState:
     """Atomic node: Suggest personalized message modifications.
 
     CRITICAL: Suggestions are LOGGED ONLY, never sent to customers.
@@ -70,7 +64,7 @@ def node(
         suggestion = personalizer(
             base_message=proposed_response,
             customer_profile=customer,
-            conversation_history=history
+            conversation_history=history,
         )
 
         # Create suggestion record
@@ -82,7 +76,7 @@ def node(
             "modifications": suggestion.get("modifications", []),
             "confidence": suggestion.get("confidence", 0.0),
             "reasoning": suggestion.get("reasoning", ""),
-            "customer_profile": customer
+            "customer_profile": customer,
         }
 
         # Log suggestion (NEVER modify actual response)

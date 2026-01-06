@@ -24,10 +24,7 @@ class SlotAvailabilityClient:
         self.http = http_client
 
     async def get_available_slots_enhanced(
-        self,
-        service_id: str,
-        date: str,
-        vehicle_type: Optional[str] = None
+        self, service_id: str, date: str, vehicle_type: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get enhanced available slots for a specific date.
 
@@ -61,18 +58,17 @@ class SlotAvailabilityClient:
                 {
                     "service_id": service_id,
                     "date_str": date,  # Frappe endpoint expects "date_str" parameter
-                    "vehicle_type": vehicle_type
-                }
+                    "vehicle_type": vehicle_type,
+                },
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error fetching available slots for {service_id} on {date}: {e}")
+            logger.error(
+                f"Error fetching available slots for {service_id} on {date}: {e}"
+            )
             raise
 
     async def get_calendar_availability(
-        self,
-        service_id: str,
-        month: str,
-        year: str
+        self, service_id: str, month: str, year: str
     ) -> Dict[str, Any]:
         """Get calendar availability overview for entire month.
 
@@ -102,11 +98,7 @@ class SlotAvailabilityClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.get_calendar_availability_enhanced",
-                {
-                    "service_id": service_id,
-                    "month": month,
-                    "year": year
-                }
+                {"service_id": service_id, "month": month, "year": year},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching calendar availability for {service_id}: {e}")
@@ -136,7 +128,7 @@ class SlotAvailabilityClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.check_slot_availability",
-                {"slot_id": slot_id}
+                {"slot_id": slot_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error checking slot availability for {slot_id}: {e}")

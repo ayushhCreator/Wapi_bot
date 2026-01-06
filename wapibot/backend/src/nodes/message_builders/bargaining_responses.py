@@ -26,7 +26,9 @@ class BargainingResponseBuilder:
             Appropriate response for current bargaining stage
         """
         stage = state.get("bargaining_stage", 1)
-        service_name = state.get("selected_service", {}).get("product_name", "this service")
+        service_name = state.get("selected_service", {}).get(
+            "product_name", "this service"
+        )
 
         if stage == 1:
             return self._distract_response(service_name, state)

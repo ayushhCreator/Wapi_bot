@@ -7,7 +7,9 @@ from nodes.atomic.send_message import node as send_message_node
 from nodes.atomic.send_media import node as send_media_node
 from nodes.atomic.call_frappe import node as call_frappe_node
 from nodes.message_builders.booking_confirmation import BookingConfirmationBuilder
-from nodes.message_builders.payment_instructions import build_payment_instructions_caption
+from nodes.message_builders.payment_instructions import (
+    build_payment_instructions_caption,
+)
 from nodes.payments import generate_qr_node, schedule_reminders_node
 from nodes.routing.resume_router import create_resume_router
 from nodes.domain import calculate_booking_price
@@ -38,6 +40,7 @@ async def send_confirmation(state: BookingState) -> BookingState:
 async def extract_confirmation(state: BookingState) -> BookingState:
     """Extract YES/NO confirmation using domain extraction node."""
     from nodes.extraction import extract_confirmation as extract_confirmation_node
+
     result = await extract_confirmation_node.node(state, field_path="confirmed")
     logger.info(f"🔍 Confirmation: {result.get('confirmed')}")
     return result
@@ -59,10 +62,17 @@ async def create_booking(state: BookingState) -> BookingState:
     client = get_yawlit_client()
     transformer = ExtractBookingParams()
     booking_params = transformer(None, state)
+
     def state_extractor(s):
         return booking_params
+
     logger.info("📝 Creating booking via API...")
-    result = await call_frappe_node(state, client.booking_create.create_booking_by_phone, "booking_api_response", state_extractor=state_extractor)
+    result = await call_frappe_node(
+        state,
+        client.booking_create.create_booking_by_phone,
+        "booking_api_response",
+        state_extractor=state_extractor,
+    )
     api_response = result.get("booking_api_response", {})
     message = api_response.get("message", {})
     result["booking_response"] = message
@@ -77,7 +87,9 @@ async def generate_payment_qr(state: BookingState) -> BookingState:
     amount = state.get("total_price")
     booking_id = state.get("booking_id", "Unknown")
     logger.info(f"🔍 Generating QR for booking: {booking_id}")
-    return await generate_qr_node(state, amount=amount, transaction_note=f"Yawlit Booking {booking_id}")
+    return await generate_qr_node(
+        state, amount=amount, transaction_note=f"Yawlit Booking {booking_id}"
+    )
 
 
 async def schedule_payment_reminders(state: BookingState) -> BookingState:
@@ -87,12 +99,14 @@ async def schedule_payment_reminders(state: BookingState) -> BookingState:
 
 async def send_qr_message(state: BookingState) -> BookingState:
     """Send QR code IMAGE with professional payment instructions."""
+
     def qr_media_builder(s):
         session_id = s.get("payment_session_id")
         amount = s.get("payment_amount", 0)
         media_url = f"{settings.public_base_url}/api/v1/qr/{session_id}.png"
         caption = build_payment_instructions_caption(amount)
         return {"media_type": "image", "media_url": media_url, "caption": caption}
+
     return await send_media_node(state, qr_media_builder)
 
 
@@ -108,6 +122,7 @@ async def send_success(state: BookingState) -> BookingState:
 
 async def send_cancelled(state: BookingState) -> BookingState:
     """Send booking cancelled message."""
+
     def cancelled_message(s):
         return "❌ Booking cancelled. Feel free to start a new booking anytime!"
 
@@ -116,12 +131,28 @@ async def send_cancelled(state: BookingState) -> BookingState:
 
 async def send_unclear(state: BookingState) -> BookingState:
     """Send message for unclear confirmation."""
+    retry_count = state.get("confirmation_retry_count", 0) + 1
+
+    if retry_count >= 3:
+        # Escalate after 3 failures
+        def escalation_message(s):
+            return "I'm having trouble understanding. Let me connect you with support."
+
+        result = await send_message_node(state, escalation_message)
+        result["should_proceed"] = True
+        result["current_step"] = "escalate_to_human"
+        result["confirmation_retry_count"] = retry_count
+        return result
+
     def unclear_message(s):
         return "Please reply with YES to confirm or NO to cancel the booking."
 
     result = await send_message_node(state, unclear_message)
     result["should_proceed"] = False  # Stop and wait for next user message
-    result["current_step"] = "awaiting_booking_confirmation"  # Resume here on next message
+    result["current_step"] = (
+        "awaiting_booking_confirmation"  # Resume here on next message
+    )
+    result["confirmation_retry_count"] = retry_count
     return result
 
 
@@ -137,7 +168,7 @@ route_booking_entry = create_resume_router(
     resume_node="extract_confirmation",
     fresh_node="calculate_price",
     readiness_check=lambda s: s.get("total_price") is not None,
-    router_name="booking_entry"
+    router_name="booking_entry",
 )
 
 
@@ -158,12 +189,25 @@ def create_booking_group() -> StateGraph:
     workflow.add_node("send_unclear", send_unclear)
     workflow.set_entry_point("propose_response")
     workflow.add_edge("propose_response", "entry")
-    workflow.add_conditional_edges("entry", route_booking_entry,
-        {"calculate_price": "calculate_price", "extract_confirmation": "extract_confirmation"})
+    workflow.add_conditional_edges(
+        "entry",
+        route_booking_entry,
+        {
+            "calculate_price": "calculate_price",
+            "extract_confirmation": "extract_confirmation",
+        },
+    )
     workflow.add_edge("calculate_price", "send_confirmation")
     workflow.add_edge("send_confirmation", END)
-    workflow.add_conditional_edges("extract_confirmation", route_confirmation,
-        {"confirmed": "create_booking", "cancelled": "send_cancelled", "unclear": "send_unclear"})
+    workflow.add_conditional_edges(
+        "extract_confirmation",
+        route_confirmation,
+        {
+            "confirmed": "create_booking",
+            "cancelled": "send_cancelled",
+            "unclear": "send_unclear",
+        },
+    )
     workflow.add_edge("create_booking", "generate_payment_qr")
     workflow.add_edge("generate_payment_qr", "schedule_payment_reminders")
     workflow.add_edge("schedule_payment_reminders", "send_qr_message")

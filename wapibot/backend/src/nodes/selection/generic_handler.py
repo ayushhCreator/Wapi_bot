@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 async def handle_selection(
     state: BookingState,
-    selection_type: str,      # "vehicle" | "service" | "slot" | "addon"
-    options_key: str,         # "vehicle_options" | "service_options" | ...
-    selected_key: str,        # "vehicle" | "service" | "slot" | "addons"
-    user_input_key: str = "user_message"
+    selection_type: str,  # "vehicle" | "service" | "slot" | "addon"
+    options_key: str,  # "vehicle_options" | "service_options" | ...
+    selected_key: str,  # "vehicle" | "service" | "slot" | "addons"
+    user_input_key: str = "user_message",
 ) -> BookingState:
     """Process user selection from a list of options.
 
@@ -39,7 +39,9 @@ async def handle_selection(
     user_input = state.get(user_input_key, "").strip()
     options = state.get(options_key, [])
 
-    logger.info(f"Processing {selection_type} selection: '{user_input}' from {len(options)} options")
+    logger.info(
+        f"Processing {selection_type} selection: '{user_input}' from {len(options)} options"
+    )
 
     # Validate input is numeric
     try:

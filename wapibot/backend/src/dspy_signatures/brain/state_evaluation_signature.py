@@ -15,7 +15,7 @@ class StateEvaluationSignature(dspy.Signature):
     conversation_history: str = dspy.InputField(
         desc="Recent conversation messages (role: content format)"
     )
-    booking_state: str = dspy.InputField(
+    current_state: str = dspy.InputField(
         desc="Current booking progress (profile, vehicle, service, slot status)"
     )
 
@@ -28,6 +28,4 @@ class StateEvaluationSignature(dspy.Signature):
     user_satisfaction: float = dspy.OutputField(
         desc="Estimated user satisfaction (0.0-1.0)"
     )
-    reasoning: str = dspy.OutputField(
-        desc="Reasoning for the evaluation scores"
-    )
+    reasoning: str = dspy.OutputField(desc="Reasoning for the evaluation scores")

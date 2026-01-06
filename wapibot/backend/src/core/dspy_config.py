@@ -42,13 +42,26 @@ class DSPyConfigurator:
         model_name = f"openrouter/{settings.openrouter_model}"
         logger.info(f"Initializing OpenRouter: {model_name}")
 
-        return dspy.LM(model=model_name, api_base=settings.openrouter_base_url, api_key=settings.openrouter_api_key, timeout=settings.openrouter_timeout, extra_headers={"HTTP-Referer": settings.openrouter_site_url, "X-Title": settings.openrouter_app_name})
+        return dspy.LM(
+            model=model_name,
+            api_base=settings.openrouter_base_url,
+            api_key=settings.openrouter_api_key,
+            timeout=settings.openrouter_timeout,
+            extra_headers={
+                "HTTP-Referer": settings.openrouter_site_url,
+                "X-Title": settings.openrouter_app_name,
+            },
+        )
 
     def _get_openai_lm(self) -> dspy.LM:
         """Initialize OpenAI LLM."""
         logger.info(f"Initializing OpenAI: {settings.openai_model}")
 
-        return dspy.LM(model=settings.openai_model, api_key=settings.openai_api_key, timeout=settings.openai_timeout)
+        return dspy.LM(
+            model=settings.openai_model,
+            api_key=settings.openai_api_key,
+            timeout=settings.openai_timeout,
+        )
 
     def configure(self):
         """Configure primary LLM based on settings."""

@@ -13,10 +13,12 @@ class RegexVehicleExtractor:
 
     # Indian license plate patterns
     # Standard: XX00XX0000 (e.g., WB06AF1234)
-    STANDARD_PLATE_PATTERN = r'\b([A-Z]{2})[\s\-]?(\d{2})[\s\-]?([A-Z]{1,2})[\s\-]?(\d{4})\b'
+    STANDARD_PLATE_PATTERN = (
+        r"\b([A-Z]{2})[\s\-]?(\d{2})[\s\-]?([A-Z]{1,2})[\s\-]?(\d{4})\b"
+    )
 
     # BH series: 00XX0000XX (e.g., 22BH1234AB)
-    BH_PLATE_PATTERN = r'\b\d{2}[\s\-]?BH[\s\-]?\d{4}[\s\-]?[A-Z]{2}\b'
+    BH_PLATE_PATTERN = r"\b\d{2}[\s\-]?BH[\s\-]?\d{4}[\s\-]?[A-Z]{2}\b"
 
     def extract(self, message: str) -> Optional[Dict[str, str]]:
         """Extract vehicle brand and/or number plate from message.
@@ -60,7 +62,7 @@ class RegexVehicleExtractor:
         if match:
             plate = match.group(0)
             # Normalize: remove spaces and hyphens
-            return plate.replace(' ', '').replace('-', '')
+            return plate.replace(" ", "").replace("-", "")
 
         # Try standard format and validate state code
         match = re.search(self.STANDARD_PLATE_PATTERN, message)
@@ -70,7 +72,7 @@ class RegexVehicleExtractor:
             if state_code in INDIAN_STATE_CODES:
                 plate = match.group(0)
                 # Normalize: remove spaces and hyphens
-                return plate.replace(' ', '').replace('-', '')
+                return plate.replace(" ", "").replace("-", "")
 
         return None
 
@@ -86,7 +88,7 @@ class RegexVehicleExtractor:
         # Check for each brand
         for brand in VEHICLE_BRANDS:
             # Look for brand as whole word
-            pattern = r'\b' + re.escape(brand) + r'\b'
+            pattern = r"\b" + re.escape(brand) + r"\b"
             if re.search(pattern, message):
                 # Return capitalized brand
                 return brand.capitalize()

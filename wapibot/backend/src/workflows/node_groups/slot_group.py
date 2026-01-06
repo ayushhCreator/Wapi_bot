@@ -44,13 +44,17 @@ async def fetch_slots(state: BookingState) -> BookingState:
         date = start_date + timedelta(days=i)
         date_str = date.strftime("%Y-%m-%d")
         try:
-            response = await client.slot_availability.get_available_slots_enhanced(service_id=service_id, date=date_str, vehicle_type=vehicle_type)
+            response = await client.slot_availability.get_available_slots_enhanced(
+                service_id=service_id, date=date_str, vehicle_type=vehicle_type
+            )
             slots = response.get("message", {}).get("slots", [])
             if not slots:
                 slots = response.get("slots", [])
             if not slots and isinstance(response.get("message"), list):
                 slots = response["message"]
-            available_slots = [slot for slot in slots if slot.get("available", True) is not False]
+            available_slots = [
+                slot for slot in slots if slot.get("available", True) is not False
+            ]
             logger.info(f"📅 {len(available_slots)} available slot(s) for {date_str}")
             for slot in available_slots:
                 slot["date"] = date_str
@@ -71,17 +75,50 @@ async def fetch_slots(state: BookingState) -> BookingState:
 
 async def format_and_send_slots(state: BookingState) -> BookingState:
     """Filter, group, and send slots to customer, then pause for user input."""
-    filtered = await transform_node(state, FilterSlotsByPreference(), "slot_options", "filtered_slot_options")
-    grouped = await transform_node(filtered, GroupSlotsByTime(), "filtered_slot_options", "grouped_slots")
+    filtered = await transform_node(
+        state, FilterSlotsByPreference(), "slot_options", "filtered_slot_options"
+    )
+    grouped = await transform_node(
+        filtered, GroupSlotsByTime(), "filtered_slot_options", "grouped_slots"
+    )
     result = await send_message_node(grouped, GroupedSlotsBuilder())
     result["should_proceed"] = False
     result["current_step"] = "awaiting_slot_selection"
     return result
 
 
+async def ensure_filtered_slots(state: BookingState) -> BookingState:
+    """Ensure filtered_slot_options exists (regenerate if missing on resume)."""
+    if not state.get("filtered_slot_options") and state.get("slot_options"):
+        logger.info("🔄 Regenerating filtered_slot_options on resume")
+        state = await transform_node(
+            state, FilterSlotsByPreference(), "slot_options", "filtered_slot_options"
+        )
+    return state
+
+
 async def process_slot_selection(state: BookingState) -> BookingState:
     """Process slot selection from user."""
-    result = await handle_selection(state, selection_type="slot", options_key="filtered_slot_options", selected_key="slot")
+    # Ensure filtered_slot_options exists (regenerate if missing on resume)
+    state = await ensure_filtered_slots(state)
+
+    # Validate state before processing
+    slot_opts = state.get("slot_options", [])
+    filtered_opts = state.get("filtered_slot_options", [])
+    logger.info(f"📊 Slot state: {len(slot_opts)} raw, {len(filtered_opts)} filtered")
+
+    if len(filtered_opts) == 0 and len(slot_opts) > 0:
+        logger.error("⚠️ BUG: filtered_slot_options empty but slot_options exists!")
+        # Regenerate filtered options as fallback
+        state = await ensure_filtered_slots(state)
+        filtered_opts = state.get("filtered_slot_options", [])
+
+    result = await handle_selection(
+        state,
+        selection_type="slot",
+        options_key="filtered_slot_options",
+        selected_key="slot",
+    )
     if result.get("slot"):
         result["current_step"] = ""
         result["should_proceed"] = True
@@ -90,10 +127,7 @@ async def process_slot_selection(state: BookingState) -> BookingState:
 
 async def send_slot_error(state: BookingState) -> BookingState:
     """Send error message for invalid slot selection."""
-    return await handle_selection_error(
-        state,
-        awaiting_step="awaiting_slot_selection"
-    )
+    return await handle_selection_error(state, awaiting_step="awaiting_slot_selection")
 
 
 # Create resume router for entry point
@@ -101,8 +135,8 @@ route_slot_entry = create_resume_router(
     awaiting_step="awaiting_slot_selection",
     resume_node="process_selection",
     fresh_node="fetch_slots",
-    readiness_check=lambda s: bool(s.get("slot_options")),
-    router_name="slot_entry"
+    readiness_check=lambda s: bool(s.get("filtered_slot_options")),
+    router_name="slot_entry",
 )
 
 
@@ -115,11 +149,17 @@ def create_slot_group() -> StateGraph:
     workflow.add_node("process_selection", process_slot_selection)
     workflow.add_node("send_error", send_slot_error)
     workflow.set_entry_point("entry")
-    workflow.add_conditional_edges("entry", route_slot_entry,
-        {"fetch_slots": "fetch_slots", "process_selection": "process_selection"})
+    workflow.add_conditional_edges(
+        "entry",
+        route_slot_entry,
+        {"fetch_slots": "fetch_slots", "process_selection": "process_selection"},
+    )
     workflow.add_edge("fetch_slots", "show_slots")
     workflow.add_edge("show_slots", END)
-    workflow.add_conditional_edges("process_selection", route_after_selection,
-        {"selection_error": "send_error", "selection_success": END})
+    workflow.add_conditional_edges(
+        "process_selection",
+        route_after_selection,
+        {"selection_error": "send_error", "selection_success": END},
+    )
     workflow.add_edge("send_error", END)
     return workflow.compile()

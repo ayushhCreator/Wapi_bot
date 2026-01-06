@@ -58,9 +58,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content={
                     "detail": "Rate limit exceeded",
                     "limit": limit,
-                    "window": "1 second"
+                    "window": "1 second",
                 },
-                headers={"Retry-After": "1"}
+                headers={"Retry-After": "1"},
             )
 
         # Get remaining requests

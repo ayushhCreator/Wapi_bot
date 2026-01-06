@@ -16,10 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_redis_connection(
-    host: str = 'localhost',
-    port: int = 6379,
-    db: int = 0,
-    timeout: int = 2
+    host: str = "localhost", port: int = 6379, db: int = 0, timeout: int = 2
 ) -> bool:
     """Check if Redis is accessible.
 
@@ -41,8 +38,7 @@ def check_redis_connection(
 
 
 def ensure_redis_running(
-    compose_file: Optional[Path] = None,
-    max_wait_seconds: int = 10
+    compose_file: Optional[Path] = None, max_wait_seconds: int = 10
 ) -> bool:
     """Ensure Redis is running, auto-start via docker-compose if not.
 
@@ -72,7 +68,7 @@ def ensure_redis_running(
             ["docker-compose", "-f", str(compose_file), "up", "-d", "redis"],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Wait for Redis to be ready

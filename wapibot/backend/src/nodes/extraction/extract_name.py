@@ -35,10 +35,7 @@ def regex_fallback(message: str) -> Dict[str, Any]:
     raise ValueError("Regex name extraction failed")
 
 
-async def node(
-    state: BookingState,
-    timeout: Optional[float] = None
-) -> BookingState:
+async def node(state: BookingState, timeout: Optional[float] = None) -> BookingState:
     """Extract customer name using atomic extract.node().
 
     Tier 1: DSPy extraction (via extract.node)
@@ -60,5 +57,5 @@ async def node(
         field_path="customer",  # Will set customer.first_name, customer.last_name
         fallback_fn=regex_fallback,
         timeout=timeout,
-        metadata_path="extraction.name_meta"
+        metadata_path="extraction.name_meta",
     )

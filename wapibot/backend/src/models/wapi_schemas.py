@@ -34,14 +34,11 @@ class WAPIMessage(BaseModel):
     whatsapp_message_id: str = Field(..., examples=["wamid.abc123"])
     replied_to_whatsapp_message_id: Optional[str] = Field(None)
     is_new_message: bool = Field(..., examples=[True])
-    body: Optional[str] = Field(
-        None,
-        examples=["I want to book a car wash"]
-    )
+    body: Optional[str] = Field(None, examples=["I want to book a car wash"])
     status: Optional[str] = Field(None)
     media: Optional[Union[WAPIMedia, List]] = None
 
-    @field_validator('media', mode='before')
+    @field_validator("media", mode="before")
     @classmethod
     def handle_empty_media(cls, v):
         """Convert empty array to None for media field."""
@@ -56,8 +53,7 @@ class WAPIWebhookPayload(BaseModel):
     contact: WAPIContact
     message: WAPIMessage
     whatsapp_webhook_payload: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="Raw WhatsApp webhook data"
+        default=None, description="Raw WhatsApp webhook data"
     )
 
     class Config:
@@ -71,14 +67,14 @@ class WAPIWebhookPayload(BaseModel):
                     "last_name": "Kumar",
                     "email": "ravi@example.com",
                     "language_code": "en",
-                    "country": "india"
+                    "country": "india",
                 },
                 "message": {
                     "whatsapp_business_phone_number_id": "123456",
                     "whatsapp_message_id": "wamid.abc123",
                     "is_new_message": True,
-                    "body": "I want to book a car wash for tomorrow"
-                }
+                    "body": "I want to book a car wash for tomorrow",
+                },
             }
         }
 

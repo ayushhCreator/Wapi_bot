@@ -9,9 +9,7 @@ class NameExtractionSignature(dspy.Signature):
     conversation_history: dspy.History = dspy.InputField(
         desc="Full conversation history for context"
     )
-    user_message = dspy.InputField(
-        desc="User's message that may contain their name"
-    )
+    user_message = dspy.InputField(desc="User's message that may contain their name")
     context = dspy.InputField(
         desc="Conversation context indicating we're collecting name"
     )
@@ -22,6 +20,4 @@ class NameExtractionSignature(dspy.Signature):
     last_name = dspy.OutputField(
         desc="Extracted last name if provided, empty string otherwise"
     )
-    confidence = dspy.OutputField(
-        desc="Confidence in extraction (low/medium/high)"
-    )
+    confidence = dspy.OutputField(desc="Confidence in extraction (low/medium/high)")

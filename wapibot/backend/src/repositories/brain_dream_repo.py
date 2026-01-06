@@ -21,13 +21,20 @@ class BrainDreamRepository:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO brain_dreams VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            dream.dream_id, dream.timestamp, dream.model_used,
-            dream.conversations_processed, dream.dreams_generated,
-            dream.patterns_learned, ""  # dream_data placeholder
-        ))
+        """,
+            (
+                dream.dream_id,
+                dream.timestamp,
+                dream.model_used,
+                dream.conversations_processed,
+                dream.dreams_generated,
+                dream.patterns_learned,
+                "",  # dream_data placeholder
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -38,9 +45,12 @@ class BrainDreamRepository:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM brain_dreams ORDER BY timestamp DESC LIMIT ?
-        """, (limit,))
+        """,
+            (limit,),
+        )
 
         rows = cursor.fetchall()
         conn.close()

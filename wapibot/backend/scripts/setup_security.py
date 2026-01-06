@@ -3,7 +3,6 @@
 One-time setup: generates keys, encrypts secrets in .env.txt
 """
 
-import os
 import secrets
 import sys
 from pathlib import Path
@@ -94,9 +93,9 @@ def main():
     # Generate master key
     if not master_key_path.exists():
         generate_master_key(master_key_path)
-        print(f"✓ Generated master.key (AES-256 key)")
+        print("✓ Generated master.key (AES-256 key)")
     else:
-        print(f"⚠️  master.key already exists, skipping")
+        print("⚠️  master.key already exists, skipping")
 
     # Initialize secret manager
     secret_manager = SecretManager(str(master_key_path))
@@ -104,7 +103,7 @@ def main():
     # Generate JWT secret
     jwt_secret = secrets.token_urlsafe(32)
     jwt_secret_enc = secret_manager.encrypt_value(jwt_secret)
-    print(f"✓ Generated JWT secret key")
+    print("✓ Generated JWT secret key")
 
     # Generate API keys
     admin_key = generate_api_key("sk_live")
@@ -119,7 +118,7 @@ def main():
     # Generate field encryption key
     field_key = secrets.token_urlsafe(32)
     field_key_enc = secret_manager.encrypt_value(field_key)
-    print(f"✓ Generated field encryption key")
+    print("✓ Generated field encryption key")
 
     # Update .env.txt
     updates = {
@@ -132,7 +131,7 @@ def main():
     }
 
     update_env_file(env_path, updates)
-    print(f"✓ Updated .env.txt with encrypted secrets")
+    print("✓ Updated .env.txt with encrypted secrets")
 
     # Instructions
     print("\n" + "=" * 50)

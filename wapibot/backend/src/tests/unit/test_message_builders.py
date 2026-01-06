@@ -7,9 +7,7 @@ from message_builders.booking_confirmation import BookingConfirmationBuilder
 
 def test_greeting_builder_with_customer_name():
     """Test GreetingBuilder with customer first name."""
-    state = {
-        "customer": {"first_name": "Rahul", "last_name": "Sharma"}
-    }
+    state = {"customer": {"first_name": "Rahul", "last_name": "Sharma"}}
 
     builder = GreetingBuilder()
     message = builder(state)
@@ -35,8 +33,16 @@ def test_service_catalog_builder_with_services():
     """Test ServiceCatalogBuilder with multiple services."""
     state = {
         "filtered_services": [
-            {"product_name": "Premium Wash", "base_price": 499, "description": "Complete wash and wax"},
-            {"product_name": "Basic Wash", "base_price": 299, "description": "Quick exterior wash"}
+            {
+                "product_name": "Premium Wash",
+                "base_price": 499,
+                "description": "Complete wash and wax",
+            },
+            {
+                "product_name": "Basic Wash",
+                "base_price": 299,
+                "description": "Quick exterior wash",
+            },
         ]
     }
 
@@ -84,7 +90,7 @@ def test_booking_confirmation_builder_complete():
         "vehicle": {"brand": "TATA", "model": "Nexon", "number_plate": "MH12AB1234"},
         "selected_service": {"product_name": "Premium Wash", "base_price": 499},
         "appointment": {"date": "2025-12-25", "time_slot": "10:00 AM - 12:00 PM"},
-        "total_price": 499
+        "total_price": 499,
     }
 
     builder = BookingConfirmationBuilder()
@@ -104,10 +110,7 @@ def test_booking_confirmation_builder_complete():
 
 def test_booking_confirmation_builder_minimal():
     """Test BookingConfirmationBuilder with minimal data."""
-    state = {
-        "selected_service": {"product_name": "Basic Wash"},
-        "total_price": 299
-    }
+    state = {"selected_service": {"product_name": "Basic Wash"}, "total_price": 299}
 
     builder = BookingConfirmationBuilder()
     message = builder(state)
@@ -120,9 +123,7 @@ def test_booking_confirmation_builder_minimal():
 
 def test_booking_confirmation_builder_no_price():
     """Test BookingConfirmationBuilder with missing price."""
-    state = {
-        "selected_service": {"product_name": "Service"}
-    }
+    state = {"selected_service": {"product_name": "Service"}}
 
     builder = BookingConfirmationBuilder()
     message = builder(state)

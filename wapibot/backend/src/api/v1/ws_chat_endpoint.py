@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 async def websocket_chat(
     websocket: WebSocket,
     conversation_id: str,
-    token: str = Query(None)  # Optional JWT token for authentication
+    token: str = Query(None),  # Optional JWT token for authentication
 ):
     """WebSocket endpoint for real-time chat.
 
@@ -61,23 +61,23 @@ async def websocket_chat(
             conversation_id=conversation_id,
             websocket_id=websocket_id,
             websocket=websocket,
-            user_id=None  # TODO: Extract from validated token
+            user_id=None,  # TODO: Extract from validated token
         )
 
         # Get Redis client for publishing
         redis_client = await aioredis.from_url(
-            settings.celery_broker_url,
-            encoding="utf-8",
-            decode_responses=True
+            settings.celery_broker_url, encoding="utf-8", decode_responses=True
         )
 
         # Send connection success message
-        await websocket.send_json({
-            "type": "connection_established",
-            "websocket_id": websocket_id,
-            "conversation_id": conversation_id,
-            "message": "Connected to WapiBot WebSocket"
-        })
+        await websocket.send_json(
+            {
+                "type": "connection_established",
+                "websocket_id": websocket_id,
+                "conversation_id": conversation_id,
+                "message": "Connected to WapiBot WebSocket",
+            }
+        )
 
         # Message loop
         while True:
@@ -114,7 +114,7 @@ async def websocket_chat(
                 "should_confirm": False,
                 "should_proceed": True,
                 "service_request_id": None,
-                "service_request": None
+                "service_request": None,
             }
 
             # Run V2 full workflow
@@ -127,18 +127,20 @@ async def websocket_chat(
                     {
                         "conversation_id": conversation_id,
                         "type": "message",
-                        "data": json.dumps({
-                            "response": result.get("response", ""),
-                            "should_confirm": result.get("should_confirm", False),
-                            "completeness": result.get("completeness", 0.0),
-                            "extracted_data": {
-                                "customer": result.get("customer"),
-                                "vehicle": result.get("vehicle"),
-                                "appointment": result.get("appointment")
+                        "data": json.dumps(
+                            {
+                                "response": result.get("response", ""),
+                                "should_confirm": result.get("should_confirm", False),
+                                "completeness": result.get("completeness", 0.0),
+                                "extracted_data": {
+                                    "customer": result.get("customer"),
+                                    "vehicle": result.get("vehicle"),
+                                    "appointment": result.get("appointment"),
+                                },
                             }
-                        }),
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
+                        ),
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
                 )
 
                 logger.info(
@@ -149,24 +151,23 @@ async def websocket_chat(
             except Exception as e:
                 logger.error(
                     f"Workflow execution failed for {websocket_id[:8]}...: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
 
                 # Send error message to client
-                await websocket.send_json({
-                    "type": "error",
-                    "message": "Failed to process message. Please try again.",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "message": "Failed to process message. Please try again.",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
     except WebSocketDisconnect:
         logger.info(f"📡 WebSocket disconnected (client): {websocket_id[:8]}...")
 
     except Exception as e:
-        logger.error(
-            f"WebSocket error for {websocket_id[:8]}...: {e}",
-            exc_info=True
-        )
+        logger.error(f"WebSocket error for {websocket_id[:8]}...: {e}", exc_info=True)
 
     finally:
         # Cleanup: Unregister from Redis + SQLite

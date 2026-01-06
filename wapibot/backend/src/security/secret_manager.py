@@ -57,10 +57,10 @@ class SecretManager:
         nonce = os.urandom(12)
 
         # Encrypt plaintext
-        ciphertext = aesgcm.encrypt(nonce, plaintext.encode('utf-8'), None)
+        ciphertext = aesgcm.encrypt(nonce, plaintext.encode("utf-8"), None)
 
         # Combine nonce + ciphertext and base64 encode
-        blob = base64.b64encode(nonce + ciphertext).decode('utf-8')
+        blob = base64.b64encode(nonce + ciphertext).decode("utf-8")
 
         return f"ENC[{blob}]"
 
@@ -89,7 +89,7 @@ class SecretManager:
         aesgcm = AESGCM(key)
         plaintext_bytes = aesgcm.decrypt(nonce, ciphertext, None)
 
-        return plaintext_bytes.decode('utf-8')
+        return plaintext_bytes.decode("utf-8")
 
 
 # Global secret manager instance

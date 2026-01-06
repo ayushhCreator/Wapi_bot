@@ -39,9 +39,7 @@ async def node(state: BookingState) -> BookingState:
 
             # Fetch PaymentSession
             result = await db_session.execute(
-                select(PaymentSession).where(
-                    PaymentSession.session_id == session_id
-                )
+                select(PaymentSession).where(PaymentSession.session_id == session_id)
             )
             session = result.scalar_one_or_none()
 

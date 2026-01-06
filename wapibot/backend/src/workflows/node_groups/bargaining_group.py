@@ -17,10 +17,10 @@ def detect_bargaining(message: str) -> bool:
     message_lower = message.lower()
 
     bargaining_patterns = [
-        r'\b(discount|cheaper|reduce|lower|less|expensive|costly)\b',
-        r'\b(kam|sasta|mehenga)\b',  # Hindi
-        r'\b(price.?down|bring.?down)\b',
-        r'\b(negotiate|deal|offer)\b'
+        r"\b(discount|cheaper|reduce|lower|less|expensive|costly)\b",
+        r"\b(kam|sasta|mehenga)\b",  # Hindi
+        r"\b(price.?down|bring.?down)\b",
+        r"\b(negotiate|deal|offer)\b",
     ]
 
     for pattern in bargaining_patterns:
@@ -84,15 +84,18 @@ async def detect_conflict(state: BookingState) -> BookingState:
 def create_bargaining_group() -> StateGraph:
     """Create bargaining handler workflow with brain conflict detection."""
     workflow = StateGraph(BookingState)
-    workflow.add_node("detect_conflict", detect_conflict)  # Brain detects bargaining/frustration FIRST
+    workflow.add_node(
+        "detect_conflict", detect_conflict
+    )  # Brain detects bargaining/frustration FIRST
     workflow.add_node("initialize", initialize_bargaining)
     workflow.add_node("respond", send_bargaining_response)
     workflow.add_node("escalate", mark_for_escalation)
     workflow.set_entry_point("detect_conflict")  # Brain observes before any action
     workflow.add_edge("detect_conflict", "initialize")
     workflow.add_conditional_edges(
-        "initialize", route_bargaining_stage,
-        {"respond": "respond", "escalate": "escalate"}
+        "initialize",
+        route_bargaining_stage,
+        {"respond": "respond", "escalate": "escalate"},
     )
     workflow.add_edge("respond", END)
     workflow.add_edge("escalate", END)

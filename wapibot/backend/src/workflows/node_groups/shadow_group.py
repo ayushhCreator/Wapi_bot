@@ -9,7 +9,7 @@ from nodes.brain import (
     state_evaluator,
     goal_decomposer,
     response_proposer,
-    log_decision
+    log_decision,
 )
 from dspy_modules.module_loader import load_all_modules
 from repositories.brain_decision_repo import BrainDecisionRepository
@@ -50,21 +50,19 @@ def create_shadow_workflow(use_optimized: bool = None) -> StateGraph:
     response_gen = modules["response"]
     decision_repo = BrainDecisionRepository()
 
-    logger.info(f"🧠 Shadow workflow using {'optimized' if use_optimized else 'baseline'} modules")
+    logger.info(
+        f"🧠 Shadow workflow using {'optimized' if use_optimized else 'baseline'} modules"
+    )
 
     # Add brain processing nodes
-    workflow.add_node("monitor_conflict",
-        lambda s: conflict_monitor(s, conflict_detector))
-    workflow.add_node("predict_intent",
-        lambda s: intent_predictor(s, intent_pred))
-    workflow.add_node("evaluate_quality",
-        lambda s: state_evaluator(s, quality_eval))
-    workflow.add_node("decompose_goals",
-        lambda s: goal_decomposer(s, goal_decomp))
-    workflow.add_node("propose_response",
-        lambda s: response_proposer(s, response_gen))
-    workflow.add_node("log_to_gym",
-        lambda s: log_decision(s, decision_repo))
+    workflow.add_node(
+        "monitor_conflict", lambda s: conflict_monitor(s, conflict_detector)
+    )
+    workflow.add_node("predict_intent", lambda s: intent_predictor(s, intent_pred))
+    workflow.add_node("evaluate_quality", lambda s: state_evaluator(s, quality_eval))
+    workflow.add_node("decompose_goals", lambda s: goal_decomposer(s, goal_decomp))
+    workflow.add_node("propose_response", lambda s: response_proposer(s, response_gen))
+    workflow.add_node("log_to_gym", lambda s: log_decision(s, decision_repo))
 
     # Linear flow: observe → process → log (no action)
     workflow.set_entry_point("monitor_conflict")

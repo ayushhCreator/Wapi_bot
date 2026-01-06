@@ -56,14 +56,16 @@ async def node(state: BookingState) -> BookingState:
                     "product_id": selected_service.get("name"),
                     "addon_ids": addon_ids,
                     "electricity_provided": s.get("electricity_provided", 1),
-                    "water_provided": s.get("water_provided", 1)
+                    "water_provided": s.get("water_provided", 1),
                 }
             }
 
             addon_names = [a.get("addon") for a in addon_ids] if addon_ids else []
-            logger.info(f"💰 Price params: product={selected_service.get('name')}, "
-                       f"addons={addon_names}, elec={s.get('electricity_provided', 1)}, "
-                       f"water={s.get('water_provided', 1)}")
+            logger.info(
+                f"💰 Price params: product={selected_service.get('name')}, "
+                f"addons={addon_names}, elec={s.get('electricity_provided', 1)}, "
+                f"water={s.get('water_provided', 1)}"
+            )
             return price_params
 
         logger.info("💰 Calling calculate_booking_price API...")
@@ -71,7 +73,7 @@ async def node(state: BookingState) -> BookingState:
             state,
             client.booking_create.calculate_price,
             "price_breakdown",
-            state_extractor=extract_price_params
+            state_extractor=extract_price_params,
         )
 
         # Extract total_price from API response
@@ -81,11 +83,14 @@ async def node(state: BookingState) -> BookingState:
 
         if total_price and total_price > 0:
             result["total_price"] = total_price
-            addon_amount = (price_breakdown.get('addon_price', 0) or
-                          price_breakdown.get('addons_total', 0))
-            logger.info(f"💰 API price: ₹{total_price} "
-                       f"(base: {price_breakdown.get('base_price', 0)}, "
-                       f"addons: {addon_amount}, tax: {price_breakdown.get('tax', 0)})")
+            addon_amount = price_breakdown.get("addon_price", 0) or price_breakdown.get(
+                "addons_total", 0
+            )
+            logger.info(
+                f"💰 API price: ₹{total_price} "
+                f"(base: {price_breakdown.get('base_price', 0)}, "
+                f"addons: {addon_amount}, tax: {price_breakdown.get('tax', 0)})"
+            )
             logger.info(f"💰 Full price breakdown: {price_breakdown}")
             return result
         else:
@@ -93,13 +98,15 @@ async def node(state: BookingState) -> BookingState:
 
     except Exception as e:
         # Fallback to base price
-        logger.warning(f"💰 Price calculation failed: {e}. Using base_price: ₹{base_price}")
+        logger.warning(
+            f"💰 Price calculation failed: {e}. Using base_price: ₹{base_price}"
+        )
         state["total_price"] = base_price
         state["price_breakdown"] = {
             "base_price": base_price,
             "addon_price": 0,
             "discount": 0,
             "tax": 0,
-            "total_price": base_price
+            "total_price": base_price,
         }
         return state

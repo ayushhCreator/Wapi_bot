@@ -56,10 +56,14 @@ async def extract_address_selection(state: BookingState) -> BookingState:
             selected_address = addresses[selection - 1]
             state["selected_address_id"] = selected_address.get("name")
             state["address_selected"] = True
-            logger.info(f"🏠 Address selected: {selected_address.get('name')} (option {selection})")
+            logger.info(
+                f"🏠 Address selected: {selected_address.get('name')} (option {selection})"
+            )
         else:
             state["address_selected"] = False
-            logger.warning(f"Invalid selection: {selection} (out of range 1-{len(addresses)})")
+            logger.warning(
+                f"Invalid selection: {selection} (out of range 1-{len(addresses)})"
+            )
     except ValueError:
         # Not a number, try fuzzy matching
         state["address_selected"] = False
@@ -83,9 +87,15 @@ async def validate_address_selection(state: BookingState) -> BookingState:
 
 async def send_invalid_address_selection(state: BookingState) -> BookingState:
     """Send message for invalid address selection."""
+
     def error_msg(s):
         return f"Please reply with a valid number between 1 and {len(s.get('addresses', []))}."
-    return await handle_selection_error(state, awaiting_step="awaiting_address_selection", error_message_builder=error_msg)
+
+    return await handle_selection_error(
+        state,
+        awaiting_step="awaiting_address_selection",
+        error_message_builder=error_msg,
+    )
 
 
 def route_address_count(state: BookingState) -> str:
@@ -115,7 +125,7 @@ route_address_entry = create_resume_router(
     resume_node="extract_selection",
     fresh_node="check_count",
     readiness_check=lambda s: not s.get("address_selected", False),
-    router_name="address_entry"
+    router_name="address_entry",
 )
 
 
@@ -129,13 +139,25 @@ def create_address_group() -> StateGraph:
     workflow.add_node("validate_address_selection", validate_address_selection)
     workflow.add_node("send_invalid_address_selection", send_invalid_address_selection)
     workflow.set_entry_point("entry")
-    workflow.add_conditional_edges("entry", route_address_entry,
-        {"check_count": "check_address_count", "extract_selection": "extract_address_selection"})
-    workflow.add_conditional_edges("check_address_count", route_address_count,
-        {"auto_selected": END, "show_options": "show_address_options", "error": END})
+    workflow.add_conditional_edges(
+        "entry",
+        route_address_entry,
+        {
+            "check_count": "check_address_count",
+            "extract_selection": "extract_address_selection",
+        },
+    )
+    workflow.add_conditional_edges(
+        "check_address_count",
+        route_address_count,
+        {"auto_selected": END, "show_options": "show_address_options", "error": END},
+    )
     workflow.add_edge("show_address_options", END)
     workflow.add_edge("extract_address_selection", "validate_address_selection")
-    workflow.add_conditional_edges("validate_address_selection", route_address_validation,
-        {"valid": END, "invalid": "send_invalid_address_selection"})
+    workflow.add_conditional_edges(
+        "validate_address_selection",
+        route_address_validation,
+        {"valid": END, "invalid": "send_invalid_address_selection"},
+    )
     workflow.add_edge("send_invalid_address_selection", END)
     return workflow.compile()

@@ -31,19 +31,30 @@ class BrainDecisionRepository:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO brain_decisions VALUES
             (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            decision.decision_id, decision.conversation_id,
-            decision.timestamp.isoformat(), decision.user_message,
-            decision.conversation_history, decision.state_snapshot,
-            decision.conflict_detected, decision.predicted_intent,
-            decision.proposed_response, decision.confidence,
-            decision.brain_mode, decision.action_taken,
-            decision.response_sent, decision.user_response,
-            decision.workflow_outcome, decision.user_satisfaction
-        ))
+        """,
+            (
+                decision.decision_id,
+                decision.conversation_id,
+                decision.timestamp.isoformat(),
+                decision.user_message,
+                decision.conversation_history,
+                decision.state_snapshot,
+                decision.conflict_detected,
+                decision.predicted_intent,
+                decision.proposed_response,
+                decision.confidence,
+                decision.brain_mode,
+                decision.action_taken,
+                decision.response_sent,
+                decision.user_response,
+                decision.workflow_outcome,
+                decision.user_satisfaction,
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -54,10 +65,13 @@ class BrainDecisionRepository:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM brain_decisions
             ORDER BY timestamp DESC LIMIT ?
-        """, (limit,))
+        """,
+            (limit,),
+        )
 
         rows = cursor.fetchall()
         conn.close()
@@ -78,7 +92,9 @@ class BrainDecisionRepository:
         mode_counts = {row[0]: row[1] for row in cursor.fetchall()}
 
         # Calculate average confidence
-        cursor.execute("SELECT AVG(confidence) FROM brain_decisions WHERE confidence IS NOT NULL")
+        cursor.execute(
+            "SELECT AVG(confidence) FROM brain_decisions WHERE confidence IS NOT NULL"
+        )
         avg_confidence = cursor.fetchone()[0] or 0.0
 
         conn.close()
@@ -87,5 +103,5 @@ class BrainDecisionRepository:
             "shadow_observations": mode_counts.get("shadow", 0),
             "reflex_actions": mode_counts.get("reflex", 0),
             "conscious_decisions": mode_counts.get("conscious", 0),
-            "learning_accuracy": round(avg_confidence, 2)
+            "learning_accuracy": round(avg_confidence, 2),
         }

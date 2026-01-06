@@ -21,5 +21,5 @@ __all__ = [
     "intent_metric",
     "quality_metric",
     "goals_metric",
-    "response_metric"
+    "response_metric",
 ]

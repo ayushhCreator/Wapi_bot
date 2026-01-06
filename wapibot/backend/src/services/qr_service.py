@@ -22,9 +22,7 @@ class QRGenerationService:
     def __init__(self):
         """Initialize QR service with storage path from config."""
         self.upi_id = settings.upi_id
-        self.qr_storage_path = (
-            Path(__file__).parent.parent.parent / "data" / "qr_codes"
-        )
+        self.qr_storage_path = Path(__file__).parent.parent.parent / "data" / "qr_codes"
         self.qr_storage_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"QR storage path: {self.qr_storage_path}")
 
@@ -82,7 +80,7 @@ class QRGenerationService:
         qr.make(fit=True)
 
         # Convert to RGB for WAPI compatibility (requires RGB/RGBA, 8-bit/channel)
-        img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
+        img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
 
         # Convert to PNG bytes
         img_bytes_io = io.BytesIO()

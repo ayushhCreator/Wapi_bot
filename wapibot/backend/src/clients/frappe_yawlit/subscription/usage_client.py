@@ -46,10 +46,12 @@ class SubscriptionUsageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_usage_api.get_subscription_usage",
-                {"subscription_id": subscription_id}
+                {"subscription_id": subscription_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
-            logger.error(f"Error fetching subscription usage for {subscription_id}: {e}")
+            logger.error(
+                f"Error fetching subscription usage for {subscription_id}: {e}"
+            )
             raise
 
     async def get_wash_history(self, subscription_id: str) -> Dict[str, Any]:
@@ -76,7 +78,7 @@ class SubscriptionUsageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_usage_api.get_wash_history",
-                {"subscription_id": subscription_id}
+                {"subscription_id": subscription_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching wash history for {subscription_id}: {e}")
@@ -105,7 +107,7 @@ class SubscriptionUsageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_usage_api.get_remaining_washes",
-                {"subscription_id": subscription_id}
+                {"subscription_id": subscription_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching remaining washes for {subscription_id}: {e}")
@@ -134,7 +136,7 @@ class SubscriptionUsageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.subscription_wash_cancellation.get_subscription_usage_summary",
-                {"subscription_id": subscription_id}
+                {"subscription_id": subscription_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching usage summary for {subscription_id}: {e}")
@@ -163,7 +165,7 @@ class SubscriptionUsageClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.service_usage_analytics.get_subscription_usage_analytics",
-                {"subscription_id": subscription_id}
+                {"subscription_id": subscription_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching usage analytics for {subscription_id}: {e}")

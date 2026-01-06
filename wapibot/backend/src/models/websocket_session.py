@@ -19,46 +19,33 @@ class WebSocketSessionTable(SQLModel, table=True):
     __tablename__ = "websocket_sessions"
 
     id: Optional[int] = Field(
-        default=None,
-        primary_key=True,
-        description="Auto-incrementing primary key"
+        default=None, primary_key=True, description="Auto-incrementing primary key"
     )
     websocket_id: str = Field(
-        unique=True,
-        index=True,
-        description="Unique WebSocket connection ID (UUID)"
+        unique=True, index=True, description="Unique WebSocket connection ID (UUID)"
     )
-    conversation_id: str = Field(
-        index=True,
-        description="Conversation/phone number ID"
-    )
-    user_id: Optional[str] = Field(
-        default=None,
-        description="Optional user identifier"
-    )
+    conversation_id: str = Field(index=True, description="Conversation/phone number ID")
+    user_id: Optional[str] = Field(default=None, description="Optional user identifier")
     connected_at: datetime = Field(
         default_factory=datetime.utcnow,
-        description="Connection establishment timestamp (UTC)"
+        description="Connection establishment timestamp (UTC)",
     )
     disconnected_at: Optional[datetime] = Field(
-        default=None,
-        description="Connection termination timestamp (UTC)"
+        default=None, description="Connection termination timestamp (UTC)"
     )
     duration_seconds: Optional[int] = Field(
         default=None,
-        description="Connection duration in seconds (calculated on disconnect)"
+        description="Connection duration in seconds (calculated on disconnect)",
     )
     messages_sent: int = Field(
-        default=0,
-        description="Number of messages sent to client"
+        default=0, description="Number of messages sent to client"
     )
     messages_received: int = Field(
-        default=0,
-        description="Number of messages received from client"
+        default=0, description="Number of messages received from client"
     )
     disconnect_reason: Optional[str] = Field(
         default=None,
-        description="Disconnect reason: client_close, timeout, error, server_shutdown"
+        description="Disconnect reason: client_close, timeout, error, server_shutdown",
     )
 
 

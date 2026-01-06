@@ -22,7 +22,6 @@ ENDPOINT_SECURITY_CONFIG = {
         "rate_limit": 5,
         "force_auth_in_dev": True,
     },
-
     # Brain Endpoints - DoS Risk
     "/brain/dream": {
         "requires_auth": True,
@@ -49,20 +48,17 @@ ENDPOINT_SECURITY_CONFIG = {
         "required_scopes": ["brain", "admin"],
         "rate_limit": 5,
     },
-
     # QR Endpoint - Enumeration Risk
     "/api/v1/qr/.*": {
         "requires_auth": False,  # Public (WAPI needs access)
         "rate_limit": 8,
         "force_rate_limit_in_dev": True,  # Always rate limit
     },
-
     # Chat Endpoint - Public but rate limited
     "/api/v1/chat": {
         "requires_auth": False,
         "rate_limit": 5,
     },
-
     # WAPI Webhook - Has HMAC validation in endpoint
     "/api/v1/wapi/webhook": {
         "requires_auth": True,  # HMAC handled in endpoint

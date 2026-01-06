@@ -10,7 +10,7 @@ def test_filter_services_by_vehicle_type():
         {"product_name": "Car Wash", "vehicle_type": "Hatchback", "base_price": 299},
         {"product_name": "SUV Wash", "vehicle_type": "SUV", "base_price": 499},
         {"product_name": "Basic Wash", "vehicle_type": "Hatchback", "base_price": 199},
-        {"product_name": "Sedan Wash", "vehicle_type": "Sedan", "base_price": 349}
+        {"product_name": "Sedan Wash", "vehicle_type": "Sedan", "base_price": 349},
     ]
 
     state = {"vehicle": {"vehicle_type": "Hatchback"}}
@@ -28,7 +28,7 @@ def test_filter_services_case_insensitive():
     """Test FilterServicesByVehicle is case insensitive."""
     services = [
         {"product_name": "Service 1", "vehicle_type": "hatchback", "base_price": 100},
-        {"product_name": "Service 2", "vehicle_type": "HATCHBACK", "base_price": 200}
+        {"product_name": "Service 2", "vehicle_type": "HATCHBACK", "base_price": 200},
     ]
 
     state = {"vehicle": {"vehicle_type": "Hatchback"}}
@@ -43,7 +43,7 @@ def test_filter_services_no_vehicle_type():
     """Test FilterServicesByVehicle returns all when no vehicle type."""
     services = [
         {"product_name": "Service 1", "vehicle_type": "Hatchback", "base_price": 100},
-        {"product_name": "Service 2", "vehicle_type": "SUV", "base_price": 200}
+        {"product_name": "Service 2", "vehicle_type": "SUV", "base_price": 200},
     ]
 
     state = {}  # No vehicle type
@@ -56,9 +56,7 @@ def test_filter_services_no_vehicle_type():
 
 def test_filter_services_no_matches():
     """Test FilterServicesByVehicle with no matching services."""
-    services = [
-        {"product_name": "SUV Wash", "vehicle_type": "SUV", "base_price": 499}
-    ]
+    services = [{"product_name": "SUV Wash", "vehicle_type": "SUV", "base_price": 499}]
 
     state = {"vehicle": {"vehicle_type": "Hatchback"}}
 
@@ -73,7 +71,7 @@ def test_format_slot_options_with_slots():
     slots = [
         {"date": "2025-12-25", "time_slot": "10:00 AM - 12:00 PM", "available": True},
         {"date": "2025-12-25", "time_slot": "2:00 PM - 4:00 PM", "available": True},
-        {"date": "2025-12-26", "time_slot": "10:00 AM - 12:00 PM", "available": True}
+        {"date": "2025-12-26", "time_slot": "10:00 AM - 12:00 PM", "available": True},
     ]
 
     state = {}
@@ -92,7 +90,7 @@ def test_format_slot_options_filters_unavailable():
     """Test FormatSlotOptions filters out unavailable slots."""
     slots = [
         {"date": "2025-12-25", "time_slot": "10:00 AM - 12:00 PM", "available": True},
-        {"date": "2025-12-25", "time_slot": "2:00 PM - 4:00 PM", "available": False}
+        {"date": "2025-12-25", "time_slot": "2:00 PM - 4:00 PM", "available": False},
     ]
 
     state = {}
@@ -120,7 +118,7 @@ def test_format_slot_options_all_unavailable():
     """Test FormatSlotOptions with all slots unavailable."""
     slots = [
         {"date": "2025-12-25", "time_slot": "10:00 AM - 12:00 PM", "available": False},
-        {"date": "2025-12-25", "time_slot": "2:00 PM - 4:00 PM", "available": False}
+        {"date": "2025-12-25", "time_slot": "2:00 PM - 4:00 PM", "available": False},
     ]
 
     state = {}
@@ -136,7 +134,7 @@ def test_format_slot_options_groups_by_date():
     slots = [
         {"date": "2025-12-25", "time_slot": "10:00 AM", "available": True},
         {"date": "2025-12-26", "time_slot": "11:00 AM", "available": True},
-        {"date": "2025-12-25", "time_slot": "2:00 PM", "available": True}
+        {"date": "2025-12-25", "time_slot": "2:00 PM", "available": True},
     ]
 
     state = {}

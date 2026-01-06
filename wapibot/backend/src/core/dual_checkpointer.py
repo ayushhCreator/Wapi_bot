@@ -123,16 +123,22 @@ class DualCheckpointer(BaseCheckpointSaver):
         """List checkpoints from both sources (memory preferred)."""
         # Get from memory first
         seen_ids = set()
-        async for checkpoint in self.memory.alist(config, filter=filter, before=before, limit=limit):
+        async for checkpoint in self.memory.alist(
+            config, filter=filter, before=before, limit=limit
+        ):
             seen_ids.add(checkpoint.config["configurable"]["thread_id"])
             yield checkpoint
 
         # Add from SQLite if not in memory (e.g., after restart)
         try:
-            async for checkpoint in self.sqlite.alist(config, filter=filter, before=before, limit=limit):
+            async for checkpoint in self.sqlite.alist(
+                config, filter=filter, before=before, limit=limit
+            ):
                 thread_id = checkpoint.config["configurable"]["thread_id"]
                 if thread_id not in seen_ids:
-                    logger.debug(f"📦 Checkpoint {thread_id} found only in SQLite (restored)")
+                    logger.debug(
+                        f"📦 Checkpoint {thread_id} found only in SQLite (restored)"
+                    )
                     yield checkpoint
         except Exception as e:
             logger.warning(f"SQLite checkpoint list failed: {e}")

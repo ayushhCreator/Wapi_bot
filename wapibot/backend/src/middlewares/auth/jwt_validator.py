@@ -16,10 +16,7 @@ class JWTValidator:
     """JWT Bearer token validator implementing AuthValidator protocol."""
 
     def __init__(
-        self,
-        secret_key: str,
-        algorithm: str = "HS256",
-        verify_exp: bool = True
+        self, secret_key: str, algorithm: str = "HS256", verify_exp: bool = True
     ):
         """Initialize JWT validator.
 
@@ -59,7 +56,7 @@ class JWTValidator:
                 token,
                 self.secret_key,
                 algorithms=[self.algorithm],
-                options={"verify_exp": self.verify_exp}
+                options={"verify_exp": self.verify_exp},
             )
 
             # Extract user context
@@ -67,7 +64,7 @@ class JWTValidator:
                 "user_id": payload.get("sub"),
                 "email": payload.get("email"),
                 "scopes": payload.get("scopes", []),
-                "auth_method": "jwt"
+                "auth_method": "jwt",
             }
 
         except jwt.ExpiredSignatureError:
@@ -82,11 +79,7 @@ class JWTValidator:
         return "Bearer"
 
     def generate_token(
-        self,
-        user_id: str,
-        email: str,
-        scopes: list,
-        expiration_minutes: int = 60
+        self, user_id: str, email: str, scopes: list, expiration_minutes: int = 60
     ) -> str:
         """Generate JWT token (for testing/user creation).
 
@@ -104,7 +97,7 @@ class JWTValidator:
             "email": email,
             "scopes": scopes,
             "iat": datetime.utcnow(),
-            "exp": datetime.utcnow() + timedelta(minutes=expiration_minutes)
+            "exp": datetime.utcnow() + timedelta(minutes=expiration_minutes),
         }
 
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)

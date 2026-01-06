@@ -7,7 +7,9 @@ from core.config import Settings
 
 # Default path for brain_gym.db in backend/data/
 # CRITICAL: Must be absolute path to work across different working directories
-_DEFAULT_BRAIN_GYM_PATH = str((Path(__file__).parent.parent.parent / "data" / "brain_gym.db").resolve())
+_DEFAULT_BRAIN_GYM_PATH = str(
+    (Path(__file__).parent.parent.parent / "data" / "brain_gym.db").resolve()
+)
 
 
 class BrainSettings(Settings):
@@ -16,8 +18,7 @@ class BrainSettings(Settings):
     # Master controls
     brain_enabled: bool = Field(default=True, description="Enable brain observation")
     brain_mode: Literal["shadow", "reflex", "conscious"] = Field(
-        default="shadow",
-        description="Brain operation mode"
+        default="shadow", description="Brain operation mode"
     )
 
     # Action toggles (conscious mode only)
@@ -50,9 +51,15 @@ class BrainSettings(Settings):
     rl_gym_optimize_interval: int = Field(default=100)
 
     # GEPA Optimization
-    use_optimized_modules: bool = Field(default=True, description="Use GEPA-optimized modules if available")
-    gepa_teacher_model: str = Field(default="qwen3:8b", description="Teacher LLM for GEPA reflection")
-    gepa_breadth: int = Field(default=10, description="Number of prompt candidates in GEPA")
+    use_optimized_modules: bool = Field(
+        default=True, description="Use GEPA-optimized modules if available"
+    )
+    gepa_teacher_model: str = Field(
+        default="qwen3:8b", description="Teacher LLM for GEPA reflection"
+    )
+    gepa_breadth: int = Field(
+        default=10, description="Number of prompt candidates in GEPA"
+    )
     gepa_depth: int = Field(default=3, description="Optimization iterations in GEPA")
 
 

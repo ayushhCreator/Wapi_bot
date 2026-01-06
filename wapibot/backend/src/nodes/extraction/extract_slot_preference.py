@@ -17,10 +17,7 @@ from core.config import settings
 logger = logging.getLogger(__name__)
 
 
-async def node(
-    state: BookingState,
-    timeout: Optional[float] = None
-) -> BookingState:
+async def node(state: BookingState, timeout: Optional[float] = None) -> BookingState:
     """Extract slot preference (time + date) using hybrid regex + DSPy.
 
     Extraction strategy (regex-first for cost optimization):
@@ -36,7 +33,9 @@ async def node(
         Updated state with preferred_date, preferred_time_range
     """
     message = state.get("user_message", "")
-    extraction_timeout = timeout if timeout is not None else settings.extraction_timeout_normal
+    extraction_timeout = (
+        timeout if timeout is not None else settings.extraction_timeout_normal
+    )
 
     # Regex extraction (fast, cheap)
     time_result = extract_time_range(message, TIME_RANGE_PATTERNS)
@@ -48,7 +47,9 @@ async def node(
         if enhanced_result:
             date_result = enhanced_result
             if enhanced_result.get("needs_confirmation"):
-                state["date_confirmation_prompt"] = enhanced_result.get("confirmation_prompt")
+                state["date_confirmation_prompt"] = enhanced_result.get(
+                    "confirmation_prompt"
+                )
                 state["needs_date_confirmation"] = True
 
     # If regex succeeded for at least one field
@@ -72,17 +73,18 @@ async def node(
             loop.run_in_executor(
                 None,
                 lambda: extractor(
-                    conversation_history=state.get("history", []),
-                    user_message=message
-                )
+                    conversation_history=state.get("history", []), user_message=message
+                ),
             ),
-            timeout=extraction_timeout
+            timeout=extraction_timeout,
         )
 
         state["slot_preference_extraction_method"] = "dspy"
         state["preferred_date"] = dspy_result.get("preferred_date", "")
         state["preferred_time_range"] = dspy_result.get("preferred_time_range", "")
-        logger.info(f"✅ DSPy extracted slot preference: date={dspy_result.get('preferred_date')}, time={dspy_result.get('preferred_time_range')}")
+        logger.info(
+            f"✅ DSPy extracted slot preference: date={dspy_result.get('preferred_date')}, time={dspy_result.get('preferred_time_range')}"
+        )
 
         return state
 

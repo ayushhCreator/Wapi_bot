@@ -17,7 +17,7 @@ async def execute_with_retry(
     request_config: Dict[str, Any],
     response_parser: Callable[[httpx.Response], Any],
     retry_count: int,
-    timeout: float
+    timeout: float,
 ) -> tuple[Optional[Any], Optional[Dict[str, Any]], Optional[Exception]]:
     """Execute HTTP request with retry logic.
 
@@ -46,7 +46,9 @@ async def execute_with_retry(
                 # Parse response
                 try:
                     parsed_data = response_parser(response)
-                    metadata = create_response_metadata(response, request_config, attempt)
+                    metadata = create_response_metadata(
+                        response, request_config, attempt
+                    )
 
                     logger.info(f"✅ API call successful: {request_config.get('url')}")
                     return (parsed_data, metadata, None)
@@ -56,7 +58,9 @@ async def execute_with_retry(
                     return (None, None, parse_error)  # Don't retry parse errors
 
             except httpx.HTTPStatusError as e:
-                logger.warning(f"⚠️ HTTP error (attempt {attempt}/{retry_count}): {e.response.status_code}")
+                logger.warning(
+                    f"⚠️ HTTP error (attempt {attempt}/{retry_count}): {e.response.status_code}"
+                )
                 last_error = e
 
                 # Don't retry on 4xx client errors
@@ -64,7 +68,9 @@ async def execute_with_retry(
                     break
 
             except (httpx.TimeoutException, httpx.ConnectError) as e:
-                logger.warning(f"⚠️ Network error (attempt {attempt}/{retry_count}): {type(e).__name__}")
+                logger.warning(
+                    f"⚠️ Network error (attempt {attempt}/{retry_count}): {type(e).__name__}"
+                )
                 last_error = e
 
             except Exception as e:

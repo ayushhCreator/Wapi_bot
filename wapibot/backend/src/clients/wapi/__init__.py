@@ -5,14 +5,14 @@ from clients.wapi.schemas import (
     SendMessageRequest,
     SendMediaRequest,
     ContactCreate,
-    WAPIResponse
+    WAPIResponse,
 )
 
 __all__ = [
-    'WAPIClient',
-    'get_wapi_client',
-    'SendMessageRequest',
-    'SendMediaRequest',
-    'ContactCreate',
-    'WAPIResponse'
+    "WAPIClient",
+    "get_wapi_client",
+    "SendMessageRequest",
+    "SendMediaRequest",
+    "ContactCreate",
+    "WAPIResponse",
 ]

@@ -68,8 +68,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if not user_context:
             logger.warning(f"Unauthorized access attempt: {path}")
             return JSONResponse(
-                status_code=401,
-                content={"detail": "Authentication required"}
+                status_code=401, content={"detail": "Authentication required"}
             )
 
         # Check scopes (authorization)
@@ -82,8 +81,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     f"required={required_scopes}, has={list(user_scopes)}"
                 )
                 return JSONResponse(
-                    status_code=403,
-                    content={"detail": "Insufficient permissions"}
+                    status_code=403, content={"detail": "Insufficient permissions"}
                 )
 
         # Attach user context to request

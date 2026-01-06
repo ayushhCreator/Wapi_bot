@@ -27,22 +27,18 @@ class ABTestResult(BaseModel):
 
     # Comparison metrics
     difference: Dict[str, Any] = Field(
-        description="Differences between variants",
-        default_factory=dict
+        description="Differences between variants", default_factory=dict
     )
 
     # Evaluation
     metric_score_a: Optional[float] = Field(
-        description="Metric score for variant A",
-        default=None
+        description="Metric score for variant A", default=None
     )
     metric_score_b: Optional[float] = Field(
-        description="Metric score for variant B",
-        default=None
+        description="Metric score for variant B", default=None
     )
     winner: Optional[str] = Field(
-        description="Which variant performed better (A or B)",
-        default=None
+        description="Which variant performed better (A or B)", default=None
     )
 
     # Actual outcome (filled later)
@@ -60,6 +56,6 @@ class ABTestResult(BaseModel):
                 "variant_b": "v1.0",
                 "metric_score_a": 0.72,
                 "metric_score_b": 0.85,
-                "winner": "B"
+                "winner": "B",
             }
         }

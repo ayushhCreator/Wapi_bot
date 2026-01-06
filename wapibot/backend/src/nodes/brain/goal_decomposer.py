@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 class GoalDecomposer(Protocol):
     """Protocol for goal decomposition modules."""
 
-    def forward(self, user_message: str, predicted_intent: str, booking_state: dict) -> dict:
+    def forward(
+        self, user_message: str, predicted_intent: str, current_state: dict
+    ) -> dict:
         """Decompose user goal into sub-goals.
 
         Returns:
@@ -19,10 +21,7 @@ class GoalDecomposer(Protocol):
         ...
 
 
-def node(
-    state: BrainState,
-    decomposer: GoalDecomposer
-) -> BrainState:
+def node(state: BrainState, decomposer: GoalDecomposer) -> BrainState:
     """Atomic node: Decompose user goal into actionable sub-goals.
 
     Uses aPFC-like function to decompose:
@@ -43,11 +42,11 @@ def node(
         predicted_intent = state.get("predicted_intent", "unclear")
 
         # Build booking state summary
-        booking_state = {
+        current_state = {
             "has_profile": state.get("profile_complete", False),
             "has_vehicle": state.get("vehicle_complete", False),
             "has_service": state.get("service_selected", False),
-            "has_slot": state.get("slot_selected", False)
+            "has_slot": state.get("slot_selected", False),
         }
 
         if not user_message or predicted_intent == "unclear":
@@ -58,7 +57,7 @@ def node(
         result = decomposer(
             user_message=user_message,
             predicted_intent=predicted_intent,
-            booking_state=booking_state
+            current_state=current_state,
         )
 
         # Update state

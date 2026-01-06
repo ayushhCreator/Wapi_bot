@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def intent_metric(
-    example: dspy.Example,
-    pred: dspy.Prediction,
-    trace: Optional[str] = None
+    example: dspy.Example, pred: dspy.Prediction, trace: Optional[str] = None
 ) -> float:
     """Evaluate intent prediction quality.
 
@@ -56,7 +54,7 @@ def intent_metric(
             score += 0.4
 
     # Component 2: Confidence Calibration (0.3 points)
-    correct = (predicted_intent and pred_intent == predicted_intent.lower())
+    correct = predicted_intent and pred_intent == predicted_intent.lower()
 
     if correct and pred_confidence > 0.7:
         score += 0.3
@@ -94,7 +92,7 @@ def _is_similar_intent(intent1: str, intent2: str) -> bool:
         {"booking", "reservation", "schedule"},
         {"modification", "change", "update", "reschedule"},
         {"inquiry", "question", "ask", "clarification"},
-        {"complaint", "issue", "problem"}
+        {"complaint", "issue", "problem"},
     ]
 
     for pair in similar_pairs:
@@ -111,7 +109,7 @@ def _intent_matches_action(intent: str, action: str) -> bool:
         "booking": ["schedule", "book", "reserve", "appointment"],
         "modification": ["update", "change", "modify", "reschedule"],
         "inquiry": ["answer", "clarify", "explain", "provide"],
-        "complaint": ["escalate", "resolve", "address"]
+        "complaint": ["escalate", "resolve", "address"],
     }
 
     if intent in intent_action_map:
@@ -126,7 +124,7 @@ def _is_related_action(next_step: str, action: str) -> bool:
         ("collect", "extract", "gather"),
         ("validate", "check", "verify"),
         ("confirm", "approve", "accept"),
-        ("respond", "reply", "answer")
+        ("respond", "reply", "answer"),
     ]
 
     for keywords in related_keywords:

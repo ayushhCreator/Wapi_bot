@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def quality_metric(
-    example: dspy.Example,
-    pred: dspy.Prediction,
-    trace: Optional[str] = None
+    example: dspy.Example, pred: dspy.Prediction, trace: Optional[str] = None
 ) -> float:
     """Evaluate quality assessment accuracy.
 

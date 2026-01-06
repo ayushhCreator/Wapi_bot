@@ -29,45 +29,44 @@ class IntentPredictor(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]],
         user_message: str,
-        booking_state: Dict[str, Any]
+        current_state: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Predict user intent from message.
 
         Args:
             conversation_history: Previous messages [{role, content}]
             user_message: Current user message
-            booking_state: Current booking progress
+            current_state: Current booking progress
 
         Returns:
             Dict with predicted_intent, confidence
         """
         try:
             # Format history
-            history_str = "\n".join([
-                f"{msg['role']}: {msg['content']}"
-                for msg in conversation_history[-5:]
-            ])
+            history_str = "\n".join(
+                [
+                    f"{msg['role']}: {msg['content']}"
+                    for msg in conversation_history[-5:]
+                ]
+            )
 
             # Format booking state
-            state_str = f"Profile: {booking_state.get('has_profile', False)}, "
-            state_str += f"Vehicle: {booking_state.get('has_vehicle', False)}, "
-            state_str += f"Service: {booking_state.get('has_service', False)}"
+            state_str = f"Profile: {current_state.get('has_profile', False)}, "
+            state_str += f"Vehicle: {current_state.get('has_vehicle', False)}, "
+            state_str += f"Service: {current_state.get('has_service', False)}"
 
             # Fast prediction (no ChainOfThought)
             result = self.predictor(
                 conversation_history=history_str,
                 user_message=user_message,
-                booking_state=state_str
+                current_state=state_str,
             )
 
             return {
                 "predicted_intent": result.predicted_intent.strip().lower(),
-                "confidence": result.confidence
+                "confidence": result.confidence,
             }
 
         except Exception as e:
             logger.error(f"Intent prediction failed: {e}")
-            return {
-                "predicted_intent": "unclear",
-                "confidence": 0.0
-            }
+            return {"predicted_intent": "unclear", "confidence": 0.0}

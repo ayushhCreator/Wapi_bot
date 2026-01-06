@@ -34,12 +34,12 @@ def regex_fallback(message: str) -> Dict[str, Any]:
     message_lower = message.lower().strip()
 
     # Yes patterns
-    yes_patterns = r'\b(yes|yeah|yep|yup|sure|ok|okay|confirm|proceed|accept)\b'
+    yes_patterns = r"\b(yes|yeah|yep|yup|sure|ok|okay|confirm|proceed|accept)\b"
     if re.search(yes_patterns, message_lower):
         return {"confirmed": True}
 
     # No patterns
-    no_patterns = r'\b(no|nope|nah|cancel|skip|decline|reject)\b'
+    no_patterns = r"\b(no|nope|nah|cancel|skip|decline|reject)\b"
     if re.search(no_patterns, message_lower):
         return {"confirmed": False}
 
@@ -50,17 +50,16 @@ def regex_fallback(message: str) -> Dict[str, Any]:
 class ConfirmationExtractor:
     """Simple confirmation extractor."""
 
-    def __call__(self, conversation_history: list, user_message: str, **kwargs) -> Dict[str, Any]:
+    def __call__(
+        self, conversation_history: list, user_message: str, **kwargs
+    ) -> Dict[str, Any]:
         """Extract confirmation from message."""
         # For confirmation, regex is usually sufficient
         # This is a placeholder for LLM-based confirmation if needed
         return regex_fallback(user_message)
 
 
-async def node(
-    state: BookingState,
-    field_path: str = "confirmation"
-) -> BookingState:
+async def node(state: BookingState, field_path: str = "confirmation") -> BookingState:
     """Extract yes/no confirmation.
 
     Args:
@@ -77,5 +76,5 @@ async def node(
         extractor,
         field_path=field_path,
         fallback_fn=regex_fallback,
-        metadata_path=f"extraction.{field_path}_meta"
+        metadata_path=f"extraction.{field_path}_meta",
     )

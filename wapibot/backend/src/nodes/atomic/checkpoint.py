@@ -28,7 +28,7 @@ async def node(
     state: BookingState,
     checkpoint_name: str,
     checkpoint_type: str = "milestone",
-    save_to_brain: bool = True
+    save_to_brain: bool = True,
 ) -> BookingState:
     """Atomic checkpoint node - saves state at milestones for debugging and learning.
 
@@ -73,7 +73,7 @@ async def node(
         "conversation_id": state.get("conversation_id"),
         "current_step": state.get("current_step"),
         "completeness": state.get("completeness", 0.0),
-        "errors": state.get("errors", [])
+        "errors": state.get("errors", []),
     }
 
     # Log checkpoint
@@ -96,15 +96,19 @@ async def node(
                 decision_id=f"chk_{uuid.uuid4().hex[:8]}",
                 conversation_id=state.get("conversation_id", "unknown"),
                 user_message=state.get("user_message", ""),
-                conversation_history=json.dumps(state.get("history", [])[-5:]),  # Last 5 messages
-                state_snapshot=json.dumps({
-                    "completeness": state.get("completeness", 0.0),
-                    "current_step": state.get("current_step"),
-                    "errors": state.get("errors", [])
-                }),
+                conversation_history=json.dumps(
+                    state.get("history", [])[-5:]
+                ),  # Last 5 messages
+                state_snapshot=json.dumps(
+                    {
+                        "completeness": state.get("completeness", 0.0),
+                        "current_step": state.get("current_step"),
+                        "errors": state.get("errors", []),
+                    }
+                ),
                 brain_mode=brain_settings.brain_mode,
                 action_taken=f"checkpoint:{checkpoint_name}",
-                workflow_outcome=checkpoint_type  # milestone | error | decision_point
+                workflow_outcome=checkpoint_type,  # milestone | error | decision_point
             )
 
             # Save to RL Gym database

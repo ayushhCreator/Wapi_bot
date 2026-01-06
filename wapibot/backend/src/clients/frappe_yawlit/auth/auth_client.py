@@ -35,10 +35,7 @@ class AuthClient:
         """
         return await self.http.post(
             "/api/method/yawlit_automotive_services.api.auth.unified_login.login_with_email_or_phone",
-            {
-                "username": email,
-                "password": password
-            }
+            {"username": email, "password": password},
         )
 
     async def login_phone(self, phone: str, password: str) -> Dict[str, Any]:
@@ -56,13 +53,12 @@ class AuthClient:
         """
         return await self.http.post(
             "/api/method/yawlit_automotive_services.api.auth.phone_password.login_with_phone",
-            {
-                "phone_number": phone,
-                "password": password
-            }
+            {"phone_number": phone, "password": password},
         )
 
-    async def register_unified(self, name: str, email_or_phone: str, password: str) -> Dict[str, Any]:
+    async def register_unified(
+        self, name: str, email_or_phone: str, password: str
+    ) -> Dict[str, Any]:
         """Register new customer with email or phone.
 
         Args:
@@ -85,8 +81,8 @@ class AuthClient:
             {
                 "customer_name": name,
                 "email_or_phone": email_or_phone,
-                "password": password
-            }
+                "password": password,
+            },
         )
 
     async def complete_profile(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -127,7 +123,7 @@ class AuthClient:
         """
         return await self.http.post(
             "/api/method/yawlit_automotive_services.api.customer_portal.complete_profile",
-            {"data": profile_data}
+            {"data": profile_data},
         )
 
     async def get_user_prefill_data(self) -> Dict[str, Any]:
@@ -159,7 +155,7 @@ class AuthClient:
         """
         return await self.http.post(
             "/api/method/yawlit_automotive_services.api.auth.phone_otp.send_otp",
-            {"phone_number": phone}
+            {"phone_number": phone},
         )
 
     async def verify_otp(self, phone: str, otp: str) -> Dict[str, Any]:
@@ -177,10 +173,7 @@ class AuthClient:
         """
         return await self.http.post(
             "/api/method/yawlit_automotive_services.api.auth.phone_otp.verify_otp_and_login",
-            {
-                "phone_number": phone,
-                "otp": otp
-            }
+            {"phone_number": phone, "otp": otp},
         )
 
     async def reset_password(self, email: str) -> Dict[str, Any]:
@@ -198,7 +191,7 @@ class AuthClient:
         """
         return await self.http.post(
             "/api/method/yawlit_automotive_services.api.auth.password_reset.send_reset_email",
-            {"email": email}
+            {"email": email},
         )
 
     async def logout(self) -> Dict[str, Any]:

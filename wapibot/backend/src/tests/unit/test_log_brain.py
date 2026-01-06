@@ -14,11 +14,11 @@ async def test_log_saves_to_brain_when_enabled():
         "user_message": "I want to book a service",
         "history": [
             {"role": "user", "content": "Hi"},
-            {"role": "assistant", "content": "Hello!"}
+            {"role": "assistant", "content": "Hello!"},
         ],
         "current_step": "extraction",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -28,14 +28,15 @@ async def test_log_saves_to_brain_when_enabled():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+    ):
         result = await log.node(
             state,
             event_type="extraction_success",
             event_data={"field": "customer.first_name", "confidence": 0.95},
-            severity="info"
+            severity="info",
         )
 
         # Verify state unchanged (logging is side-effect only)
@@ -60,7 +61,7 @@ async def test_log_skips_brain_when_disabled():
         "history": [],
         "current_step": "test",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -69,14 +70,12 @@ async def test_log_skips_brain_when_disabled():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+    ):
         result = await log.node(
-            state,
-            event_type="test_event",
-            event_data={"test": "data"},
-            severity="info"
+            state, event_type="test_event", event_data={"test": "data"}, severity="info"
         )
 
         # Brain repository NOT called
@@ -92,7 +91,7 @@ async def test_log_skips_brain_when_rl_gym_disabled():
         "history": [],
         "current_step": "test",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -101,14 +100,12 @@ async def test_log_skips_brain_when_rl_gym_disabled():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+    ):
         result = await log.node(
-            state,
-            event_type="test_event",
-            event_data={"test": "data"},
-            severity="info"
+            state, event_type="test_event", event_data={"test": "data"}, severity="info"
         )
 
         # Brain repository NOT called
@@ -124,7 +121,7 @@ async def test_log_handles_brain_save_error():
         "history": [],
         "current_step": "test",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -136,15 +133,16 @@ async def test_log_handles_brain_save_error():
     mock_repo = MagicMock()
     mock_repo.save.side_effect = Exception("Database write failed")
 
-    with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+    ):
         # Should NOT raise exception
         result = await log.node(
             state,
             event_type="test_event",
             event_data={"test": "data"},
-            severity="error"
+            severity="error",
         )
 
         # Workflow continues normally
@@ -157,12 +155,10 @@ async def test_log_serializes_event_data():
     state: BookingState = {
         "conversation_id": "test_12345",
         "user_message": "Test",
-        "history": [
-            {"role": "user", "content": "Message 1"}
-        ],
+        "history": [{"role": "user", "content": "Message 1"}],
         "current_step": "api_call",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -176,17 +172,15 @@ async def test_log_serializes_event_data():
         "endpoint": "get_available_slots",
         "latency_ms": 234,
         "status": "success",
-        "slot_count": 5
+        "slot_count": 5,
     }
 
-    with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+    ):
         await log.node(
-            state,
-            event_type="api_call",
-            event_data=event_data,
-            severity="info"
+            state, event_type="api_call", event_data=event_data, severity="info"
         )
 
         # Verify saved decision
@@ -195,6 +189,7 @@ async def test_log_serializes_event_data():
 
         # Verify state snapshot contains event data
         import json
+
         state_snapshot = json.loads(saved_decision.state_snapshot)
         assert state_snapshot["event_type"] == "api_call"
         assert state_snapshot["severity"] == "info"
@@ -212,7 +207,7 @@ async def test_log_handles_none_event_data():
         "history": [],
         "current_step": "test",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -222,20 +217,22 @@ async def test_log_handles_none_event_data():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+    ):
         await log.node(
             state,
             event_type="simple_event",
             event_data=None,  # No data
-            severity="debug"
+            severity="debug",
         )
 
         # Verify saved decision
         saved_decision = mock_repo.save.call_args[0][0]
 
         import json
+
         state_snapshot = json.loads(saved_decision.state_snapshot)
         assert state_snapshot["data"] == {}  # Empty dict for None
 
@@ -252,7 +249,7 @@ async def test_log_limits_conversation_history():
         ],
         "current_step": "test",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -262,19 +259,18 @@ async def test_log_limits_conversation_history():
 
     mock_repo = MagicMock()
 
-    with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-         patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+    with (
+        patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+        patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+    ):
         await log.node(
-            state,
-            event_type="test_event",
-            event_data={"test": "data"},
-            severity="info"
+            state, event_type="test_event", event_data={"test": "data"}, severity="info"
         )
 
         # Verify only last 3 messages saved
         saved_decision = mock_repo.save.call_args[0][0]
         import json
+
         conv_history = json.loads(saved_decision.conversation_history)
         assert len(conv_history) == 3
         assert conv_history[0]["content"] == "Message 7"  # Last 3 messages
@@ -290,7 +286,7 @@ async def test_log_severity_levels():
         "history": [],
         "current_step": "test",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     mock_settings = MagicMock()
@@ -303,14 +299,15 @@ async def test_log_severity_levels():
     for severity in severities:
         mock_repo = MagicMock()
 
-        with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-             patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+        with (
+            patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+            patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+        ):
             await log.node(
                 state,
                 event_type=f"test_{severity}",
                 event_data={"severity_test": True},
-                severity=severity
+                severity=severity,
             )
 
             # Verify workflow_outcome matches severity
@@ -327,7 +324,7 @@ async def test_log_different_brain_modes():
         "history": [],
         "current_step": "test",
         "response": "",
-        "should_proceed": True
+        "should_proceed": True,
     }
 
     brain_modes = ["shadow", "reflex", "conscious"]
@@ -340,14 +337,15 @@ async def test_log_different_brain_modes():
 
         mock_repo = MagicMock()
 
-        with patch('nodes.atomic.log.get_brain_settings', return_value=mock_settings), \
-             patch('nodes.atomic.log.BrainDecisionRepository', return_value=mock_repo):
-
+        with (
+            patch("nodes.atomic.log.get_brain_settings", return_value=mock_settings),
+            patch("nodes.atomic.log.BrainDecisionRepository", return_value=mock_repo),
+        ):
             await log.node(
                 state,
                 event_type="mode_test",
                 event_data={"mode": mode},
-                severity="info"
+                severity="info",
             )
 
             # Verify brain_mode recorded correctly

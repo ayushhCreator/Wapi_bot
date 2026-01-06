@@ -25,11 +25,11 @@ def electricity_regex_fallback(message: str) -> Dict[str, Any]:
     message_lower = message.lower().strip()
 
     # Positive patterns
-    if re.search(r'\b(yes|have|available|there is)\b.*\belect', message_lower):
+    if re.search(r"\b(yes|have|available|there is)\b.*\belect", message_lower):
         return {"electricity": True}
 
     # Negative patterns
-    if re.search(r'\b(no|don\'t have|not available|no elect)', message_lower):
+    if re.search(r"\b(no|don\'t have|not available|no elect)", message_lower):
         return {"electricity": False}
 
     raise ValueError("Could not determine electricity availability")
@@ -47,11 +47,11 @@ def water_regex_fallback(message: str) -> Dict[str, Any]:
     message_lower = message.lower().strip()
 
     # Positive patterns
-    if re.search(r'\b(yes|have|available|there is)\b.*\bwater', message_lower):
+    if re.search(r"\b(yes|have|available|there is)\b.*\bwater", message_lower):
         return {"water": True}
 
     # Negative patterns
-    if re.search(r'\b(no|don\'t have|not available|no water)', message_lower):
+    if re.search(r"\b(no|don\'t have|not available|no water)", message_lower):
         return {"water": False}
 
     raise ValueError("Could not determine water availability")
@@ -61,14 +61,18 @@ def water_regex_fallback(message: str) -> Dict[str, Any]:
 class ElectricityExtractor:
     """Electricity availability extractor."""
 
-    def __call__(self, conversation_history: list, user_message: str, **kwargs) -> Dict[str, Any]:
+    def __call__(
+        self, conversation_history: list, user_message: str, **kwargs
+    ) -> Dict[str, Any]:
         return electricity_regex_fallback(user_message)
 
 
 class WaterExtractor:
     """Water availability extractor."""
 
-    def __call__(self, conversation_history: list, user_message: str, **kwargs) -> Dict[str, Any]:
+    def __call__(
+        self, conversation_history: list, user_message: str, **kwargs
+    ) -> Dict[str, Any]:
         return water_regex_fallback(user_message)
 
 
@@ -78,7 +82,7 @@ async def extract_electricity(state: BookingState) -> BookingState:
         state,
         ElectricityExtractor(),
         field_path="utilities.electricity",
-        fallback_fn=electricity_regex_fallback
+        fallback_fn=electricity_regex_fallback,
     )
 
 
@@ -88,5 +92,5 @@ async def extract_water(state: BookingState) -> BookingState:
         state,
         WaterExtractor(),
         field_path="utilities.water",
-        fallback_fn=water_regex_fallback
+        fallback_fn=water_regex_fallback,
     )

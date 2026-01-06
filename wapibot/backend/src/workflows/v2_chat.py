@@ -32,7 +32,7 @@ async def extract_name(state: BookingState) -> BookingState:
         extractor=name_extractor,
         field_path="customer.first_name",
         fallback_fn=lambda msg: regex_fallback.extract(msg),
-        metadata_path="customer.extraction_metadata"
+        metadata_path="customer.extraction_metadata",
     )
 
 

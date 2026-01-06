@@ -9,8 +9,19 @@ from typing import Optional, Dict
 
 # Greeting stopwords to reject as names
 STOPWORDS = {
-    "hi", "hello", "hey", "haan", "yes", "ok", "okay",
-    "sure", "yep", "yeah", "nope", "no", "thanks"
+    "hi",
+    "hello",
+    "hey",
+    "haan",
+    "yes",
+    "ok",
+    "okay",
+    "sure",
+    "yep",
+    "yeah",
+    "nope",
+    "no",
+    "thanks",
 }
 
 
@@ -21,7 +32,6 @@ class RegexNameExtractor:
     PATTERNS = [
         # "my name is John", "I am John", "I'm John Doe"
         r"(?:my name is|i am|i'?m|this is|call me)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)",
-
         # Just a capitalized name "John" or "John Doe"
         r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)$",
     ]
@@ -58,14 +68,8 @@ class RegexNameExtractor:
                 # Split into first/last name
                 parts = full_name.split()
                 if len(parts) == 1:
-                    return {
-                        "first_name": parts[0],
-                        "last_name": ""
-                    }
+                    return {"first_name": parts[0], "last_name": ""}
                 else:
-                    return {
-                        "first_name": parts[0],
-                        "last_name": " ".join(parts[1:])
-                    }
+                    return {"first_name": parts[0], "last_name": " ".join(parts[1:])}
 
         return None

@@ -15,9 +15,7 @@ class AppointmentExtractionSignature(dspy.Signature):
     conversation_history: str = dspy.InputField(
         desc="Previous conversation turns for context"
     )
-    user_message: str = dspy.InputField(
-        desc="Current user message to extract from"
-    )
+    user_message: str = dspy.InputField(desc="Current user message to extract from")
     context: str = dspy.InputField(
         desc="Extraction context (e.g., 'Scheduling service appointment')"
     )

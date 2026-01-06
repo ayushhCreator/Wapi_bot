@@ -6,9 +6,9 @@ from pathlib import Path
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
 
 async def test_workflow():
     """Test the Blender-style workflow with phone 6290818033."""
@@ -32,7 +32,7 @@ async def test_workflow():
     initial_state = {
         "conversation_id": "6290818033",  # Your phone number
         "user_message": "Hi",
-        "history": []
+        "history": [],
     }
 
     print("=" * 60)
@@ -60,11 +60,15 @@ async def test_workflow():
 
         if result.get("customer"):
             customer = result["customer"]
-            print(f"👤 Customer: {customer.get('first_name')} (UUID: {customer.get('customer_uuid')})")
+            print(
+                f"👤 Customer: {customer.get('first_name')} (UUID: {customer.get('customer_uuid')})"
+            )
 
         if result.get("vehicle"):
             vehicle = result["vehicle"]
-            print(f"🚗 Vehicle: {vehicle.get('vehicle_make')} {vehicle.get('vehicle_model')} ({vehicle.get('vehicle_number')})")
+            print(
+                f"🚗 Vehicle: {vehicle.get('vehicle_make')} {vehicle.get('vehicle_model')} ({vehicle.get('vehicle_number')})"
+            )
         elif result.get("vehicle_options"):
             print(f"🚗 Vehicles: {len(result['vehicle_options'])} options available")
 
@@ -85,6 +89,7 @@ async def test_workflow():
         print("=" * 60)
         print(f"Error: {str(e)}")
         import traceback
+
         traceback.print_exc()
 
     finally:
@@ -92,6 +97,7 @@ async def test_workflow():
         print("\n🧹 Cleaning up...")
         await checkpointer_manager.shutdown()
         print("✅ Done!")
+
 
 if __name__ == "__main__":
     asyncio.run(test_workflow())

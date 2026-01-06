@@ -4,7 +4,7 @@ import pytest
 from workflows.existing_user_booking import (
     extract_service_selection_node,
     extract_slot_selection_node,
-    extract_confirmation_node
+    extract_confirmation_node,
 )
 
 
@@ -16,8 +16,8 @@ async def test_extract_service_selection_with_number():
         "filtered_services": [
             {"product_name": "Basic Wash", "base_price": 299},
             {"product_name": "Premium Wash", "base_price": 499},
-            {"product_name": "Deluxe Wash", "base_price": 699}
-        ]
+            {"product_name": "Deluxe Wash", "base_price": 699},
+        ],
     }
 
     result = await extract_service_selection_node(state)
@@ -34,8 +34,8 @@ async def test_extract_service_selection_with_name():
         "user_message": "I want the premium wash please",
         "filtered_services": [
             {"product_name": "Basic Wash", "base_price": 299},
-            {"product_name": "Premium Wash", "base_price": 499}
-        ]
+            {"product_name": "Premium Wash", "base_price": 499},
+        ],
     }
 
     result = await extract_service_selection_node(state)
@@ -49,9 +49,7 @@ async def test_extract_service_selection_invalid_number():
     """Test service selection extraction with invalid number."""
     state = {
         "user_message": "I want service 10",
-        "filtered_services": [
-            {"product_name": "Basic Wash", "base_price": 299}
-        ]
+        "filtered_services": [{"product_name": "Basic Wash", "base_price": 299}],
     }
 
     result = await extract_service_selection_node(state)
@@ -65,9 +63,7 @@ async def test_extract_service_selection_unclear():
     """Test service selection extraction with unclear message."""
     state = {
         "user_message": "What is the price?",
-        "filtered_services": [
-            {"product_name": "Basic Wash", "base_price": 299}
-        ]
+        "filtered_services": [{"product_name": "Basic Wash", "base_price": 299}],
     }
 
     result = await extract_service_selection_node(state)
@@ -82,9 +78,19 @@ async def test_extract_slot_selection_with_date():
     state = {
         "user_message": "I want 2025-12-26 morning slot",
         "available_slots": [
-            {"date": "2025-12-26", "time_slot": "10:00 AM - 12:00 PM", "slot_id": "SLOT-001", "available": True},
-            {"date": "2025-12-27", "time_slot": "10:00 AM - 12:00 PM", "slot_id": "SLOT-002", "available": True}
-        ]
+            {
+                "date": "2025-12-26",
+                "time_slot": "10:00 AM - 12:00 PM",
+                "slot_id": "SLOT-001",
+                "available": True,
+            },
+            {
+                "date": "2025-12-27",
+                "time_slot": "10:00 AM - 12:00 PM",
+                "slot_id": "SLOT-002",
+                "available": True,
+            },
+        ],
     }
 
     result = await extract_slot_selection_node(state)
@@ -100,9 +106,19 @@ async def test_extract_slot_selection_with_time():
     state = {
         "user_message": "I want the 2:00 PM - 4:00 PM slot",  # Exact match
         "available_slots": [
-            {"date": "2025-12-26", "time_slot": "10:00 AM - 12:00 PM", "slot_id": "SLOT-001", "available": True},
-            {"date": "2025-12-26", "time_slot": "2:00 PM - 4:00 PM", "slot_id": "SLOT-002", "available": True}
-        ]
+            {
+                "date": "2025-12-26",
+                "time_slot": "10:00 AM - 12:00 PM",
+                "slot_id": "SLOT-001",
+                "available": True,
+            },
+            {
+                "date": "2025-12-26",
+                "time_slot": "2:00 PM - 4:00 PM",
+                "slot_id": "SLOT-002",
+                "available": True,
+            },
+        ],
     }
 
     result = await extract_slot_selection_node(state)
@@ -117,9 +133,19 @@ async def test_extract_slot_selection_skip_unavailable():
     state = {
         "user_message": "2025-12-27",
         "available_slots": [
-            {"date": "2025-12-27", "time_slot": "10:00 AM - 12:00 PM", "slot_id": "SLOT-001", "available": False},
-            {"date": "2025-12-27", "time_slot": "2:00 PM - 4:00 PM", "slot_id": "SLOT-002", "available": True}
-        ]
+            {
+                "date": "2025-12-27",
+                "time_slot": "10:00 AM - 12:00 PM",
+                "slot_id": "SLOT-001",
+                "available": False,
+            },
+            {
+                "date": "2025-12-27",
+                "time_slot": "2:00 PM - 4:00 PM",
+                "slot_id": "SLOT-002",
+                "available": True,
+            },
+        ],
     }
 
     result = await extract_slot_selection_node(state)

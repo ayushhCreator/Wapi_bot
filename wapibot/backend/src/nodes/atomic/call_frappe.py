@@ -48,7 +48,7 @@ async def node(
     operation: FrappeOperation,
     result_path: str,
     state_extractor: Optional[Callable[[BookingState], Dict[str, Any]]] = None,
-    on_failure: str = "log"
+    on_failure: str = "log",
 ) -> BookingState:
     """Atomic Frappe API call node - works with ANY YawlitClient method.
 

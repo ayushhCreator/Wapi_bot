@@ -15,7 +15,7 @@ class ResponseGenerator(Protocol):
         conversation_history: list,
         user_message: str,
         sub_goals: list,
-        booking_state: dict
+        current_state: dict,
     ) -> dict:
         """Generate optimal response.
 
@@ -25,10 +25,7 @@ class ResponseGenerator(Protocol):
         ...
 
 
-def node(
-    state: BrainState,
-    generator: ResponseGenerator
-) -> BrainState:
+def node(state: BrainState, generator: ResponseGenerator) -> BrainState:
     """Atomic node: Generate optimal response using BestOfN + Refine.
 
     Uses dlPFC-like function to:
@@ -47,14 +44,15 @@ def node(
         # Extract context
         history = state.get("history", [])
         user_message = state.get("user_message", "")
-        sub_goals = state.get("decomposed_goals", ["continue_conversation"])
+        # FIXED: Handle case where key exists but value is None
+        sub_goals = state.get("decomposed_goals") or ["continue_conversation"]
 
         # Build booking state summary
-        booking_state = {
+        current_state = {
             "has_profile": state.get("profile_complete", False),
             "has_vehicle": state.get("vehicle_complete", False),
             "has_service": state.get("service_selected", False),
-            "has_slot": state.get("slot_selected", False)
+            "has_slot": state.get("slot_selected", False),
         }
 
         if not user_message:
@@ -66,7 +64,7 @@ def node(
             conversation_history=history,
             user_message=user_message,
             sub_goals=sub_goals,
-            booking_state=booking_state
+            current_state=current_state,
         )
 
         # Update state

@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 async def node(
     state: BookingState,
     observation_path: str,
-    observation_data: Optional[Dict[str, Any]] = None
+    observation_data: Optional[Dict[str, Any]] = None,
 ) -> BookingState:
     """Atomic brain observation node - records brain mode and decisions.
 
@@ -60,7 +60,7 @@ async def node(
     # Build observation metadata
     metadata = {
         "brain_mode": brain_settings.brain_mode,
-        "brain_enabled": brain_settings.brain_enabled
+        "brain_enabled": brain_settings.brain_enabled,
     }
 
     # Merge custom observation data if provided

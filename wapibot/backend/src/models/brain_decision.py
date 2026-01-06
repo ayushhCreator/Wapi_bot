@@ -43,6 +43,6 @@ class BrainDecision(BaseModel):
                 "conversation_id": "conv_456",
                 "user_message": "Can you give me a discount?",
                 "brain_mode": "shadow",
-                "conflict_detected": "bargaining"
+                "conflict_detected": "bargaining",
             }
         }

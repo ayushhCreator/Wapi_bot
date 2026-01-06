@@ -44,8 +44,12 @@ async def send_vehicle_options(state: BookingState) -> BookingState:
 
 async def send_please_register(state: BookingState) -> BookingState:
     """Send registration prompt."""
+
     def message(s):
-        return "Please register first: https://yawlit.duckdns.org/customer/auth/register"
+        return (
+            "Please register first: https://yawlit.duckdns.org/customer/auth/register"
+        )
+
     result = await send_message_node(state, message)
     result["should_proceed"] = False  # Error state, stop workflow
     return result
@@ -53,8 +57,10 @@ async def send_please_register(state: BookingState) -> BookingState:
 
 async def send_profile_incomplete(state: BookingState) -> BookingState:
     """Send profile completion prompt."""
+
     def message(s):
         return "Please complete your profile at https://yawlit.duckdns.org/customer/profile"
+
     result = await send_message_node(state, message)
     result["should_proceed"] = False  # Error state, stop workflow
     return result
@@ -62,8 +68,10 @@ async def send_profile_incomplete(state: BookingState) -> BookingState:
 
 async def send_no_vehicles(state: BookingState) -> BookingState:
     """Send vehicle addition prompt."""
+
     def message(s):
         return "Please add a vehicle at https://yawlit.duckdns.org/customer/profile"
+
     result = await send_message_node(state, message)
     result["should_proceed"] = False  # Error state, stop workflow
     return result
@@ -119,8 +127,8 @@ def create_profile_group() -> StateGraph:
             "profile_incomplete": "send_profile_incomplete",
             "no_vehicles": "send_no_vehicles",
             "vehicle_selection_required": "send_vehicle_options",
-            "profile_ready": "send_greeting"
-        }
+            "profile_ready": "send_greeting",
+        },
     )
 
     # Terminal nodes

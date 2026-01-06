@@ -24,7 +24,7 @@ class ConversationRepository:
         conversation_id: str,
         booking_state: BookingState,
         state: str,
-        completeness: float
+        completeness: float,
     ) -> int:
         """Save versioned conversation state using SQLModel.
 
@@ -44,8 +44,9 @@ class ConversationRepository:
         async with await db_connection.get_session() as session:
             # Get current max version using SQLModel query
             result = await session.execute(
-                select(func.max(ConversationStateTable.version))
-                .where(ConversationStateTable.conversation_id == conversation_id)
+                select(func.max(ConversationStateTable.version)).where(
+                    ConversationStateTable.conversation_id == conversation_id
+                )
             )
             max_version = result.scalar()
             version = (max_version or 0) + 1
@@ -56,7 +57,7 @@ class ConversationRepository:
                 version=version,
                 state=state,
                 booking_state_json=json.dumps(booking_state),
-                completeness=completeness
+                completeness=completeness,
             )
 
             session.add(new_state)
@@ -65,10 +66,7 @@ class ConversationRepository:
             logger.info(f"Saved state v{version} for {conversation_id}")
             return version
 
-    async def get_state(
-        self,
-        conversation_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_state(self, conversation_id: str) -> Optional[Dict[str, Any]]:
         """Get latest conversation state using SQLModel.
 
         Args:
@@ -101,13 +99,10 @@ class ConversationRepository:
                 "state": state_record.state,
                 "booking_state": json.loads(state_record.booking_state_json),
                 "completeness": state_record.completeness,
-                "created_at": state_record.created_at
+                "created_at": state_record.created_at,
             }
 
-    async def get_history(
-        self,
-        conversation_id: str
-    ) -> List[Dict[str, Any]]:
+    async def get_history(self, conversation_id: str) -> List[Dict[str, Any]]:
         """Get conversation history using SQLModel.
 
         Args:
@@ -134,8 +129,10 @@ class ConversationRepository:
                     "turn_number": record.turn_number,
                     "role": record.role,
                     "content": record.content,
-                    "extracted_data": json.loads(record.extracted_data_json) if record.extracted_data_json else None,
-                    "created_at": record.created_at
+                    "extracted_data": json.loads(record.extracted_data_json)
+                    if record.extracted_data_json
+                    else None,
+                    "created_at": record.created_at,
                 }
                 for record in records
             ]
@@ -146,7 +143,7 @@ class ConversationRepository:
         turn_number: int,
         role: str,
         content: str,
-        extracted_data: Optional[Dict[str, Any]] = None
+        extracted_data: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Add conversation turn using SQLModel.
 
@@ -166,7 +163,9 @@ class ConversationRepository:
                 turn_number=turn_number,
                 role=role,
                 content=content,
-                extracted_data_json=json.dumps(extracted_data) if extracted_data else None
+                extracted_data_json=json.dumps(extracted_data)
+                if extracted_data
+                else None,
             )
 
             session.add(new_turn)

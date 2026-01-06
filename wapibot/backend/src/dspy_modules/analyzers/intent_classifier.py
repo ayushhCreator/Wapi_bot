@@ -22,7 +22,7 @@ class IntentClassifier(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Classifying user intent"
+        context: str = "Classifying user intent",
     ) -> Dict[str, Any]:
         """Classify user intent from message.
 
@@ -42,19 +42,21 @@ class IntentClassifier(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         confidence_map = {
             "low": settings.confidence_low,
             "medium": settings.confidence_medium,
-            "high": settings.confidence_high
+            "high": settings.confidence_high,
         }
         confidence_str = getattr(result, "confidence", "medium").lower()
-        confidence_float = confidence_map.get(confidence_str, settings.confidence_medium)
+        confidence_float = confidence_map.get(
+            confidence_str, settings.confidence_medium
+        )
 
         return {
             "intent": getattr(result, "intent", "general_question").lower(),
             "confidence": confidence_float,
-            "reasoning": getattr(result, "reasoning", "")
+            "reasoning": getattr(result, "reasoning", ""),
         }

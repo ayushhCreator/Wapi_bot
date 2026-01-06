@@ -40,10 +40,14 @@ class ServiceCatalogBuilder:
             message = builder(state)
         """
         # Get service options (try both old and new keys for compatibility)
-        services = state.get("service_options", []) or state.get("filtered_services", [])
+        services = state.get("service_options", []) or state.get(
+            "filtered_services", []
+        )
 
         if not services:
-            return "Sorry, no services are available for your vehicle type at the moment."
+            return (
+                "Sorry, no services are available for your vehicle type at the moment."
+            )
 
         # Build catalog header
         message = "Here are the available services for your vehicle:\n\n"
@@ -59,7 +63,9 @@ class ServiceCatalogBuilder:
 
             # Add description if available (truncate if too long)
             if description:
-                desc_short = description[:80] + "..." if len(description) > 80 else description
+                desc_short = (
+                    description[:80] + "..." if len(description) > 80 else description
+                )
                 message += f"   {desc_short}\n"
 
             message += "\n"

@@ -12,9 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def start_ngrok_tunnel(
-    port: int = 8000,
-    region: str = "in",
-    bind_tls: bool = True
+    port: int = 8000, region: str = "in", bind_tls: bool = True
 ) -> Optional[str]:
     """Start ngrok tunnel on specified port.
 

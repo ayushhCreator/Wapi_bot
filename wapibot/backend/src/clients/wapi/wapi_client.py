@@ -8,9 +8,7 @@ from typing import Optional, Dict, Any, Union
 import httpx
 
 from core.config import settings
-from clients.wapi.schemas import (
-    ContactCreate
-)
+from clients.wapi.schemas import ContactCreate
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +21,7 @@ class WAPIClient:
         base_url: Optional[str] = None,
         vendor_uid: Optional[str] = None,
         bearer_token: Optional[str] = None,
-        from_phone_number_id: Optional[str] = None
+        from_phone_number_id: Optional[str] = None,
     ):
         """Initialize WAPI client with configuration.
 
@@ -36,7 +34,9 @@ class WAPIClient:
         self.base_url = base_url or settings.wapi_base_url
         self.vendor_uid = vendor_uid or settings.wapi_vendor_uid
         self.bearer_token = bearer_token or settings.wapi_bearer_token
-        self.from_phone_number_id = from_phone_number_id or settings.wapi_from_phone_number_id
+        self.from_phone_number_id = (
+            from_phone_number_id or settings.wapi_from_phone_number_id
+        )
 
         # Validate required credentials
         if not self.vendor_uid or not self.bearer_token:
@@ -46,16 +46,16 @@ class WAPIClient:
             )
 
         # Ensure base_url has trailing slash for proper path joining
-        if not self.base_url.endswith('/'):
-            self.base_url = self.base_url + '/'
+        if not self.base_url.endswith("/"):
+            self.base_url = self.base_url + "/"
 
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=30.0,
             headers={
                 "Authorization": f"Bearer {self.bearer_token}",
-                "Content-Type": "application/json"
-            }
+                "Content-Type": "application/json",
+            },
         )
 
     async def close(self) -> None:
@@ -92,7 +92,7 @@ class WAPIClient:
         phone_number: str,
         message_body: str,
         from_phone_number_id: Optional[str] = None,
-        contact: Optional[Union[ContactCreate, Dict[str, Any]]] = None
+        contact: Optional[Union[ContactCreate, Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """Send text message via WAPI.
 
@@ -117,17 +117,21 @@ class WAPIClient:
         """
         payload: Dict[str, Any] = {
             "phone_number": phone_number,
-            "message_body": message_body
+            "message_body": message_body,
         }
 
         # Add optional phone number ID
         if from_phone_number_id or self.from_phone_number_id:
-            payload["from_phone_number_id"] = from_phone_number_id or self.from_phone_number_id
+            payload["from_phone_number_id"] = (
+                from_phone_number_id or self.from_phone_number_id
+            )
 
         # Add optional contact auto-creation
         if contact:
             # Convert Pydantic model to dict if needed
-            contact_dict = contact.model_dump() if isinstance(contact, ContactCreate) else contact
+            contact_dict = (
+                contact.model_dump() if isinstance(contact, ContactCreate) else contact
+            )
             payload["contact"] = contact_dict
 
         endpoint = self._get_endpoint("contact/send-message")
@@ -154,7 +158,7 @@ class WAPIClient:
         caption: Optional[str] = None,
         file_name: Optional[str] = None,
         from_phone_number_id: Optional[str] = None,
-        contact: Optional[Union[ContactCreate, Dict[str, Any]]] = None
+        contact: Optional[Union[ContactCreate, Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """Send media message (image, video, document) via WAPI.
 
@@ -184,12 +188,14 @@ class WAPIClient:
         payload: Dict[str, Any] = {
             "phone_number": phone_number,
             "media_type": media_type,
-            "media_url": media_url
+            "media_url": media_url,
         }
 
         # Add optional fields
         if from_phone_number_id or self.from_phone_number_id:
-            payload["from_phone_number_id"] = from_phone_number_id or self.from_phone_number_id
+            payload["from_phone_number_id"] = (
+                from_phone_number_id or self.from_phone_number_id
+            )
 
         if caption:
             payload["caption"] = caption
@@ -199,7 +205,9 @@ class WAPIClient:
 
         if contact:
             # Convert Pydantic model to dict if needed
-            contact_dict = contact.model_dump() if isinstance(contact, ContactCreate) else contact
+            contact_dict = (
+                contact.model_dump() if isinstance(contact, ContactCreate) else contact
+            )
             payload["contact"] = contact_dict
 
         endpoint = self._get_endpoint("contact/send-media-message")
@@ -218,10 +226,7 @@ class WAPIClient:
             logger.error(f"Failed to send media to {phone_number}: {e}")
             raise
 
-    async def get_contact(
-        self,
-        phone_number_or_email: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_contact(self, phone_number_or_email: str) -> Optional[Dict[str, Any]]:
         """Get contact information by phone number or email.
 
         Args:

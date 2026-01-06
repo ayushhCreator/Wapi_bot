@@ -75,8 +75,8 @@ def create_brain_workflow() -> StateGraph:
             "shadow": "shadow",
             "reflex": "reflex",
             "conscious": "conscious",
-            "skip": "skip"
-        }
+            "skip": "skip",
+        },
     )
 
     # All modes finish

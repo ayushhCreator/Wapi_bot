@@ -52,6 +52,10 @@ async def extract_preference(state: BookingState) -> BookingState:
 
 def route_after_extraction(state: BookingState) -> str:
     """Route based on what was extracted."""
+    # Check for validation error first
+    if state.get("mcq_error"):
+        return "mcq_error"
+
     has_date = bool(state.get("preferred_date"))
     has_time = bool(state.get("preferred_time_range"))
 
@@ -82,15 +86,23 @@ async def process_time_mcq(state: BookingState) -> BookingState:
             logger.info("✅ Both preferences complete, continuing workflow")
     else:
         logger.warning(f"⚠️ Invalid time MCQ: {message}")
+        # Add error state flag for routing
+        state["mcq_error"] = f"Please reply with 1, 2, or 3 (you sent: {message})"
     return state
 
 
 async def process_date_mcq(state: BookingState) -> BookingState:
     """Process date MCQ selection (1=today, 2=tomorrow, 3=day after, 4=next week)."""
     from datetime import datetime, timedelta
+
     message = state.get("user_message", "").strip()
     today = datetime.now().date()
-    date_map = {"1": today, "2": today + timedelta(days=1), "3": today + timedelta(days=2), "4": today + timedelta(days=7)}
+    date_map = {
+        "1": today,
+        "2": today + timedelta(days=1),
+        "3": today + timedelta(days=2),
+        "4": today + timedelta(days=7),
+    }
     selected_date = date_map.get(message)
     if selected_date:
         state["preferred_date"] = selected_date.isoformat()
@@ -104,6 +116,8 @@ async def process_date_mcq(state: BookingState) -> BookingState:
             logger.info("✅ Both preferences complete, continuing workflow")
     else:
         logger.warning(f"⚠️ Invalid date MCQ: {message}")
+        # Add error state flag for routing
+        state["mcq_error"] = f"Please reply with 1, 2, 3, or 4 (you sent: {message})"
     return state
 
 
@@ -123,6 +137,30 @@ async def ask_date_mcq(state: BookingState) -> BookingState:
     return result
 
 
+async def send_time_error(state: BookingState) -> BookingState:
+    """Send error message for invalid time MCQ."""
+    from nodes.atomic.send_message import node as send_message_node
+
+    error_msg = state.get("mcq_error", "Invalid choice. Please reply with 1, 2, or 3")
+    result = await send_message_node(state, lambda s: error_msg)
+    # Don't proceed, stay in current step to allow retry
+    result["should_proceed"] = False
+    return result
+
+
+async def send_date_error(state: BookingState) -> BookingState:
+    """Send error message for invalid date MCQ."""
+    from nodes.atomic.send_message import node as send_message_node
+
+    error_msg = state.get(
+        "mcq_error", "Invalid choice. Please reply with 1, 2, 3, or 4"
+    )
+    result = await send_message_node(state, lambda s: error_msg)
+    # Don't proceed, stay in current step to allow retry
+    result["should_proceed"] = False
+    return result
+
+
 def create_slot_preference_group() -> StateGraph:
     """Create slot preference collection workflow."""
     workflow = StateGraph(BookingState)
@@ -133,16 +171,54 @@ def create_slot_preference_group() -> StateGraph:
     workflow.add_node("process_date_mcq", process_date_mcq)
     workflow.add_node("ask_time_mcq", ask_time_mcq)
     workflow.add_node("ask_date_mcq", ask_date_mcq)
+    workflow.add_node("send_time_error", send_time_error)
+    workflow.add_node("send_date_error", send_date_error)
     workflow.set_entry_point("entry")
-    workflow.add_conditional_edges("entry", route_preference_entry,
-        {"ask_preference": "ask_preference", "extract_preference": "extract_preference", "process_time_mcq": "process_time_mcq", "process_date_mcq": "process_date_mcq"})
+    workflow.add_conditional_edges(
+        "entry",
+        route_preference_entry,
+        {
+            "ask_preference": "ask_preference",
+            "extract_preference": "extract_preference",
+            "process_time_mcq": "process_time_mcq",
+            "process_date_mcq": "process_date_mcq",
+        },
+    )
     workflow.add_edge("ask_preference", END)
-    workflow.add_conditional_edges("extract_preference", route_after_extraction,
-        {"both_extracted": END, "date_only": "ask_time_mcq", "time_only": "ask_date_mcq", "neither": "ask_date_mcq"})
-    workflow.add_conditional_edges("process_time_mcq", route_after_extraction,
-        {"both_extracted": END, "time_only": "ask_date_mcq", "date_only": "ask_time_mcq", "neither": "ask_date_mcq"})
-    workflow.add_conditional_edges("process_date_mcq", route_after_extraction,
-        {"both_extracted": END, "date_only": "ask_time_mcq", "time_only": "ask_date_mcq", "neither": "ask_date_mcq"})
+    workflow.add_conditional_edges(
+        "extract_preference",
+        route_after_extraction,
+        {
+            "both_extracted": END,
+            "date_only": "ask_time_mcq",
+            "time_only": "ask_date_mcq",
+            "neither": "ask_date_mcq",
+        },
+    )
+    workflow.add_conditional_edges(
+        "process_time_mcq",
+        route_after_extraction,
+        {
+            "both_extracted": END,
+            "time_only": "ask_date_mcq",
+            "date_only": "ask_time_mcq",
+            "neither": "ask_date_mcq",
+            "mcq_error": "send_time_error",
+        },
+    )
+    workflow.add_conditional_edges(
+        "process_date_mcq",
+        route_after_extraction,
+        {
+            "both_extracted": END,
+            "date_only": "ask_time_mcq",
+            "time_only": "ask_date_mcq",
+            "neither": "ask_date_mcq",
+            "mcq_error": "send_date_error",
+        },
+    )
+    workflow.add_edge("send_time_error", END)
+    workflow.add_edge("send_date_error", END)
     workflow.add_edge("ask_time_mcq", END)
     workflow.add_edge("ask_date_mcq", END)
     return workflow.compile()

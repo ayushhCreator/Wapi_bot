@@ -10,15 +10,12 @@ import re
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-from fallbacks.ordinal_patterns import (
-    RELATIVE_DAY_PATTERNS,
-    MONTH_NAMES
-)
+from fallbacks.ordinal_patterns import RELATIVE_DAY_PATTERNS, MONTH_NAMES
 
 
 def extract_ordinal_number(text: str) -> Optional[int]:
     """Extract day number from ordinal text (1st → 1, 31st → 31)."""
-    pattern = r'\b(\d{1,2})(st|nd|rd|th)\b'
+    pattern = r"\b(\d{1,2})(st|nd|rd|th)\b"
     match = re.search(pattern, text.lower())
     if match:
         return int(match.group(1))
@@ -39,7 +36,7 @@ def extract_enhanced_date(message: str) -> Optional[Dict[str, Any]]:
     today = datetime.now().date()
 
     # Try ordinal with month first (highest confidence)
-    ordinal_month_pattern = r'\b(\d{1,2})(st|nd|rd|th)\s+(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b'
+    ordinal_month_pattern = r"\b(\d{1,2})(st|nd|rd|th)\s+(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b"
     match = re.search(ordinal_month_pattern, message_lower)
     if match:
         day = int(match.group(1))
@@ -52,13 +49,18 @@ def extract_enhanced_date(message: str) -> Optional[Dict[str, Any]]:
         return {
             "preferred_date": target_date.isoformat(),
             "confidence": 0.95,
-            "needs_confirmation": False
+            "needs_confirmation": False,
         }
 
     # Try "next Monday/Tuesday/etc" patterns
     weekdays = {
-        "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
-        "friday": 4, "saturday": 5, "sunday": 6
+        "monday": 0,
+        "tuesday": 1,
+        "wednesday": 2,
+        "thursday": 3,
+        "friday": 4,
+        "saturday": 5,
+        "sunday": 6,
     }
 
     for day_name, pattern in RELATIVE_DAY_PATTERNS.items():
@@ -74,7 +76,7 @@ def extract_enhanced_date(message: str) -> Optional[Dict[str, Any]]:
                 return {
                     "preferred_date": target_date.isoformat(),
                     "confidence": 0.90,
-                    "needs_confirmation": False
+                    "needs_confirmation": False,
                 }
 
     # Try ordinal only (needs confirmation - ambiguous)
@@ -95,7 +97,7 @@ def extract_enhanced_date(message: str) -> Optional[Dict[str, Any]]:
                 "preferred_date": target_date.isoformat(),
                 "confidence": 0.70,
                 "needs_confirmation": True,
-                "confirmation_prompt": f"Did you mean {month_name} {day_num}?"
+                "confirmation_prompt": f"Did you mean {month_name} {day_num}?",
             }
         except ValueError:
             return None

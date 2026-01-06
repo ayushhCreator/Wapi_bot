@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 class IntentPredictor(Protocol):
     """Protocol for intent prediction modules."""
 
-    def forward(self, conversation_history: list, user_message: str, booking_state: dict) -> dict:
+    def forward(
+        self, conversation_history: list, user_message: str, current_state: dict
+    ) -> dict:
         """Predict user intent.
 
         Returns:
@@ -19,10 +21,7 @@ class IntentPredictor(Protocol):
         ...
 
 
-def node(
-    state: BrainState,
-    predictor: IntentPredictor
-) -> BrainState:
+def node(state: BrainState, predictor: IntentPredictor) -> BrainState:
     """Atomic node: Predict user intent and next action.
 
     Uses OFC-like function to predict:
@@ -42,11 +41,11 @@ def node(
         user_message = state.get("user_message", "")
 
         # Build booking state summary
-        booking_state = {
+        current_state = {
             "has_profile": state.get("profile_complete", False),
             "has_vehicle": state.get("vehicle_complete", False),
             "has_service": state.get("service_selected", False),
-            "has_slot": state.get("slot_selected", False)
+            "has_slot": state.get("slot_selected", False),
         }
 
         if not user_message:
@@ -57,14 +56,16 @@ def node(
         result = predictor(
             conversation_history=history,
             user_message=user_message,
-            booking_state=booking_state
+            current_state=current_state,
         )
 
         # Update state
         state["predicted_intent"] = result.get("predicted_intent", "unclear")
         state["brain_confidence"] = result.get("confidence", 0.0)
 
-        logger.info(f"Intent predicted: {state['predicted_intent']} (confidence: {result.get('confidence', 0.0)})")
+        logger.info(
+            f"Intent predicted: {state['predicted_intent']} (confidence: {result.get('confidence', 0.0)})"
+        )
 
         return state
 

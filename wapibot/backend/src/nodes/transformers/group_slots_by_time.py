@@ -25,7 +25,9 @@ class GroupSlotsByTime:
         )
     """
 
-    def __call__(self, slots: List[Dict[str, Any]], state: BookingState) -> Dict[str, List[Dict[str, Any]]]:
+    def __call__(
+        self, slots: List[Dict[str, Any]], state: BookingState
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """Group slots by time of day.
 
         Args:
@@ -49,11 +51,7 @@ class GroupSlotsByTime:
             #   "evening": [{"date": "2025-12-28", "start_time": "18:00"}]
             # }
         """
-        grouped = {
-            "morning": [],
-            "afternoon": [],
-            "evening": []
-        }
+        grouped = {"morning": [], "afternoon": [], "evening": []}
 
         for slot in slots:
             time_range = self._get_time_range(slot)

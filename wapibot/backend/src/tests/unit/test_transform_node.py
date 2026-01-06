@@ -11,9 +11,9 @@ async def test_transform_filter_data():
         "all_services": [
             {"name": "Car Wash", "vehicle_type": "Hatchback"},
             {"name": "SUV Wash", "vehicle_type": "SUV"},
-            {"name": "Basic Wash", "vehicle_type": "Hatchback"}
+            {"name": "Basic Wash", "vehicle_type": "Hatchback"},
         ],
-        "vehicle": {"vehicle_type": "Hatchback"}
+        "vehicle": {"vehicle_type": "Hatchback"},
     }
 
     # Filter transformer
@@ -21,7 +21,9 @@ async def test_transform_filter_data():
         vtype = state.get("vehicle", {}).get("vehicle_type")
         return [s for s in services if s["vehicle_type"] == vtype]
 
-    result = await transform.node(state, filter_by_type, "all_services", "filtered_services")
+    result = await transform.node(
+        state, filter_by_type, "all_services", "filtered_services"
+    )
 
     # Should have 2 Hatchback services
     assert "filtered_services" in result
@@ -35,7 +37,7 @@ async def test_transform_format_data():
     state = {
         "services": [
             {"product_name": "Premium Wash", "base_price": 499},
-            {"product_name": "Basic Wash", "base_price": 299}
+            {"product_name": "Basic Wash", "base_price": 299},
         ]
     }
 
@@ -46,7 +48,9 @@ async def test_transform_format_data():
             lines.append(f"{svc['product_name']} - ₹{svc['base_price']}")
         return "\n".join(lines)
 
-    result = await transform.node(state, format_catalog, "services", "formatted_catalog")
+    result = await transform.node(
+        state, format_catalog, "services", "formatted_catalog"
+    )
 
     assert "formatted_catalog" in result
     assert "Premium Wash - ₹499" in result["formatted_catalog"]
@@ -57,10 +61,7 @@ async def test_transform_format_data():
 async def test_transform_calculate_data():
     """Test transform with calculator."""
     state = {
-        "booking_data": {
-            "base_price": 500,
-            "addons": [{"price": 100}, {"price": 200}]
-        }
+        "booking_data": {"base_price": 500, "addons": [{"price": 100}, {"price": 200}]}
     }
 
     # Calculate transformer
@@ -77,20 +78,14 @@ async def test_transform_calculate_data():
 @pytest.mark.asyncio
 async def test_transform_empty_source_skip():
     """Test transform with empty source and skip mode."""
-    state = {
-        "customer": {"first_name": "Rahul"}
-    }
+    state = {"customer": {"first_name": "Rahul"}}
 
     def noop_transformer(data, s):
         return data
 
     # Source path doesn't exist, should skip
     result = await transform.node(
-        state,
-        noop_transformer,
-        "missing_field",
-        "target",
-        on_empty="skip"
+        state, noop_transformer, "missing_field", "target", on_empty="skip"
     )
 
     # Target should not be created
@@ -108,11 +103,7 @@ async def test_transform_empty_source_default():
         return data
 
     result = await transform.node(
-        state,
-        noop_transformer,
-        "missing_field",
-        "target",
-        on_empty="default"
+        state, noop_transformer, "missing_field", "target", on_empty="default"
     )
 
     # Target should be set to None
@@ -131,20 +122,14 @@ async def test_transform_empty_source_raise():
     # Should raise ValueError
     with pytest.raises(ValueError, match="Source path 'missing_field' is empty"):
         await transform.node(
-            state,
-            noop_transformer,
-            "missing_field",
-            "target",
-            on_empty="raise"
+            state, noop_transformer, "missing_field", "target", on_empty="raise"
         )
 
 
 @pytest.mark.asyncio
 async def test_transform_transformer_error():
     """Test error handling when transformer fails."""
-    state = {
-        "data": [1, 2, 3]
-    }
+    state = {"data": [1, 2, 3]}
 
     def failing_transformer(data, s):
         raise ValueError("Transformation failed intentionally")
@@ -163,10 +148,7 @@ async def test_transform_nested_source_target():
     state = {
         "api_responses": {
             "services": {
-                "data": [
-                    {"id": 1, "name": "Service 1"},
-                    {"id": 2, "name": "Service 2"}
-                ]
+                "data": [{"id": 1, "name": "Service 1"}, {"id": 2, "name": "Service 2"}]
             }
         }
     }
@@ -175,10 +157,7 @@ async def test_transform_nested_source_target():
         return [item["name"] for item in data]
 
     result = await transform.node(
-        state,
-        extract_names,
-        "api_responses.services.data",
-        "service_names"
+        state, extract_names, "api_responses.services.data", "service_names"
     )
 
     assert result["service_names"] == ["Service 1", "Service 2"]

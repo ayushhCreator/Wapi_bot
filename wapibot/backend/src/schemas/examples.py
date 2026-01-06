@@ -19,21 +19,21 @@ EXAMPLE_VEHICLE_HONDA = {
     "brand": "Honda",
     "model": "City",
     "registration": "BR01AB1999",
-    "type": "Hatchback"
+    "type": "Hatchback",
 }
 
 EXAMPLE_VEHICLE_TATA = {
     "brand": "Tata",
     "model": "Punch",
     "registration": "BR01AB2342",
-    "type": "SUV"
+    "type": "SUV",
 }
 
 EXAMPLE_VEHICLE_CRETA = {
     "brand": "Honda",
     "model": "Creta",
     "registration": "BR01AB2346",
-    "type": "Sedan"
+    "type": "Sedan",
 }
 
 # Service Examples (from chat.txt - actual Yawlit services)
@@ -42,7 +42,7 @@ EXAMPLE_SERVICE_HATCHBACK = {
     "product_id": "HatchBack-Premium-One-Time",
     "name": "HatchBack Premium (One Time)",
     "price": 499.0,
-    "vehicle_type": "Hatchback"
+    "vehicle_type": "Hatchback",
 }
 
 EXAMPLE_SERVICE_SEDAN = {
@@ -50,7 +50,7 @@ EXAMPLE_SERVICE_SEDAN = {
     "product_id": "Sedan-Premium-One-Time",
     "name": "Sedan Premium (One Time)",
     "price": 599.0,
-    "vehicle_type": "Sedan"
+    "vehicle_type": "Sedan",
 }
 
 EXAMPLE_SERVICE_SUV = {
@@ -58,7 +58,7 @@ EXAMPLE_SERVICE_SUV = {
     "product_id": "SUV-Premium-One-Time",
     "name": "Suv Premium (One Time)",
     "price": 599.0,
-    "vehicle_type": "SUV"
+    "vehicle_type": "SUV",
 }
 
 # Payment Examples (UUIDs and transaction data)
@@ -68,8 +68,12 @@ EXAMPLE_SESSION_UUID_THIRD = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 # UPI Examples (Yawlit's actual UPI ID)
 EXAMPLE_UPI_ID = "yawlit@paytm"
-EXAMPLE_UPI_STRING = f"upi://pay?pa={EXAMPLE_UPI_ID}&pn=Yawlit&am=499.00&cu=INR&tn=Booking"
-EXAMPLE_UPI_STRING_ALT = f"upi://pay?pa={EXAMPLE_UPI_ID}&pn=Yawlit&am=599.00&cu=INR&tn=Booking"
+EXAMPLE_UPI_STRING = (
+    f"upi://pay?pa={EXAMPLE_UPI_ID}&pn=Yawlit&am=499.00&cu=INR&tn=Booking"
+)
+EXAMPLE_UPI_STRING_ALT = (
+    f"upi://pay?pa={EXAMPLE_UPI_ID}&pn=Yawlit&am=599.00&cu=INR&tn=Booking"
+)
 
 # Payment Amounts (from chat.txt - actual service prices)
 EXAMPLE_PAYMENT_AMOUNT_HATCHBACK = 499.00

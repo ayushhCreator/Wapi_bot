@@ -28,7 +28,7 @@ def extract_time_range(message: str, patterns: List[Any]) -> Optional[Dict[str, 
                     "preferred_time_range": pattern_config.range_name,
                     "start_hour": pattern_config.start_hour,
                     "end_hour": pattern_config.end_hour,
-                    "confidence": 0.95
+                    "confidence": 0.95,
                 }
     return None
 
@@ -55,14 +55,20 @@ def extract_date(message: str, patterns: List[Any]) -> Optional[Dict[str, Any]]:
                     return {
                         "preferred_date": target_date.isoformat(),
                         "date_str": pattern_config.pattern_name,
-                        "confidence": 0.95
+                        "confidence": 0.95,
                     }
 
     # Try weekday patterns (Monday, Tuesday, etc.)
     from models.extraction_patterns import WEEKDAY_PATTERNS
+
     weekdays = {
-        "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
-        "friday": 4, "saturday": 5, "sunday": 6
+        "monday": 0,
+        "tuesday": 1,
+        "wednesday": 2,
+        "thursday": 3,
+        "friday": 4,
+        "saturday": 5,
+        "sunday": 6,
     }
 
     for day_name, day_patterns in WEEKDAY_PATTERNS.items():
@@ -77,7 +83,7 @@ def extract_date(message: str, patterns: List[Any]) -> Optional[Dict[str, Any]]:
                 return {
                     "preferred_date": target_date.isoformat(),
                     "date_str": day_name,
-                    "confidence": 0.90
+                    "confidence": 0.90,
                 }
 
     return None

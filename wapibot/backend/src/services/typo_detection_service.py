@@ -19,7 +19,7 @@ class TypoDetectionService:
         ("customer.email", "Email address"),
         ("vehicle.brand", "Vehicle brand"),
         ("vehicle.model", "Vehicle model"),
-        ("appointment.service_type", "Service type")
+        ("appointment.service_type", "Service type"),
     ]
 
     def __init__(self):
@@ -27,9 +27,7 @@ class TypoDetectionService:
         self.detector = detect_typos
 
     def detect_all_typos(
-        self,
-        state: BookingState,
-        user_message: str
+        self, state: BookingState, user_message: str
     ) -> List[Dict[str, Any]]:
         """Detect typos across all checkable fields.
 
@@ -53,17 +51,19 @@ class TypoDetectionService:
                 state=state,
                 user_message=user_message,
                 field_name=field_label,
-                extracted_value=value
+                extracted_value=value,
             )
 
             if result["has_typo"] and result["suggested_correction"]:
-                typos_found.append({
-                    "field": field_path,
-                    "field_label": field_label,
-                    "original": value,
-                    "suggested": result["suggested_correction"],
-                    "confidence": result["confidence"]
-                })
+                typos_found.append(
+                    {
+                        "field": field_path,
+                        "field_label": field_label,
+                        "original": value,
+                        "suggested": result["suggested_correction"],
+                        "confidence": result["confidence"],
+                    }
+                )
 
         return typos_found
 

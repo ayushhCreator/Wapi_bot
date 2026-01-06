@@ -15,18 +15,18 @@ def detect_question_type(message: str) -> str:
     message_lower = message.lower()
 
     hours_patterns = [
-        r'\b(hours?|timing?|time|open|close|when)\b',
-        r'\b(kab khule|kab band)\b'  # Hindi
+        r"\b(hours?|timing?|time|open|close|when)\b",
+        r"\b(kab khule|kab band)\b",  # Hindi
     ]
 
     location_patterns = [
-        r'\b(where|location|address|area|place)\b',
-        r'\b(kaha|kahaan)\b'  # Hindi
+        r"\b(where|location|address|area|place)\b",
+        r"\b(kaha|kahaan)\b",  # Hindi
     ]
 
     services_patterns = [
-        r'\b(what services|which services|services|offerings|what do you|what can)\b',
-        r'\b(kya services|kaun si services)\b'  # Hindi
+        r"\b(what services|which services|services|offerings|what do you|what can)\b",
+        r"\b(kya services|kaun si services)\b",  # Hindi
     ]
 
     for pattern in hours_patterns:

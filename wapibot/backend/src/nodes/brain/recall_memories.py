@@ -16,9 +16,7 @@ class MemoryRepository(Protocol):
 
 
 def node(
-    state: BrainState,
-    repo: MemoryRepository,
-    min_memories: int = 50
+    state: BrainState, repo: MemoryRepository, min_memories: int = 50
 ) -> BrainState:
     """Atomic node: Recall memories for dream processing.
 
@@ -51,10 +49,10 @@ def node(
         sorted_memories = sorted(
             memories,
             key=lambda m: (
-                m.get("user_satisfaction", 0.0) * 0.6 +
-                m.get("conversation_quality", 0.0) * 0.4
+                m.get("user_satisfaction", 0.0) * 0.6
+                + m.get("conversation_quality", 0.0) * 0.4
             ),
-            reverse=True
+            reverse=True,
         )
 
         # Update state

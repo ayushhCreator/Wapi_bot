@@ -34,17 +34,13 @@ router = APIRouter(prefix="/admin/payments", tags=["admin", "payments"])
         400: {
             "description": "Payment already confirmed",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Payment already confirmed"}
-                }
+                "application/json": {"example": {"detail": "Payment already confirmed"}}
             },
         },
         404: {
             "description": "Payment session not found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Payment session not found"}
-                }
+                "application/json": {"example": {"detail": "Payment session not found"}}
             },
         },
     },
@@ -128,9 +124,7 @@ async def confirm_payment(
         404: {
             "description": "Payment session not found",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Payment session not found"}
-                }
+                "application/json": {"example": {"detail": "Payment session not found"}}
             },
         },
     },
@@ -143,9 +137,7 @@ async def get_payment_status(session_id: str) -> PaymentStatusResponse:
     """
     async with await db_connection.get_session() as db_session:
         result = await db_session.execute(
-            select(PaymentSession).where(
-                PaymentSession.session_id == session_id
-            )
+            select(PaymentSession).where(PaymentSession.session_id == session_id)
         )
         session = result.scalar_one_or_none()
 

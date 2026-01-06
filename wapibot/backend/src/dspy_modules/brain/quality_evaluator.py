@@ -24,43 +24,42 @@ class QualityEvaluator(dspy.Module):
         self.evaluator = dspy.ChainOfThought(StateEvaluationSignature)
 
     def forward(
-        self,
-        conversation_history: List[Dict[str, str]],
-        booking_state: Dict[str, Any]
+        self, conversation_history: List[Dict[str, str]], current_state: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Evaluate conversation quality.
 
         Args:
             conversation_history: Previous messages [{role, content}]
-            booking_state: Current booking progress
+            current_state: Current booking progress
 
         Returns:
             Dict with quality_score, completeness, satisfaction, reasoning
         """
         try:
             # Format history
-            history_str = "\n".join([
-                f"{msg['role']}: {msg['content']}"
-                for msg in conversation_history[-10:]  # More context for quality
-            ])
+            history_str = "\n".join(
+                [
+                    f"{msg['role']}: {msg['content']}"
+                    for msg in conversation_history[-10:]  # More context for quality
+                ]
+            )
 
             # Format booking state
-            state_str = f"Profile: {booking_state.get('has_profile', False)}, "
-            state_str += f"Vehicle: {booking_state.get('has_vehicle', False)}, "
-            state_str += f"Service: {booking_state.get('has_service', False)}, "
-            state_str += f"Slot: {booking_state.get('has_slot', False)}"
+            state_str = f"Profile: {current_state.get('has_profile', False)}, "
+            state_str += f"Vehicle: {current_state.get('has_vehicle', False)}, "
+            state_str += f"Service: {current_state.get('has_service', False)}, "
+            state_str += f"Slot: {current_state.get('has_slot', False)}"
 
             # Evaluate with reasoning
             result = self.evaluator(
-                conversation_history=history_str,
-                booking_state=state_str
+                conversation_history=history_str, current_state=state_str
             )
 
             return {
                 "quality_score": result.quality_score,
                 "completeness": result.completeness,
                 "user_satisfaction": result.user_satisfaction,
-                "reasoning": result.reasoning
+                "reasoning": result.reasoning,
             }
 
         except Exception as e:
@@ -69,5 +68,5 @@ class QualityEvaluator(dspy.Module):
                 "quality_score": 0.5,
                 "completeness": 0.0,
                 "user_satisfaction": 0.5,
-                "reasoning": f"Error: {str(e)}"
+                "reasoning": f"Error: {str(e)}",
             }

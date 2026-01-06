@@ -78,8 +78,7 @@ async def _cancel_reminders_async(session_id: str) -> dict:
         await db_session.commit()
 
         logger.info(
-            f"✅ Cancelled {cancelled_count} reminders "
-            f"({failed_count} failures)"
+            f"✅ Cancelled {cancelled_count} reminders ({failed_count} failures)"
         )
 
         return {

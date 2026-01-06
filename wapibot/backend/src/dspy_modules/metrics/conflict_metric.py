@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def conflict_metric(
-    example: dspy.Example,
-    pred: dspy.Prediction,
-    trace: Optional[str] = None
+    example: dspy.Example, pred: dspy.Prediction, trace: Optional[str] = None
 ) -> float:
     """Evaluate conflict detection prediction quality.
 
@@ -53,7 +51,9 @@ def conflict_metric(
 
     # Component 2: Confidence Calibration (0.3 points)
     # High confidence when correct, low confidence when wrong
-    correct = (true_conflict and pred_conflict != "no") or (not true_conflict and pred_conflict == "no")
+    correct = (true_conflict and pred_conflict != "no") or (
+        not true_conflict and pred_conflict == "no"
+    )
 
     if correct and pred_confidence > 0.7:
         score += 0.3
@@ -65,8 +65,14 @@ def conflict_metric(
     # Component 3: Reasoning Quality (0.2 points)
     # Check if reasoning mentions key conflict signals
     reasoning_signals = [
-        "disagree", "no", "wrong", "incorrect", "change",
-        "different", "not", "contradict"
+        "disagree",
+        "no",
+        "wrong",
+        "incorrect",
+        "change",
+        "different",
+        "not",
+        "contradict",
     ]
 
     if true_conflict:
@@ -75,7 +81,9 @@ def conflict_metric(
             score += 0.2
     else:
         # Should NOT overuse conflict words for non-conflicts
-        conflict_words = sum(1 for signal in reasoning_signals if signal in pred_reasoning)
+        conflict_words = sum(
+            1 for signal in reasoning_signals if signal in pred_reasoning
+        )
         if conflict_words == 0:
             score += 0.2
         elif conflict_words == 1:

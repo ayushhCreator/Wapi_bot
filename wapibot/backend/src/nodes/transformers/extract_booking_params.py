@@ -57,7 +57,9 @@ class ExtractBookingParams:
         booking_date = slot.get("date")
         slot_id = slot.get("name")
         vehicle_id = state.get("vehicle", {}).get("vehicle_id")
-        address_id = state.get("selected_address_id") or customer.get("default_address_id")
+        address_id = state.get("selected_address_id") or customer.get(
+            "default_address_id"
+        )
 
         # Validate required fields
         missing_fields = []
@@ -78,13 +80,17 @@ class ExtractBookingParams:
             logger.error(f"   slot keys: {list(slot.keys())}")
             logger.error(f"   vehicle keys: {list(state.get('vehicle', {}).keys())}")
             logger.error(f"   customer keys: {list(customer.keys())}")
-            raise ValueError(f"Missing required booking fields: {', '.join(missing_fields)}")
+            raise ValueError(
+                f"Missing required booking fields: {', '.join(missing_fields)}"
+            )
 
         # Log booking data
         addon_ids = state.get("addon_ids", [])
-        logger.info(f"📋 Booking data: product_id={product_id}, date={booking_date}, "
-                   f"slot_id={slot_id}, vehicle_id={vehicle_id}, address_id={address_id}, "
-                   f"addon_ids={addon_ids}")
+        logger.info(
+            f"📋 Booking data: product_id={product_id}, date={booking_date}, "
+            f"slot_id={slot_id}, vehicle_id={vehicle_id}, address_id={address_id}, "
+            f"addon_ids={addon_ids}"
+        )
 
         # Return phone_number and booking_data (API signature)
         return {
@@ -98,6 +104,6 @@ class ExtractBookingParams:
                 "electricity_provided": state.get("electricity_provided", 1),
                 "water_provided": state.get("water_provided", 1),
                 "addon_ids": state.get("addon_ids", []),
-                "payment_mode": "Pay Now"
-            }
+                "payment_mode": "Pay Now",
+            },
         }

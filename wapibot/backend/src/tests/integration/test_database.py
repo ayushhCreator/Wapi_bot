@@ -31,8 +31,9 @@ class TestDatabaseTables:
 
         # Verify it was created
         result = await test_db_session.execute(
-            select(ConversationStateTable)
-            .where(ConversationStateTable.conversation_id == "test_conv_001")
+            select(ConversationStateTable).where(
+                ConversationStateTable.conversation_id == "test_conv_001"
+            )
         )
         retrieved = result.scalar_one()
 
@@ -87,8 +88,9 @@ class TestDatabaseTables:
 
         # Verify it was created
         result = await test_db_session.execute(
-            select(ConversationHistoryTable)
-            .where(ConversationHistoryTable.conversation_id == "test_conv_003")
+            select(ConversationHistoryTable).where(
+                ConversationHistoryTable.conversation_id == "test_conv_003"
+            )
         )
         retrieved = result.scalar_one()
 
@@ -146,30 +148,29 @@ class TestConversationRepository:
                 return test_db_session
 
         monkeypatch.setattr(
-            conversation_repository,
-            "db_connection",
-            MockDBConnection()
+            conversation_repository, "db_connection", MockDBConnection()
         )
 
         repo = ConversationRepository()
         booking_state = {
             "name": {"first": "Ravi", "last": "Kumar"},
-            "phone": "+919876543210"
+            "phone": "+919876543210",
         }
 
         version = await repo.save_state(
             conversation_id="test_conv_005",
             booking_state=booking_state,
             state="collecting",
-            completeness=0.6
+            completeness=0.6,
         )
 
         assert version == 1
 
         # Verify in database
         result = await test_db_session.execute(
-            select(ConversationStateTable)
-            .where(ConversationStateTable.conversation_id == "test_conv_005")
+            select(ConversationStateTable).where(
+                ConversationStateTable.conversation_id == "test_conv_005"
+            )
         )
         state = result.scalar_one()
 
@@ -189,7 +190,7 @@ class TestConversationRepository:
             version=2,
             state="confirmation",
             booking_state_json=json.dumps(booking_data),
-            completeness=0.9
+            completeness=0.9,
         )
         test_db_session.add(state)
         await test_db_session.commit()
@@ -202,9 +203,7 @@ class TestConversationRepository:
                 return test_db_session
 
         monkeypatch.setattr(
-            conversation_repository,
-            "db_connection",
-            MockDBConnection()
+            conversation_repository, "db_connection", MockDBConnection()
         )
 
         repo = ConversationRepository()
@@ -218,7 +217,9 @@ class TestConversationRepository:
         assert result["booking_state"]["name"] == "Test User"
 
     @pytest.mark.asyncio
-    async def test_get_state_none_if_not_exists(self, test_db_session: AsyncSession, monkeypatch):
+    async def test_get_state_none_if_not_exists(
+        self, test_db_session: AsyncSession, monkeypatch
+    ):
         """Test that get_state returns None for non-existent conversation."""
         from repositories import conversation_repository
 
@@ -227,9 +228,7 @@ class TestConversationRepository:
                 return test_db_session
 
         monkeypatch.setattr(
-            conversation_repository,
-            "db_connection",
-            MockDBConnection()
+            conversation_repository, "db_connection", MockDBConnection()
         )
 
         repo = ConversationRepository()
@@ -247,9 +246,7 @@ class TestConversationRepository:
                 return test_db_session
 
         monkeypatch.setattr(
-            conversation_repository,
-            "db_connection",
-            MockDBConnection()
+            conversation_repository, "db_connection", MockDBConnection()
         )
 
         repo = ConversationRepository()
@@ -260,13 +257,14 @@ class TestConversationRepository:
             turn_number=1,
             role="user",
             content="Hello there",
-            extracted_data=extracted_data
+            extracted_data=extracted_data,
         )
 
         # Verify in database
         result = await test_db_session.execute(
-            select(ConversationHistoryTable)
-            .where(ConversationHistoryTable.conversation_id == "test_conv_007")
+            select(ConversationHistoryTable).where(
+                ConversationHistoryTable.conversation_id == "test_conv_007"
+            )
         )
         turn = result.scalar_one()
 
@@ -292,7 +290,7 @@ class TestConversationRepository:
                 conversation_id=conv_id,
                 turn_number=turn_num,
                 role=role,
-                content=content
+                content=content,
             )
             test_db_session.add(turn)
 
@@ -306,9 +304,7 @@ class TestConversationRepository:
                 return test_db_session
 
         monkeypatch.setattr(
-            conversation_repository,
-            "db_connection",
-            MockDBConnection()
+            conversation_repository, "db_connection", MockDBConnection()
         )
 
         repo = ConversationRepository()

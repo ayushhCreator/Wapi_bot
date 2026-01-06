@@ -20,16 +20,19 @@ class BrainMemoryRepository:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO brain_memories VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            memory.get("memory_id"),
-            memory.get("conversation_id"),
-            memory.get("timestamp"),
-            memory.get("user_message"),
-            memory.get("conversation_quality", 0.5),
-            memory.get("user_satisfaction")
-        ))
+        """,
+            (
+                memory.get("memory_id"),
+                memory.get("conversation_id"),
+                memory.get("timestamp"),
+                memory.get("user_message"),
+                memory.get("conversation_quality", 0.5),
+                memory.get("user_satisfaction"),
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -40,10 +43,13 @@ class BrainMemoryRepository:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM brain_memories
             ORDER BY timestamp DESC LIMIT ?
-        """, (limit,))
+        """,
+            (limit,),
+        )
 
         rows = cursor.fetchall()
         conn.close()

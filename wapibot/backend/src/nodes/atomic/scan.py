@@ -27,10 +27,7 @@ class Extractor(Protocol):
     """Protocol for extractors that can scan history."""
 
     def __call__(
-        self,
-        conversation_history: list,
-        user_message: str,
-        **kwargs
+        self, conversation_history: list, user_message: str, **kwargs
     ) -> dict[str, Any]:
         """Extract data from conversation."""
         ...
@@ -69,7 +66,7 @@ async def node(
     field_path: str,
     max_turns: int = 10,
     skip_if_exists: bool = True,
-    timeout: Optional[float] = None
+    timeout: Optional[float] = None,
 ) -> BookingState:
     """Atomic scan node - retroactively scan history for missing data.
 
@@ -109,7 +106,9 @@ async def node(
     current_value = get_nested_field(state, field_path)
 
     if skip_if_exists and current_value is not None:
-        logger.info(f"⏭️ Skipping scan for {field_path} (already exists: {current_value})")
+        logger.info(
+            f"⏭️ Skipping scan for {field_path} (already exists: {current_value})"
+        )
         return state
 
     logger.info(f"🔍 Scanning history for {field_path} (max {max_turns} turns)")
@@ -124,7 +123,9 @@ async def node(
     # Scan recent turns (newest first, up to max_turns)
     turns_to_scan = list(reversed(history[-max_turns:]))
 
-    extraction_timeout = timeout if timeout is not None else settings.extraction_timeout_normal
+    extraction_timeout = (
+        timeout if timeout is not None else settings.extraction_timeout_normal
+    )
 
     for i, turn in enumerate(turns_to_scan):
         try:
@@ -132,7 +133,9 @@ async def node(
             if not message:
                 continue
 
-            logger.debug(f"Scanning turn {i+1}/{len(turns_to_scan)}: {message[:50]}...")
+            logger.debug(
+                f"Scanning turn {i + 1}/{len(turns_to_scan)}: {message[:50]}..."
+            )
 
             # Run extractor on this turn
             loop = asyncio.get_event_loop()
@@ -140,11 +143,11 @@ async def node(
                 loop.run_in_executor(
                     None,
                     lambda: extractor(
-                        conversation_history=history[:len(history)-i],
-                        user_message=message
-                    )
+                        conversation_history=history[: len(history) - i],
+                        user_message=message,
+                    ),
                 ),
-                timeout=extraction_timeout
+                timeout=extraction_timeout,
             )
 
             # Extract value from result
@@ -154,7 +157,9 @@ async def node(
                 confidence = result.get("confidence", 0.5)
             else:
                 field_name = field_path.split(".")[-1]
-                value = getattr(result, field_name, None) or getattr(result, "value", None)
+                value = getattr(result, field_name, None) or getattr(
+                    result, "value", None
+                )
                 confidence = getattr(result, "confidence", 0.5)
 
             # If we found a value, use it!
@@ -162,28 +167,34 @@ async def node(
                 set_nested_field(state, field_path, value)
                 logger.info(
                     f"✅ Retroactively found {field_path} = {value} "
-                    f"(turn -{i+1}, confidence: {confidence})"
+                    f"(turn -{i + 1}, confidence: {confidence})"
                 )
 
                 # Store scan metadata
                 metadata_path = f"{field_path}_scan_metadata"
-                set_nested_field(state, metadata_path, {
-                    "extraction_method": "retroactive_scan",
-                    "turns_back": i + 1,
-                    "confidence": confidence
-                })
+                set_nested_field(
+                    state,
+                    metadata_path,
+                    {
+                        "extraction_method": "retroactive_scan",
+                        "turns_back": i + 1,
+                        "confidence": confidence,
+                    },
+                )
 
                 return state
 
         except asyncio.TimeoutError:
-            logger.debug(f"Timeout scanning turn {i+1}")
+            logger.debug(f"Timeout scanning turn {i + 1}")
             continue
         except Exception as e:
-            logger.debug(f"Error scanning turn {i+1}: {e}")
+            logger.debug(f"Error scanning turn {i + 1}: {e}")
             continue
 
     # Scanned all turns, found nothing
-    logger.info(f"⚠️ Retroactive scan found no {field_path} in {len(turns_to_scan)} turns")
+    logger.info(
+        f"⚠️ Retroactive scan found no {field_path} in {len(turns_to_scan)} turns"
+    )
 
     if "errors" not in state:
         state["errors"] = []

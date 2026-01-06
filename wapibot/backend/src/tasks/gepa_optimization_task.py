@@ -12,14 +12,14 @@ from dspy_modules.brain import (
     IntentPredictor,
     QualityEvaluator,
     GoalDecomposer,
-    ResponseGenerator
+    ResponseGenerator,
 )
 from dspy_modules.metrics import (
     conflict_metric,
     intent_metric,
     quality_metric,
     goals_metric,
-    response_metric
+    response_metric,
 )
 from dspy_modules.module_loader import save_optimized_modules
 
@@ -66,7 +66,7 @@ def run_gepa_optimization(num_iterations: int = 100) -> dict:
             "intent": IntentPredictor(),
             "quality": QualityEvaluator(),
             "goals": GoalDecomposer(),
-            "response": ResponseGenerator()
+            "response": ResponseGenerator(),
         }
 
         # Metric functions
@@ -75,7 +75,7 @@ def run_gepa_optimization(num_iterations: int = 100) -> dict:
             "intent": intent_metric,
             "quality": quality_metric,
             "goals": goals_metric,
-            "response": response_metric
+            "response": response_metric,
         }
 
         # Optimize each module using teacher LLM
@@ -91,8 +91,13 @@ def run_gepa_optimization(num_iterations: int = 100) -> dict:
                 metric = metrics[module_name]
 
                 if len(trainset) < 10:
-                    logger.warning(f"⏭️  Skipping {module_name}: only {len(trainset)} examples")
-                    results[module_name] = {"status": "skipped", "reason": "insufficient_data"}
+                    logger.warning(
+                        f"⏭️  Skipping {module_name}: only {len(trainset)} examples"
+                    )
+                    results[module_name] = {
+                        "status": "skipped",
+                        "reason": "insufficient_data",
+                    }
                     continue
 
                 try:
@@ -106,15 +111,12 @@ def run_gepa_optimization(num_iterations: int = 100) -> dict:
                         metric=metric,
                         breadth=settings.gepa_breadth,
                         depth=settings.gepa_depth,
-                        init_temperature=1.0
+                        init_temperature=1.0,
                     )
 
                     # Compile module (GEPA optimizes prompts)
                     optimized = optimizer.compile(
-                        baseline_module,
-                        trainset=train,
-                        valset=val,
-                        num_threads=4
+                        baseline_module, trainset=train, valset=val, num_threads=4
                     )
 
                     optimized_modules[module_name] = optimized
@@ -132,7 +134,7 @@ def run_gepa_optimization(num_iterations: int = 100) -> dict:
                         "avg_score": avg_score,
                         "num_examples": len(trainset),
                         "train_size": len(train),
-                        "val_size": len(val)
+                        "val_size": len(val),
                     }
 
                     logger.info(f"✅ {module_name}: score={avg_score:.3f}")
@@ -147,7 +149,7 @@ def run_gepa_optimization(num_iterations: int = 100) -> dict:
             metadata = {
                 "gepa_config": {
                     "breadth": settings.gepa_breadth,
-                    "depth": settings.gepa_depth
+                    "depth": settings.gepa_depth,
                 },
                 "metrics": {
                     name: res.get("avg_score", 0.0)
@@ -155,18 +157,20 @@ def run_gepa_optimization(num_iterations: int = 100) -> dict:
                     if res.get("status") == "success"
                 },
                 "teacher_lm": "qwen3:8b",
-                "student_lm": "gemma3:4b"
+                "student_lm": "gemma3:4b",
             }
 
             save_optimized_modules(optimized_modules, version, metadata)
-            logger.info(f"💾 Saved {len(optimized_modules)} optimized modules as {version}")
+            logger.info(
+                f"💾 Saved {len(optimized_modules)} optimized modules as {version}"
+            )
 
         return {
             "status": "success",
             "decisions_processed": len(decisions),
             "iterations": num_iterations,
             "module_results": results,
-            "optimized_count": len(optimized_modules)
+            "optimized_count": len(optimized_modules),
         }
 
     except Exception as e:

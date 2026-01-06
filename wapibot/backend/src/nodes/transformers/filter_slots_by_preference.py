@@ -25,7 +25,9 @@ class FilterSlotsByPreference:
         )
     """
 
-    def __call__(self, slots: List[Dict[str, Any]], state: BookingState) -> List[Dict[str, Any]]:
+    def __call__(
+        self, slots: List[Dict[str, Any]], state: BookingState
+    ) -> List[Dict[str, Any]]:
         """Filter slots by preferences from state.
 
         Args:
@@ -58,15 +60,13 @@ class FilterSlotsByPreference:
 
         # Filter by date if specified
         if preferred_date:
-            filtered = [
-                slot for slot in filtered
-                if slot.get("date") == preferred_date
-            ]
+            filtered = [slot for slot in filtered if slot.get("date") == preferred_date]
 
         # Filter by time range if specified
         if preferred_time_range:
             filtered = [
-                slot for slot in filtered
+                slot
+                for slot in filtered
                 if self._slot_matches_time_range(slot, preferred_time_range)
             ]
 

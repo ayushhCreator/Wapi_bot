@@ -12,15 +12,15 @@ class RegexEmailExtractor:
     """Fast email extraction using regex with EmailStr validation."""
 
     # Standard email pattern (RFC 5322 simplified)
-    PATTERN = r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b'
+    PATTERN = r"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b"
 
     # Common placeholders to reject
     PLACEHOLDERS = {
-        'none@example.com',
-        'test@test.com',
-        'noreply@example.com',
-        'no-reply@example.com',
-        'email@example.com',
+        "none@example.com",
+        "test@test.com",
+        "noreply@example.com",
+        "no-reply@example.com",
+        "email@example.com",
     }
 
     def extract(self, message: str) -> Optional[Dict[str, str]]:
@@ -51,6 +51,7 @@ class RegexEmailExtractor:
         try:
             # EmailStr validation ensures RFC 5322 compliance
             from pydantic import TypeAdapter
+
             email_adapter = TypeAdapter(EmailStr)
             validated_email = email_adapter.validate_python(email_candidate)
             return {"email": str(validated_email)}

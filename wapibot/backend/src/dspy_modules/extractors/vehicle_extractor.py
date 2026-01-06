@@ -22,7 +22,7 @@ class VehicleExtractor(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Collecting vehicle details for service"
+        context: str = "Collecting vehicle details for service",
     ) -> Dict[str, Any]:
         """Extract vehicle details from user message.
 
@@ -42,7 +42,7 @@ class VehicleExtractor(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         confidence_str = getattr(result, "confidence", "medium")
@@ -52,5 +52,5 @@ class VehicleExtractor(dspy.Module):
             "brand": getattr(result, "brand", "").strip(),
             "model": getattr(result, "model", "").strip(),
             "number_plate": getattr(result, "number_plate", "").strip(),
-            "confidence": confidence_float
+            "confidence": confidence_float,
         }

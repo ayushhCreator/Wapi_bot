@@ -19,7 +19,12 @@ from db.db_models import ConversationStateTable, ConversationHistoryTable
 logger = logging.getLogger(__name__)
 
 # Explicitly reference tables to avoid "unused import" warnings
-__all__ = ['DatabaseConnection', 'db_connection', 'ConversationStateTable', 'ConversationHistoryTable']
+__all__ = [
+    "DatabaseConnection",
+    "db_connection",
+    "ConversationStateTable",
+    "ConversationHistoryTable",
+]
 
 # Database configuration
 DB_PATH = Path(__file__).parent.parent.parent / "data" / "conversations.db"
@@ -39,7 +44,7 @@ DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 class DatabaseConnection:
     """Async SQLite database connection manager using SQLModel."""
 
-    _instance: Optional['DatabaseConnection'] = None
+    _instance: Optional["DatabaseConnection"] = None
     _engine: Optional[AsyncEngine] = None
     _session_factory: Optional[sessionmaker] = None
 
@@ -84,9 +89,7 @@ class DatabaseConnection:
         if self._session_factory is None:
             engine = await self.get_engine()
             self._session_factory = sessionmaker(
-                bind=engine,
-                class_=AsyncSession,
-                expire_on_commit=False
+                bind=engine, class_=AsyncSession, expire_on_commit=False
             )
 
         return self._session_factory()

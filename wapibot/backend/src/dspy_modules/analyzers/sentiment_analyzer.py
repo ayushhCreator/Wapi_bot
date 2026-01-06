@@ -21,7 +21,7 @@ class SentimentAnalyzer(dspy.Module):
         self,
         conversation_history: List[Dict[str, str]] | None = None,
         user_message: str = "",
-        context: str = "Analyzing customer sentiment in booking flow"
+        context: str = "Analyzing customer sentiment in booking flow",
     ) -> Dict[str, Any]:
         """Analyze sentiment across 5 dimensions.
 
@@ -41,7 +41,7 @@ class SentimentAnalyzer(dspy.Module):
         result = self.predictor(
             conversation_history=dspy_history,
             user_message=user_message,
-            context=context
+            context=context,
         )
 
         return {
@@ -50,6 +50,8 @@ class SentimentAnalyzer(dspy.Module):
             "frustration": getattr(result, "frustration", "none").lower(),
             "clarity": getattr(result, "clarity", "clear").lower(),
             "engagement": getattr(result, "engagement", "neutral").lower(),
-            "overall_sentiment": getattr(result, "overall_sentiment", "neutral").lower(),
-            "reasoning": getattr(result, "reasoning", "")
+            "overall_sentiment": getattr(
+                result, "overall_sentiment", "neutral"
+            ).lower(),
+            "reasoning": getattr(result, "reasoning", ""),
         }

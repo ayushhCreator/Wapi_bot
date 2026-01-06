@@ -102,8 +102,7 @@ async def node(
     state["payment_status"] = PaymentStatus.PENDING.value
 
     logger.info(
-        f"✅ Payment session created: {session_id} "
-        f"(amount={amount}, path={qr_path})"
+        f"✅ Payment session created: {session_id} (amount={amount}, path={qr_path})"
     )
 
     return state

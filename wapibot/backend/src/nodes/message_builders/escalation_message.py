@@ -29,7 +29,7 @@ class EscalationMessageBuilder:
             "price_negotiation": "Let me connect you with our team for custom pricing.",
             "technical_issue": "Our technical team will assist you shortly.",
             "complex_request": "Let me transfer you to a specialist.",
-            "general": "Connecting you with our support team."
+            "general": "Connecting you with our support team.",
         }
 
         reason_text = messages.get(reason, messages["general"])

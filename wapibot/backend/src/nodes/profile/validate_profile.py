@@ -17,7 +17,9 @@ async def route_after_profile_fetch(state: BookingState) -> str:
         - "profile_ready": Ready to proceed
     """
     # Debug: Log what state we received
-    logger.info(f"🔍 ROUTING: profile_complete in state = {state.get('profile_complete')}")
+    logger.info(
+        f"🔍 ROUTING: profile_complete in state = {state.get('profile_complete')}"
+    )
     logger.info(f"🔍 ROUTING: customer in state = {state.get('customer') is not None}")
     logger.info(f"🔍 ROUTING: vehicle in state = {state.get('vehicle') is not None}")
     logger.info(f"🔍 ROUTING: vehicle_selected = {state.get('vehicle_selected')}")

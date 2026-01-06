@@ -26,7 +26,7 @@ def default_merge_strategy(
     existing: Dict[str, Any],
     new: Dict[str, Any],
     existing_confidence: float,
-    new_confidence: float
+    new_confidence: float,
 ) -> Dict[str, Any]:
     """Default merge strategy: only accept if new confidence is higher.
 
@@ -60,7 +60,7 @@ async def node(
     new_confidence: float,
     merge_fn: Optional[Callable] = None,
     confidence_field: str = "confidence",
-    turn: Optional[int] = None
+    turn: Optional[int] = None,
 ) -> BookingState:
     """Atomic merge node - confidence-based data merging.
 
@@ -98,10 +98,7 @@ async def node(
     if merge_fn is not None:
         try:
             merged = merge_fn(
-                existing_data,
-                new_data,
-                existing_confidence,
-                new_confidence
+                existing_data, new_data, existing_confidence, new_confidence
             )
             merged[confidence_field] = max(existing_confidence, new_confidence)
 

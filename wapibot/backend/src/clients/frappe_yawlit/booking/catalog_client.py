@@ -44,10 +44,16 @@ class ServiceCatalogClient:
                 "/api/method/frappe.client.get_list",
                 {
                     "doctype": "ServiceCategory",
-                    "fields": ["name", "category_name", "category_slug", "icon", "description"],
+                    "fields": [
+                        "name",
+                        "category_name",
+                        "category_slug",
+                        "icon",
+                        "description",
+                    ],
                     "filters": {"active": 1},
-                    "order_by": "display_order asc"
-                }
+                    "order_by": "display_order asc",
+                },
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching service categories: {e}")
@@ -57,7 +63,7 @@ class ServiceCatalogClient:
         self,
         category: Optional[str] = None,
         frequency_type: Optional[str] = None,
-        vehicle_type: Optional[str] = None
+        vehicle_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Get services filtered by category, frequency, and vehicle type.
 
@@ -94,8 +100,8 @@ class ServiceCatalogClient:
                 {
                     "category": category,
                     "frequency_type": frequency_type,
-                    "vehicle_type": vehicle_type
-                }
+                    "vehicle_type": vehicle_type,
+                },
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching filtered services: {e}")
@@ -123,7 +129,7 @@ class ServiceCatalogClient:
         try:
             return await self.http.post(
                 "/api/method/yawlit_automotive_services.api.booking.get_optional_addons",
-                {"product_id": service_id}
+                {"product_id": service_id},
             )
         except (NotFoundError, FrappeAPIError) as e:
             logger.error(f"Error fetching optional addons for {service_id}: {e}")

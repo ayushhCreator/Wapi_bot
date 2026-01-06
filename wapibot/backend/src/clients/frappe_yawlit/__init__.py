@@ -44,7 +44,7 @@ from clients.frappe_yawlit.auth import AuthClient
 from clients.frappe_yawlit.customer import (
     ProfileClient,
     AddressClient,
-    CustomerLookupClient
+    CustomerLookupClient,
 )
 
 # Booking
@@ -52,14 +52,14 @@ from clients.frappe_yawlit.booking import (
     BookingCreateClient,
     BookingManageClient,
     ServiceCatalogClient,
-    SlotAvailabilityClient
+    SlotAvailabilityClient,
 )
 
 # Subscription
 from clients.frappe_yawlit.subscription import (
     SubscriptionPlansClient,
     SubscriptionManageClient,
-    SubscriptionUsageClient
+    SubscriptionUsageClient,
 )
 
 # Payment
@@ -69,10 +69,7 @@ from clients.frappe_yawlit.payment import PaymentClient
 from clients.frappe_yawlit.vendor import VendorPortalClient
 
 # Admin
-from clients.frappe_yawlit.admin import (
-    AdminDashboardClient,
-    AdminBookingClient
-)
+from clients.frappe_yawlit.admin import AdminDashboardClient, AdminBookingClient
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +104,7 @@ class YawlitClient:
         api_key: str | None = None,
         api_secret: str | None = None,
         timeout: float = 30.0,
-        max_retries: int = 3
+        max_retries: int = 3,
     ):
         """Initialize Yawlit API client.
 
@@ -130,10 +127,7 @@ class YawlitClient:
         """
         # Create configuration
         self.config = FrappeClientConfig(
-            base_url=base_url,
-            api_key=api_key,
-            api_secret=api_secret,
-            timeout=timeout
+            base_url=base_url, api_key=api_key, api_secret=api_secret, timeout=timeout
         )
 
         # Create HTTP client

@@ -32,7 +32,9 @@ def run_dream_cycle() -> dict:
         recent_decisions = decision_repo.get_recent(settings.dream_min_conversations)
 
         if len(recent_decisions) < settings.dream_min_conversations:
-            logger.info(f"⏳ Not enough data: {len(recent_decisions)}/{settings.dream_min_conversations}")
+            logger.info(
+                f"⏳ Not enough data: {len(recent_decisions)}/{settings.dream_min_conversations}"
+            )
             return {"status": "skipped", "reason": "insufficient_data"}
 
         # TODO: Implement Ollama-based dream generation
@@ -44,7 +46,7 @@ def run_dream_cycle() -> dict:
             conversations_processed=len(recent_decisions),
             dreams_generated=0,
             patterns_learned=0,
-            model_used=settings.dream_ollama_model
+            model_used=settings.dream_ollama_model,
         )
 
         # Save dream result

@@ -33,11 +33,7 @@ class ModuleVersioning:
             (self.base_dir / module_name).mkdir(exist_ok=True)
 
     def save_module(
-        self,
-        module_name: str,
-        module: Any,
-        version: str,
-        metadata: Dict[str, Any]
+        self, module_name: str, module: Any, version: str, metadata: Dict[str, Any]
     ) -> str:
         """Save optimized module with version and metadata.
 
@@ -64,10 +60,10 @@ class ModuleVersioning:
             "version": version,
             "timestamp": datetime.utcnow().isoformat(),
             "module_name": module_name,
-            **metadata
+            **metadata,
         }
 
-        with open(metadata_path, 'w') as f:
+        with open(metadata_path, "w") as f:
             json.dump(full_metadata, f, indent=2)
 
         # Update "latest" symlink
@@ -84,10 +80,7 @@ class ModuleVersioning:
         return str(filepath)
 
     def load_module(
-        self,
-        module_name: str,
-        module_class: type,
-        version: Optional[str] = None
+        self, module_name: str, module_class: type, version: Optional[str] = None
     ) -> tuple[Any, Dict[str, Any]]:
         """Load module checkpoint by version.
 
@@ -111,7 +104,9 @@ class ModuleVersioning:
             # Load specific version
             matching_files = list(module_dir.glob(f"{version}_*.json"))
             if not matching_files:
-                raise FileNotFoundError(f"Version {version} not found for {module_name}")
+                raise FileNotFoundError(
+                    f"Version {version} not found for {module_name}"
+                )
             filepath = matching_files[0]  # Get most recent if multiple
 
         # Load module
@@ -121,7 +116,7 @@ class ModuleVersioning:
         # Load metadata
         metadata_path = filepath.with_name(filepath.stem + "_metadata.json")
         if metadata_path.exists():
-            with open(metadata_path, 'r') as f:
+            with open(metadata_path, "r") as f:
                 metadata = json.load(f)
         else:
             metadata = {"version": "unknown"}
@@ -144,11 +139,11 @@ class ModuleVersioning:
 
         versions = []
         for meta_file in metadata_files:
-            with open(meta_file, 'r') as f:
+            with open(meta_file, "r") as f:
                 metadata = json.load(f)
                 versions.append(metadata)
 
-        return sorted(versions, key=lambda x: x.get('timestamp', ''), reverse=True)
+        return sorted(versions, key=lambda x: x.get("timestamp", ""), reverse=True)
 
     def _cleanup_old_versions(self, module_dir: Path, keep_last: int = 5):
         """Remove old versions, keeping only last N.
@@ -159,7 +154,8 @@ class ModuleVersioning:
         """
         # Get all module files (exclude metadata and symlinks)
         module_files = [
-            f for f in module_dir.glob("v*.json")
+            f
+            for f in module_dir.glob("v*.json")
             if not f.is_symlink() and "_metadata" not in f.name
         ]
 
@@ -176,10 +172,7 @@ class ModuleVersioning:
             logger.info(f"🗑️  Removed old version: {old_file.name}")
 
     def compare_versions(
-        self,
-        module_name: str,
-        version_a: str,
-        version_b: str
+        self, module_name: str, version_a: str, version_b: str
     ) -> Dict[str, Any]:
         """Compare metrics between two versions.
 
@@ -200,20 +193,20 @@ class ModuleVersioning:
         if not meta_a_files or not meta_b_files:
             raise FileNotFoundError("Metadata not found for comparison")
 
-        with open(meta_a_files[0], 'r') as f:
+        with open(meta_a_files[0], "r") as f:
             meta_a = json.load(f)
-        with open(meta_b_files[0], 'r') as f:
+        with open(meta_b_files[0], "r") as f:
             meta_b = json.load(f)
 
         # Compare metrics
-        metrics_a = meta_a.get('metrics', {})
-        metrics_b = meta_b.get('metrics', {})
+        metrics_a = meta_a.get("metrics", {})
+        metrics_b = meta_b.get("metrics", {})
 
         comparison = {
             "module_name": module_name,
             "version_a": version_a,
             "version_b": version_b,
-            "metrics_comparison": {}
+            "metrics_comparison": {},
         }
 
         for metric_name in set(metrics_a.keys()) | set(metrics_b.keys()):
@@ -224,7 +217,7 @@ class ModuleVersioning:
                 f"{version_a}": val_a,
                 f"{version_b}": val_b,
                 "difference": diff,
-                "improvement_pct": (diff / val_a * 100) if val_a > 0 else 0.0
+                "improvement_pct": (diff / val_a * 100) if val_a > 0 else 0.0,
             }
 
         return comparison

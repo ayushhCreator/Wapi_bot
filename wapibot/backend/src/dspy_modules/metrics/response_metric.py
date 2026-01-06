@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def response_metric(
-    example: dspy.Example,
-    pred: dspy.Prediction,
-    trace: Optional[str] = None
+    example: dspy.Example, pred: dspy.Prediction, trace: Optional[str] = None
 ) -> float:
     """Evaluate response generation quality.
 
@@ -81,7 +79,9 @@ def response_metric(
     if pred_response and response_sent:
         # Check if response addresses key topics
         key_topics = ["appointment", "booking", "service", "vehicle", "time", "date"]
-        topics_covered = sum(1 for topic in key_topics if topic in pred_response.lower())
+        topics_covered = sum(
+            1 for topic in key_topics if topic in pred_response.lower()
+        )
         if topics_covered >= 2:
             score += 0.1
 

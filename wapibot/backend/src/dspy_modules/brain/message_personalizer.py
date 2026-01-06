@@ -14,7 +14,9 @@ class PersonalizationSignature(dspy.Signature):
     conversation_history: str = dspy.InputField(desc="Recent conversation context")
 
     personalized_message: str = dspy.OutputField(desc="Personalized version of message")
-    modifications: str = dspy.OutputField(desc="Comma-separated list of modifications made")
+    modifications: str = dspy.OutputField(
+        desc="Comma-separated list of modifications made"
+    )
     confidence: float = dspy.OutputField(desc="Confidence score (0.0-1.0)")
     reasoning: str = dspy.OutputField(desc="Why these personalizations were chosen")
 
@@ -34,10 +36,7 @@ class MessagePersonalizer(dspy.Module):
         self.personalizer = dspy.ChainOfThought(PersonalizationSignature)
 
     def forward(
-        self,
-        base_message: str,
-        customer_profile: dict,
-        conversation_history: list
+        self, base_message: str, customer_profile: dict, conversation_history: list
     ) -> dict:
         """Generate personalization suggestion.
 
@@ -54,24 +53,24 @@ class MessagePersonalizer(dspy.Module):
         profile_str += f"Communication style: {customer_profile.get('communication_style', 'professional')}"
 
         # Format history (last 3 messages)
-        history_str = "\n".join([
-            f"{msg.get('role', 'user')}: {msg.get('content', '')[:100]}"
-            for msg in conversation_history[-3:]
-        ])
+        history_str = "\n".join(
+            [
+                f"{msg.get('role', 'user')}: {msg.get('content', '')[:100]}"
+                for msg in conversation_history[-3:]
+            ]
+        )
 
         try:
             # Run personalization
             result = self.personalizer(
                 base_message=base_message,
                 customer_profile=profile_str,
-                conversation_history=history_str
+                conversation_history=history_str,
             )
 
             # Parse modifications
             modifications_list = [
-                mod.strip()
-                for mod in result.modifications.split(",")
-                if mod.strip()
+                mod.strip() for mod in result.modifications.split(",") if mod.strip()
             ]
 
             # Parse confidence
@@ -85,7 +84,7 @@ class MessagePersonalizer(dspy.Module):
                 "personalized_message": result.personalized_message,
                 "modifications": modifications_list,
                 "confidence": confidence,
-                "reasoning": result.reasoning
+                "reasoning": result.reasoning,
             }
 
         except Exception as e:
@@ -94,5 +93,5 @@ class MessagePersonalizer(dspy.Module):
                 "personalized_message": base_message,
                 "modifications": [],
                 "confidence": 0.0,
-                "reasoning": f"Error: {e}"
+                "reasoning": f"Error: {e}",
             }

@@ -24,7 +24,9 @@ class DatasetBuilder:
         """
         self.repo = repo
 
-    def build_conflict_dataset(self, decisions: List[BrainDecision]) -> List[dspy.Example]:
+    def build_conflict_dataset(
+        self, decisions: List[BrainDecision]
+    ) -> List[dspy.Example]:
         """Build dataset for ConflictDetector module.
 
         Args:
@@ -45,7 +47,7 @@ class DatasetBuilder:
                     user_message=decision.user_message,
                     # Labels for metric
                     conflict_detected=decision.conflict_detected,
-                    workflow_outcome=decision.workflow_outcome
+                    workflow_outcome=decision.workflow_outcome,
                 ).with_inputs("conversation_history", "user_message")
 
                 examples.append(example)
@@ -57,7 +59,9 @@ class DatasetBuilder:
         logger.info(f"Built {len(examples)} conflict examples")
         return examples
 
-    def build_intent_dataset(self, decisions: List[BrainDecision]) -> List[dspy.Example]:
+    def build_intent_dataset(
+        self, decisions: List[BrainDecision]
+    ) -> List[dspy.Example]:
         """Build dataset for IntentPredictor module."""
         examples = []
 
@@ -74,7 +78,7 @@ class DatasetBuilder:
                     # Labels
                     predicted_intent=decision.predicted_intent,
                     action_taken=decision.action_taken,
-                    workflow_outcome=decision.workflow_outcome
+                    workflow_outcome=decision.workflow_outcome,
                 ).with_inputs("conversation_history", "user_message", "booking_state")
 
                 examples.append(example)
@@ -86,7 +90,9 @@ class DatasetBuilder:
         logger.info(f"Built {len(examples)} intent examples")
         return examples
 
-    def build_quality_dataset(self, decisions: List[BrainDecision]) -> List[dspy.Example]:
+    def build_quality_dataset(
+        self, decisions: List[BrainDecision]
+    ) -> List[dspy.Example]:
         """Build dataset for QualityEvaluator module."""
         examples = []
 
@@ -102,7 +108,7 @@ class DatasetBuilder:
                     # Labels
                     user_satisfaction=decision.user_satisfaction,
                     workflow_outcome=decision.workflow_outcome,
-                    conflict_detected=decision.conflict_detected
+                    conflict_detected=decision.conflict_detected,
                 ).with_inputs("conversation_history", "booking_state")
 
                 examples.append(example)
@@ -129,7 +135,7 @@ class DatasetBuilder:
                     # Labels
                     action_taken=decision.action_taken,
                     state_snapshot=decision.state_snapshot,
-                    workflow_outcome=decision.workflow_outcome
+                    workflow_outcome=decision.workflow_outcome,
                 ).with_inputs("user_message", "predicted_intent", "booking_state")
 
                 examples.append(example)
@@ -140,7 +146,9 @@ class DatasetBuilder:
         logger.info(f"Built {len(examples)} goals examples")
         return examples
 
-    def build_response_dataset(self, decisions: List[BrainDecision]) -> List[dspy.Example]:
+    def build_response_dataset(
+        self, decisions: List[BrainDecision]
+    ) -> List[dspy.Example]:
         """Build dataset for ResponseGenerator module."""
         examples = []
 
@@ -162,8 +170,10 @@ class DatasetBuilder:
                     # Labels
                     user_satisfaction=decision.user_satisfaction,
                     workflow_outcome=decision.workflow_outcome,
-                    response_sent=decision.response_sent
-                ).with_inputs("conversation_history", "user_message", "sub_goals", "booking_state")
+                    response_sent=decision.response_sent,
+                ).with_inputs(
+                    "conversation_history", "user_message", "sub_goals", "booking_state"
+                )
 
                 examples.append(example)
 
@@ -173,7 +183,9 @@ class DatasetBuilder:
         logger.info(f"Built {len(examples)} response examples")
         return examples
 
-    def build_all_datasets(self, num_decisions: int = 100) -> Dict[str, List[dspy.Example]]:
+    def build_all_datasets(
+        self, num_decisions: int = 100
+    ) -> Dict[str, List[dspy.Example]]:
         """Build datasets for all 5 modules.
 
         Args:
@@ -191,7 +203,7 @@ class DatasetBuilder:
             "intent": self.build_intent_dataset(decisions),
             "quality": self.build_quality_dataset(decisions),
             "goals": self.build_goals_dataset(decisions),
-            "response": self.build_response_dataset(decisions)
+            "response": self.build_response_dataset(decisions),
         }
 
         total_examples = sum(len(ds) for ds in datasets.values())

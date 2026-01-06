@@ -12,7 +12,6 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel
 
 
-
 @pytest.fixture(scope="session")
 def event_loop():
     """Create event loop for async tests."""
@@ -42,7 +41,9 @@ async def test_db_engine() -> AsyncGenerator[AsyncEngine, None]:
 
 
 @pytest.fixture
-async def test_db_session(test_db_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
+async def test_db_session(
+    test_db_engine: AsyncEngine,
+) -> AsyncGenerator[AsyncSession, None]:
     """Create database session for testing."""
     async_session_factory = sessionmaker(
         bind=test_db_engine,
@@ -62,16 +63,12 @@ def sample_booking_state():
         "name": {"first": "Ravi", "last": "Kumar"},
         "phone": "+919876543210",
         "email": "ravi.kumar@example.com",
-        "vehicle": {
-            "brand": "Tata",
-            "model": "Nexon",
-            "number_plate": "MH12AB1234"
-        },
+        "vehicle": {"brand": "Tata", "model": "Nexon", "number_plate": "MH12AB1234"},
         "appointment": {
             "date": "2025-12-25",
             "time": "morning",
-            "service_type": "premium wash"
-        }
+            "service_type": "premium wash",
+        },
     }
 
 
@@ -89,6 +86,7 @@ def sample_conversation_history():
 @pytest.fixture
 def mock_dspy_response():
     """Mock DSPy module response."""
+
     class MockDSpyResult:
         def __init__(self, **kwargs):
             for key, value in kwargs.items():

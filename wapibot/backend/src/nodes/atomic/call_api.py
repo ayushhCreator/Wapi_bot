@@ -51,7 +51,7 @@ async def node(
     response_parser: Optional[ResponseParser] = None,
     retry_count: Optional[int] = None,
     timeout: Optional[float] = None,
-    on_failure: Literal["log", "raise", "clear"] = "log"
+    on_failure: Literal["log", "raise", "clear"] = "log",
 ) -> BookingState:
     """Atomic API call node - works with ANY HTTP API.
 

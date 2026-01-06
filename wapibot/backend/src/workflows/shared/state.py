@@ -24,7 +24,9 @@ class BookingState(TypedDict):
 
     # Extracted Data (replaces scratchpad)
     customer: Optional[Dict[str, Any]]  # {first_name, last_name, phone, customer_uuid}
-    vehicle: Optional[Dict[str, Any]]   # {vehicle_id, vehicle_make, vehicle_model, vehicle_number, vehicle_type}
+    vehicle: Optional[
+        Dict[str, Any]
+    ]  # {vehicle_id, vehicle_make, vehicle_model, vehicle_number, vehicle_type}
     appointment: Optional[Dict[str, Any]]  # {date, time_slot, service_type}
 
     # Profile Validation
@@ -51,7 +53,9 @@ class BookingState(TypedDict):
     current_step: str  # Current node name (e.g., "extract_name")
     completeness: float  # 0.0-1.0 data collection progress
     errors: List[str]  # Errors encountered during processing
-    gate_decision: Optional[str]  # "high_confidence" or "low_confidence" from confidence_gate
+    gate_decision: Optional[
+        str
+    ]  # "high_confidence" or "low_confidence" from confidence_gate
 
     # Response Generation
     response: str  # Response message to user
@@ -64,14 +68,18 @@ class BookingState(TypedDict):
     wapi_response: Optional[Dict[str, Any]]  # WAPI send message response
 
     # Service Selection
-    filtered_services: Optional[List[Dict[str, Any]]]  # Services filtered by vehicle type
+    filtered_services: Optional[
+        List[Dict[str, Any]]
+    ]  # Services filtered by vehicle type
     service_options: Optional[List[Dict[str, Any]]]  # Services available for selection
     selected_service: Optional[Dict[str, Any]]  # User's selected service
     service_selected: bool  # True if valid service selected
     selection_error: Optional[str]  # Error message for invalid selection
 
     # Addon Selection
-    available_addons: Optional[List[Dict[str, Any]]]  # Addons available for selected service
+    available_addons: Optional[
+        List[Dict[str, Any]]
+    ]  # Addons available for selected service
     selected_addons: Optional[List[Dict[str, Any]]]  # User's selected addons
     addon_ids: Optional[List[str]]  # Selected addon IDs (for API calls)
     addon_selection_complete: bool  # True if user finished addon selection
@@ -89,8 +97,12 @@ class BookingState(TypedDict):
     preferred_time_range: Optional[str]  # "morning" | "afternoon" | "evening"
     slot_preference_raw: Optional[str]  # Original user message for preference
     slot_preference_extraction_method: Optional[str]  # "regex" | "dspy" | "menu"
-    grouped_slots: Optional[Dict[str, List[Dict[str, Any]]]]  # Slots grouped by time of day
-    filtered_slot_options: Optional[List[Dict[str, Any]]]  # Filtered slots by preference
+    grouped_slots: Optional[
+        Dict[str, List[Dict[str, Any]]]
+    ]  # Slots grouped by time of day
+    filtered_slot_options: Optional[
+        List[Dict[str, Any]]
+    ]  # Filtered slots by preference
 
     # Utilities Collection (for booking_by_phone API)
     electricity_provided: Optional[int]  # 1 (yes) or 0 (no)
@@ -98,14 +110,20 @@ class BookingState(TypedDict):
 
     # Pricing & Confirmation
     total_price: Optional[float]  # Calculated total price
-    price_breakdown: Optional[Dict[str, Any]]  # {base_price, addon_price, discount, tax, total_price}
+    price_breakdown: Optional[
+        Dict[str, Any]
+    ]  # {base_price, addon_price, discount, tax, total_price}
     discount_code: Optional[str]  # Discount/coupon code (for future promo flow)
     confirmed: Optional[bool]  # True=confirmed, False=cancelled, None=unclear
 
     # Booking Result
-    booking_api_response: Optional[Dict[str, Any]]  # Raw API response from create_booking_by_phone
+    booking_api_response: Optional[
+        Dict[str, Any]
+    ]  # Raw API response from create_booking_by_phone
     booking_response: Optional[Dict[str, Any]]  # Response from booking creation API
-    booking_id: Optional[str]  # Booking ID from created booking (e.g., "LIT-BK-HD-OT-291225-0025")
+    booking_id: Optional[
+        str
+    ]  # Booking ID from created booking (e.g., "LIT-BK-HD-OT-291225-0025")
     booking_data: Optional[Dict[str, Any]]  # Full booking data from API response
     service_request_id: Optional[str]  # Created when booking confirmed
     service_request: Optional[Dict[str, Any]]  # Full service request details
@@ -121,8 +139,12 @@ class BookingState(TypedDict):
     payment_reminders_scheduled: Optional[int]  # Number of reminders scheduled
 
     # Brain System Fields (Phase 2+)
-    conflict_detected: Optional[str]  # "frustration" | "bargaining" | "cancellation" | None
-    predicted_intent: Optional[str]  # "continue_booking" | "ask_question" | "cancel" etc.
+    conflict_detected: Optional[
+        str
+    ]  # "frustration" | "bargaining" | "cancellation" | None
+    predicted_intent: Optional[
+        str
+    ]  # "continue_booking" | "ask_question" | "cancel" etc.
     conversation_quality: float  # 0.0-1.0 quality score
     booking_completeness: float  # 0.0-1.0 booking completion
     user_satisfaction: Optional[float]  # 0.0-1.0 estimated satisfaction

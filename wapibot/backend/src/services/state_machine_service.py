@@ -19,11 +19,7 @@ class StateMachineService:
     STATE_CANCELLED = "cancelled"
 
     def determine_next_state(
-        self,
-        current_state: str,
-        intent: str,
-        completeness: float,
-        is_complete: bool
+        self, current_state: str, intent: str, completeness: float, is_complete: bool
     ) -> str:
         """Determine next conversation state.
 
@@ -67,10 +63,7 @@ class StateMachineService:
         return current_state
 
     def should_confirm(
-        self,
-        state: BookingState,
-        current_state: str,
-        completeness: float
+        self, state: BookingState, current_state: str, completeness: float
     ) -> bool:
         """Check if should ask for confirmation.
 
